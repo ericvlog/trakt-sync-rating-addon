@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=7000
-      - SERVER_URL=${SERVER_URL:-https://stremio-trakt.pls3333.duckdns.org}
+      - SERVER_URL=${SERVER_URL}
     volumes:
       - ./public:/usr/src/app/public:ro
     healthcheck:
