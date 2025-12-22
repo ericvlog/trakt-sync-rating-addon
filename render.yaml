@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: stremio-trakt-addon
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: RUN_SERVER
+        value: true
+      # Set SERVER_URL in Render dashboard to your Render URL
+    healthCheckPath: /health
+    autoDeploy: true
+    regions:
+      - oregon
+      - frankfurt
+      - singapore
+    plan: free
+    disk:
+      name: app-data
+      mountPath: /usr/src/app/public
+      sizeGB: 1

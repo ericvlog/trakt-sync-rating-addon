@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  trakt-addon:
+    build: .
+    container_name: stremio-trakt-addon
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-3333}:7000"
+    environment:
+      - NODE_ENV=production
+      - PORT=7000
+      - SERVER_URL=${SERVER_URL:-https://stremio-trakt.pls3333.duckdns.org}
+    volumes:
+      - ./public:/usr/src/app/public:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - trakt-network
+
+networks:
+  trakt-network:
+    driver: bridge

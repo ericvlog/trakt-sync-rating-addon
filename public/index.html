@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trakt Sync & Rating - Stremio Addon</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: #2a2a2a; border-radius: 10px; }
+        h1 { color: #8ef; margin-bottom: 10px; }
+        .step { background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #667eea; }
+        .step h3 { color: #9f9; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #ccc; font-weight: 600; }
+        input { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #444; border-radius: 5px; color: #fff; font-size: 14px; }
+        input:focus { outline: none; border-color: #8ef; }
+        .btn { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600; margin-right: 10px; margin-bottom: 10px; transition: all 0.2s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .btn-auth { background: #17a2b8; }
+        .btn-auth:hover { background: #138496; }
+        .btn-warning { background: #fd7e14; }
+        .btn-warning:hover { background: #e8590c; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-stremio { background: #2c3e50; }
+        .btn-stremio:hover { background: #34495e; }
+        .help-text { color: #888; font-size: 12px; margin-top: 5px; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .status-success { background: #155724; color: #d4edda; }
+        .status-warning { background: #856404; color: #fff3cd; }
+        .status-error { background: #721c24; color: #f8d7da; }
+        .addon-url { background: #1a1a1a; padding: 15px; border-radius: 5px; margin: 15px 0; font-family: monospace; word-break: break-all; border: 1px solid #444; }
+
+        /* Rating presets */
+        .rating-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #444; }
+        .rating-presets { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+        .rating-preset { background: #1a1a1a; border: 2px solid #444; border-radius: 5px; padding: 12px; min-width: 60px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .rating-preset:hover { border-color: #8ef; }
+        .rating-preset.selected { background: #155724; border-color: #28a745; }
+        .rating-preset.selected .stars { color: #ffd700; }
+        .rating-preset .stars { color: #666; font-size: 12px; margin-bottom: 5px; }
+        .rating-preset .value { font-weight: bold; font-size: 16px; }
+        .rating-count { color: #8ef; font-weight: bold; }
+
+        /* Preview sections */
+        .preview-section { background: #2a2a2a; padding: 15px; border-radius: 6px; margin: 15px 0; }
+        .preview-section h4 { color: #8ef; margin-bottom: 10px; }
+        .preview-item { margin: 5px 0; padding: 8px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid #444; }
+        .preview-item.watched { border-left-color: #28a745; }
+        .preview-item.unwatched { border-left-color: #dc3545; }
+        .preview-item.rating { border-left-color: #ffd700; }
+        .preview-item.season { border-left-color: #17a2b8; }
+
+        /* Configuration sections */
+        .config-section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #444; }
+
+        /* Toggle switch */
+        .toggle { display: flex; align-items: center; margin: 15px 0; }
+        .toggle input[type="checkbox"] { display: none; }
+        .toggle-slider { width: 50px; height: 26px; background: #444; border-radius: 13px; position: relative; cursor: pointer; margin-right: 10px; transition: background 0.3s; }
+        .toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s; }
+        .toggle input:checked + .toggle-slider { background: #28a745; }
+        .toggle input:checked + .toggle-slider:before { transform: translateX(24px); }
+
+        /* Auth popup */
+        #authPopup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
+        .auth-popup-content { background:white; color:#333; padding:2rem; border-radius:10px; max-width:500px; width:90%; text-align:center; }
+        .auth-popup-content h2 { color:#17a2b8; margin-bottom:15px; }
+
+        /* Instructions */
+        .instructions { background: #1e3a5f; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #667eea; }
+        .instructions ol { margin-left: 20px; margin-top: 10px; }
+        .instructions li { margin-bottom: 8px; }
+
+        /* Button group */
+        .button-group { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+
+        /* Stremio install info */
+        .stremio-install-info { background: #2c3e50; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #3498db; }
+        .stremio-install-info h4 { color: #3498db; margin-bottom: 10px; }
+        
+        /* Addon name preview */
+        .addon-name-preview { background: #2a2a2a; padding: 10px; border-radius: 5px; margin: 10px 0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Trakt Sync & Rating Addon</h1>
+            <p>Sync watched states and rate content on Trakt.tv</p>
+        </div>
+
+        <div class="step">
+            <h3>1. Create Trakt API App</h3>
+            <p>Go to <a href="https://trakt.tv/oauth/applications" target="_blank" style="color:#8ef;">Trakt API Applications</a> and create a new app:</p>
+            <ul style="margin-left: 20px; margin-top: 10px; color: #ccc;">
+                <li>Name: "Stremio Trakt Sync"</li>
+                <li>Redirect URI: <code>urn:ietf:wg:oauth:2.0:oob</code></li>
+                <li>Click "Save App" and copy the Client ID</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>2. Configure Your Addon</h3>
+
+            <div class="form-group">
+                <label for="clientId">Trakt Client ID *</label>
+                <input type="text" id="clientId" placeholder="Enter your Trakt Client ID" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tmdbKey">TMDB API Key (Optional)</label>
+                <input type="text" id="tmdbKey" placeholder="For better titles - get from themoviedb.org">
+                <div class="help-text">Get free API key from: https://www.themoviedb.org/settings/api</div>
+            </div>
+
+            <div class="config-section">
+                <h4>👤 Addon Display Name</h4>
+                <div class="toggle">
+                    <input type="checkbox" id="showUsernameInName" checked>
+                    <label for="showUsernameInName" class="toggle-slider"></label>
+                    <label for="showUsernameInName" style="cursor: pointer;">Show username in addon name</label>
+                </div>
+                <div class="help-text">If enabled, addon will appear as "Trakt Sync & Rate (username)" in Stremio</div>
+                <div id="addonNamePreview" class="addon-name-preview">Trakt Sync & Rate (TraktUser)</div>
+            </div>
+
+            <div class="config-section">
+                <h4>✅ Watched State Sync</h4>
+                <div class="toggle">
+                    <input type="checkbox" id="enableWatched" checked>
+                    <label for="enableWatched" class="toggle-slider"></label>
+                    <label for="enableWatched" style="cursor: pointer;">Enable Watched State Sync</label>
+                </div>
+                <div class="help-text">Shows "Mark as Watched" options for movies and episodes</div>
+            </div>
+
+            <div class="config-section">
+                <h4>❌ Unwatched State Sync</h4>
+                <div class="toggle">
+                    <input type="checkbox" id="enableUnwatched" checked>
+                    <label for="enableUnwatched" class="toggle-slider"></label>
+                    <label for="enableUnwatched" style="cursor: pointer;">Enable Unwatched State Sync</label>
+                </div>
+                <div class="help-text">Shows "Mark as Unwatched" options for movies and episodes</div>
+            </div>
+
+            <div class="config-section">
+                <h4>📅 Season Watched Option</h4>
+                <div class="toggle">
+                    <input type="checkbox" id="enableSeasonWatched" checked>
+                    <label for="enableSeasonWatched" class="toggle-slider"></label>
+                    <label for="enableSeasonWatched" style="cursor: pointer;">Enable Mark Season as Watched</label>
+                </div>
+                <div class="help-text">When viewing an episode, show option to mark the entire season as watched</div>
+            </div>
+
+            <div class="config-section">
+                <h4>⭐ Rating Options</h4>
+                <div class="toggle">
+                    <input type="checkbox" id="enableRatings" checked>
+                    <label for="enableRatings" class="toggle-slider"></label>
+                    <label for="enableRatings" style="cursor: pointer;">Enable Ratings</label>
+                </div>
+                <div class="help-text">Shows rating options for content</div>
+
+                <div id="ratingSection" class="rating-section" style="display: block;">
+                    <p>Select your preferred ratings (max 6): <span id="selectedCount" class="rating-count">0/6</span></p>
+                    <div class="rating-presets" id="ratingPresets">
+                        <!-- Generated by JavaScript -->
+                    </div>
+                    <div class="help-text">Click to select/deselect. These will appear as separate rating options in Stremio.</div>
+                    <button type="button" onclick="selectDefaultRatings()" class="btn" style="background: #17a2b8; margin-top: 10px;">Use Default (5, 7, 10)</button>
+                </div>
+            </div>
+
+            <div id="authSection" style="margin-top: 20px;">
+                <button onclick="startAuth()" class="btn btn-auth">🔐 Connect to Trakt</button>
+                <div id="authStatus" class="status status-warning">Not connected to Trakt</div>
+            </div>
+        </div>
+
+        <div class="step" id="resultSection" style="display: none;">
+            <h3>3. Your Addon URL</h3>
+            <div class="addon-url" id="addonUrl"></div>
+
+            <div class="stremio-install-info">
+                <h4>🎬 Install in Stremio</h4>
+                <p>Choose one of the following methods to install this addon:</p>
+            </div>
+
+            <div class="button-group">
+                <button onclick="installInStremioWeb()" class="btn btn-stremio">🌐 Install via Stremio Web</button>
+                <button onclick="copyToClipboard()" class="btn btn-warning">📋 Copy URL</button>
+                <button onclick="installInStremioDesktop()" class="btn">💻 Install in Stremio Desktop</button>
+                <button onclick="testAddon()" class="btn">🧪 Test Addon</button>
+                <button onclick="resetConfig()" class="btn btn-danger">🔄 Reset</button>
+            </div>
+
+            <div class="instructions">
+                <p><strong>Manual Installation:</strong></p>
+                <ol>
+                    <li>Open Stremio Desktop</li>
+                    <li>Click the puzzle icon (Addons)</li>
+                    <li>Click "Community Addons"</li>
+                    <li>Click the "+" button and paste the URL above</li>
+                    <li>Click "Install"</li>
+                </ol>
+            </div>
+
+            <div class="preview-section">
+                <h4>🎬 Movie Preview:</h4>
+                <div id="moviePreview">
+                    <div id="movieWatchedPreview" style="margin-bottom: 10px;">
+                        <strong>Watched Options:</strong>
+                        <div id="movieWatchedContent" class="preview-item watched">✅ Mark "The Matrix" as Watched</div>
+                        <div id="movieUnwatchedContent" class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>
+                    </div>
+                    <div id="movieRatingsPreview">
+                        <strong>Rating Options (max 6):</strong>
+                        <div id="movieRatingsContent" class="preview-item rating">⭐ Rate "The Matrix" 5/10</div>
+                    </div>
+                    <div class="help-text">Total movie streams: <span id="movieStreamCount">2</span></div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h4>📺 Series Preview:</h4>
+                <div id="seriesPreview">
+                    <div id="seriesWatchedPreview" style="margin-bottom: 10px;">
+                        <strong>Watched Options:</strong>
+                        <div id="seriesWatchedContent">
+                            <div class="preview-item watched">✅ Mark S1E1 of "Breaking Bad" as Watched</div>
+                            <div class="preview-item season">📅 Mark Season 1 of "Breaking Bad" as Watched</div>
+                            <div class="preview-item watched">📺 Mark Entire "Breaking Bad" Series as Watched</div>
+                            <div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>
+                        </div>
+                    </div>
+                    <div id="seriesRatingsPreview">
+                        <strong>Rating Options (max 6):</strong>
+                        <div id="seriesRatingsContent">
+                            <div class="preview-item rating">⭐ Rate S1E1 of "Breaking Bad" 5/10</div>
+                        </div>
+                    </div>
+                    <div class="help-text">Total series streams (episode view): <span id="seriesStreamCount">5</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Popup -->
+    <div id="authPopup">
+        <div class="auth-popup-content">
+            <h2>Authorize with Trakt</h2>
+            <p>1. Click the button below to open Trakt authorization</p>
+            <p>2. Authorize the application</p>
+            <p>3. Copy the authorization code</p>
+            <p>4. Paste it here:</p>
+
+            <div style="margin: 20px 0;">
+                <button onclick="openTraktAuth()" class="btn" style="background:#17a2b8;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">
+                    Open Trakt Authorization
+                </button>
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="authCode" placeholder="Paste authorization code here" style="width:100%;padding:10px;margin:10px 0;color:#333;">
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button onclick="submitAuthCode()" class="btn" style="background:#28a745;">Submit Code</button>
+                <button onclick="closeAuthPopup()" style="background:#6c757d;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let selectedRatings = [5, 7, 10]; // Default presets
+        let traktTokens = null;
+        let currentUsername = 'TraktUser';
+
+        // DOM Elements
+        const clientIdInput = document.getElementById('clientId');
+        const tmdbKeyInput = document.getElementById('tmdbKey');
+        const showUsernameCheckbox = document.getElementById('showUsernameInName');
+        const enableWatchedCheckbox = document.getElementById('enableWatched');
+        const enableUnwatchedCheckbox = document.getElementById('enableUnwatched');
+        const enableSeasonWatchedCheckbox = document.getElementById('enableSeasonWatched');
+        const enableRatingsCheckbox = document.getElementById('enableRatings');
+        const ratingSection = document.getElementById('ratingSection');
+        const ratingPresetsDiv = document.getElementById('ratingPresets');
+        const authStatus = document.getElementById('authStatus');
+        const resultSection = document.getElementById('resultSection');
+        const addonUrlDiv = document.getElementById('addonUrl');
+        const authPopup = document.getElementById('authPopup');
+        const authCodeInput = document.getElementById('authCode');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        const addonNamePreview = document.getElementById('addonNamePreview');
+
+        // Preview elements
+        const movieWatchedContent = document.getElementById('movieWatchedContent');
+        const movieUnwatchedContent = document.getElementById('movieUnwatchedContent');
+        const movieRatingsContent = document.getElementById('movieRatingsContent');
+        const movieStreamCount = document.getElementById('movieStreamCount');
+        const seriesWatchedContent = document.getElementById('seriesWatchedContent');
+        const seriesRatingsContent = document.getElementById('seriesRatingsContent');
+        const seriesStreamCount = document.getElementById('seriesStreamCount');
+
+        // Initialize
+        function init() {
+            // Generate rating preset buttons
+            generateRatingPresets();
+            updateSelectedCount();
+            updateAddonNamePreview();
+
+            // Update preview when settings change
+            showUsernameCheckbox.addEventListener('change', updateAddonNamePreview);
+            enableWatchedCheckbox.addEventListener('change', updatePreview);
+            enableUnwatchedCheckbox.addEventListener('change', updatePreview);
+            enableSeasonWatchedCheckbox.addEventListener('change', updatePreview);
+            enableRatingsCheckbox.addEventListener('change', function() {
+                ratingSection.style.display = this.checked ? 'block' : 'none';
+                updatePreview();
+            });
+
+            // Load saved data
+            loadSavedData();
+
+            // Initial preview update
+            updatePreview();
+        }
+
+        // Update addon name preview
+        function updateAddonNamePreview() {
+            const showUsername = showUsernameCheckbox.checked;
+            if (showUsername && currentUsername) {
+                addonNamePreview.textContent = `Trakt Sync & Rate (${currentUsername})`;
+            } else {
+                addonNamePreview.textContent = `Trakt Sync & Rate`;
+            }
+        }
+
+        // Generate rating preset buttons (1-10)
+        function generateRatingPresets() {
+            ratingPresetsDiv.innerHTML = '';
+
+            for (let rating = 1; rating <= 10; rating++) {
+                const isSelected = selectedRatings.includes(rating);
+
+                // Create stars visualization
+                let stars = '';
+                for (let i = 1; i <= 10; i++) {
+                    stars += i <= rating ? '★' : '☆';
+                }
+
+                const preset = document.createElement('div');
+                preset.className = `rating-preset ${isSelected ? 'selected' : ''}`;
+                preset.innerHTML = `
+                    <div class="stars">${stars}</div>
+                    <div class="value">${rating}/10</div>
+                `;
+                preset.onclick = () => toggleRatingPreset(rating);
+                ratingPresetsDiv.appendChild(preset);
+            }
+        }
+
+        // Toggle rating preset (max 6)
+        function toggleRatingPreset(rating) {
+            const index = selectedRatings.indexOf(rating);
+
+            if (index > -1) {
+                // Remove if already selected
+                selectedRatings.splice(index, 1);
+            } else {
+                // Add if not at max
+                if (selectedRatings.length < 6) {
+                    selectedRatings.push(rating);
+                    selectedRatings.sort((a, b) => a - b);
+                } else {
+                    alert('Maximum 6 rating presets allowed. Please deselect one first.');
+                    return;
+                }
+            }
+
+            generateRatingPresets();
+            updateSelectedCount();
+            updatePreview();
+        }
+
+        // Select default ratings (5, 7, 10)
+        function selectDefaultRatings() {
+            selectedRatings = [5, 7, 10];
+            generateRatingPresets();
+            updateSelectedCount();
+            updatePreview();
+        }
+
+        // Update selected count display
+        function updateSelectedCount() {
+            selectedCountSpan.textContent = `${selectedRatings.length}/6`;
+        }
+
+        // Update preview based on current settings
+        function updatePreview() {
+            const enableWatched = enableWatchedCheckbox.checked;
+            const enableUnwatched = enableUnwatchedCheckbox.checked;
+            const enableSeasonWatched = enableSeasonWatchedCheckbox.checked;
+            const enableRatings = enableRatingsCheckbox.checked;
+
+            // Movie preview
+            let movieWatchedHTML = '';
+            let movieUnwatchedHTML = '';
+            let movieRatingsHTML = '';
+            let movieStreams = 0;
+
+            if (enableWatched) {
+                movieWatchedHTML = '<div class="preview-item watched">✅ Mark "The Matrix" as Watched</div>';
+                movieStreams += 1;
+            }
+            
+            if (enableUnwatched) {
+                movieUnwatchedHTML = '<div class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>';
+                movieStreams += 1;
+            }
+
+            if (enableRatings && selectedRatings.length > 0) {
+                selectedRatings.forEach(rating => {
+                    movieRatingsHTML += `<div class="preview-item rating">⭐ Rate "The Matrix" ${rating}/10</div>`;
+                    movieStreams += 1;
+                });
+            }
+
+            movieWatchedContent.innerHTML = movieWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
+            movieUnwatchedContent.innerHTML = movieUnwatchedHTML || '<div class="preview-item" style="color:#888;">No unwatched options enabled</div>';
+            movieRatingsContent.innerHTML = movieRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
+            movieStreamCount.textContent = movieStreams;
+
+            // Series preview (episode view)
+            let seriesWatchedHTML = '';
+            let seriesRatingsHTML = '';
+            let seriesStreams = 0;
+
+            if (enableWatched) {
+                seriesWatchedHTML = `<div class="preview-item watched">✅ Mark S1E1 of "Breaking Bad" as Watched</div>`;
+                seriesStreams += 1;
+                
+                if (enableSeasonWatched) {
+                    seriesWatchedHTML += `<div class="preview-item season">📅 Mark Season 1 of "Breaking Bad" as Watched</div>`;
+                    seriesStreams += 1;
+                }
+                
+                seriesWatchedHTML += `<div class="preview-item watched">📺 Mark Entire "Breaking Bad" Series as Watched</div>`;
+                seriesStreams += 1;
+            }
+            
+            if (enableUnwatched) {
+                seriesWatchedHTML += `<div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>`;
+                seriesStreams += 1;
+            }
+
+            if (enableRatings && selectedRatings.length > 0) {
+                selectedRatings.forEach(rating => {
+                    seriesRatingsHTML += `<div class="preview-item rating">⭐ Rate S1E1 of "Breaking Bad" ${rating}/10</div>`;
+                    seriesStreams += 1;
+                });
+            }
+
+            seriesWatchedContent.innerHTML = seriesWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
+            seriesRatingsContent.innerHTML = seriesRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
+            seriesStreamCount.textContent = seriesStreams;
+        }
+
+        // Start authentication
+        function startAuth() {
+            const clientId = clientIdInput.value.trim();
+            if (!clientId) {
+                alert('Please enter your Trakt Client ID');
+                return;
+            }
+
+            // Save data
+            saveData();
+
+            // Show auth popup
+            authPopup.style.display = 'flex';
+        }
+
+        // Open Trakt auth page
+        function openTraktAuth() {
+            const clientId = clientIdInput.value.trim();
+            if (!clientId) return;
+
+            const authUrl = `${window.location.origin}/oauth/initiate?clientId=${encodeURIComponent(clientId)}`;
+            window.open(authUrl, '_blank', 'width=600,height=700');
+        }
+
+        // Close auth popup
+        function closeAuthPopup() {
+            authPopup.style.display = 'none';
+            authCodeInput.value = '';
+        }
+
+        // Submit auth code
+        async function submitAuthCode() {
+            const clientId = clientIdInput.value.trim();
+            const authCode = authCodeInput.value.trim();
+
+            if (!clientId || !authCode) {
+                alert('Please enter both Client ID and Authorization Code');
+                return;
+            }
+
+            try {
+                authStatus.className = 'status';
+                authStatus.textContent = 'Authenticating...';
+
+                const response = await fetch('/oauth/exchange', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: authCode, clientId: clientId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    traktTokens = data.tokens;
+                    currentUsername = data.username;
+                    authStatus.className = 'status status-success';
+                    authStatus.innerHTML = `Connected as: <strong>${data.username}</strong>`;
+
+                    closeAuthPopup();
+                    updateAddonNamePreview();
+                    generateAddonUrl();
+                } else {
+                    authStatus.className = 'status status-error';
+                    authStatus.textContent = `Error: ${data.error}`;
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                authStatus.className = 'status status-error';
+                authStatus.textContent = `Authorization failed: ${error.message}`;
+                console.error('Auth error:', error);
+            }
+        }
+
+        // Generate addon URL
+        function generateAddonUrl() {
+            if (!traktTokens) {
+                alert('Please connect to Trakt first');
+                return;
+            }
+
+            const config = {
+                clientId: clientIdInput.value.trim(),
+                access_token: traktTokens.access_token,
+                refresh_token: traktTokens.refresh_token,
+                expires_in: traktTokens.expires_in,
+                expires_at: traktTokens.expires_at,
+                created_at: traktTokens.created_at,
+                username: traktTokens.username,
+                tmdbKey: tmdbKeyInput.value.trim() || undefined,
+                ratings: enableRatingsCheckbox.checked ? selectedRatings : [],
+                markAsWatched: enableWatchedCheckbox.checked,
+                markAsUnwatched: enableUnwatchedCheckbox.checked,
+                enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
+                showUsernameInName: showUsernameCheckbox.checked
+            };
+
+            // Clean undefined values
+            Object.keys(config).forEach(key => config[key] === undefined && delete config[key]);
+
+            // Encode to base64url
+            const configJson = JSON.stringify(config);
+            const configBase64 = btoa(configJson)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/g, '');
+
+            const addonUrl = `${window.location.origin}/configured/${configBase64}/manifest.json`;
+            addonUrlDiv.textContent = addonUrl;
+            resultSection.style.display = 'block';
+
+            // Scroll to result
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Install in Stremio Desktop (via stremio:// protocol)
+        function installInStremioDesktop() {
+            const addonUrl = addonUrlDiv.textContent;
+            if (addonUrl) {
+                const stremioUrl = 'stremio://' + addonUrl.replace(/^https?:\/\//, '');
+                window.location.href = stremioUrl;
+            }
+        }
+
+        // Install in Stremio Web - FIXED URL
+        function installInStremioWeb() {
+            const addonUrl = addonUrlDiv.textContent;
+            if (addonUrl) {
+                // CORRECTED: Use https://web.stremio.com/#/addons?addon=
+                const installUrl = `https://web.stremio.com/#/addons?addon=${encodeURIComponent(addonUrl)}`;
+                window.open(installUrl, '_blank');
+            }
+        }
+
+        // Copy to clipboard
+        function copyToClipboard() {
+            const addonUrl = addonUrlDiv.textContent;
+            if (addonUrl) {
+                navigator.clipboard.writeText(addonUrl).then(() => {
+                    alert('Addon URL copied to clipboard!');
+                }).catch(() => {
+                    // Fallback
+                    const textarea = document.createElement('textarea');
+                    textarea.value = addonUrl;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('Addon URL copied to clipboard!');
+                });
+            }
+        }
+
+        // Test addon
+        async function testAddon() {
+            const addonUrl = addonUrlDiv.textContent;
+            if (!addonUrl) return;
+
+            try {
+                const response = await fetch(addonUrl);
+                if (response.ok) {
+                    const manifest = await response.json();
+                    alert(`✅ Addon works!\n\nName: ${manifest.name}\nDescription: ${manifest.description}\nID: ${manifest.id}`);
+                } else {
+                    alert(`❌ Failed to fetch manifest: ${response.status}\n\nMake sure the addon server is running and accessible.`);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Reset configuration
+        function resetConfig() {
+            if (confirm('Are you sure you want to reset all configuration? This will clear your settings and disconnect from Trakt.')) {
+                localStorage.removeItem('trakt_config');
+                clientIdInput.value = '';
+                tmdbKeyInput.value = '';
+                showUsernameCheckbox.checked = true;
+                enableWatchedCheckbox.checked = true;
+                enableUnwatchedCheckbox.checked = true;
+                enableSeasonWatchedCheckbox.checked = true;
+                enableRatingsCheckbox.checked = true;
+                selectedRatings = [5, 7, 10];
+                traktTokens = null;
+                currentUsername = 'TraktUser';
+                authStatus.className = 'status status-warning';
+                authStatus.textContent = 'Not connected to Trakt';
+                resultSection.style.display = 'none';
+                
+                generateRatingPresets();
+                updateSelectedCount();
+                updateAddonNamePreview();
+                updatePreview();
+                
+                alert('Configuration reset successfully!');
+            }
+        }
+
+        // Load saved data from localStorage
+        function loadSavedData() {
+            const saved = localStorage.getItem('trakt_config');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.clientId) clientIdInput.value = data.clientId;
+                    if (data.tmdbKey) tmdbKeyInput.value = data.tmdbKey;
+                    if (data.ratings) selectedRatings = data.ratings;
+                    if (data.showUsernameInName !== undefined) showUsernameCheckbox.checked = data.showUsernameInName;
+                    if (data.enableWatched !== undefined) enableWatchedCheckbox.checked = data.enableWatched;
+                    if (data.enableUnwatched !== undefined) enableUnwatchedCheckbox.checked = data.enableUnwatched;
+                    if (data.enableSeasonWatched !== undefined) enableSeasonWatchedCheckbox.checked = data.enableSeasonWatched;
+                    if (data.enableRatings !== undefined) enableRatingsCheckbox.checked = data.enableRatings;
+
+                    generateRatingPresets();
+                    updateSelectedCount();
+                    updateAddonNamePreview();
+                    ratingSection.style.display = enableRatingsCheckbox.checked ? 'block' : 'none';
+                } catch (e) {
+                    console.warn('Failed to load saved data:', e);
+                }
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            const data = {
+                clientId: clientIdInput.value.trim(),
+                tmdbKey: tmdbKeyInput.value.trim(),
+                ratings: selectedRatings,
+                showUsernameInName: showUsernameCheckbox.checked,
+                enableWatched: enableWatchedCheckbox.checked,
+                enableUnwatched: enableUnwatchedCheckbox.checked,
+                enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
+                enableRatings: enableRatingsCheckbox.checked
+            };
+            localStorage.setItem('trakt_config', JSON.stringify(data));
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
