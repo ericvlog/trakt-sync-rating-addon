@@ -109,6 +109,34 @@ function parseStremioId(id, type) {
 }
 
 // ============================================
+// Rating Visual Generator
+// ============================================
+
+function generateRatingVisual(style, rating) {
+    let visual = '';
+    const numRating = parseInt(rating);
+    
+    if (!style || style === 'stars') {
+        // Classic Stars (default)
+        for (let i = 1; i <= 10; i++) {
+            visual += i <= numRating ? '★' : '☆';
+        }
+    } else if (style === 'hearts') {
+        // Emoji Hearts
+        for (let i = 1; i <= 10; i++) {
+            visual += i <= numRating ? '❤️' : '🤍';
+        }
+    } else if (style === 'progress') {
+        // Progress Bar
+        for (let i = 1; i <= 10; i++) {
+            visual += i <= numRating ? '▰' : '▱';
+        }
+    }
+    
+    return visual;
+}
+
+// ============================================
 // OAuth Routes
 // ============================================
 
@@ -437,7 +465,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
     }
 
     console.log(`[TRAKT] ✅ SUCCESS: ${message}`);
-    
+
     let responseData = {};
     try {
       responseData = await response.json();
@@ -445,17 +473,17 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
     } catch (e) {
       console.log(`[TRAKT] No JSON response body`);
     }
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       message,
       response: responseData
     };
 
   } catch (error) {
     console.error(`[TRAKT] ❌ ERROR: ${error.message}`);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error.message,
       details: error.stack
     };
@@ -468,6 +496,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
 function createStreamObject(title, action, type, imdbId, rating = null, season = null, episode = null, config = '') {
   let streamTitle;
+  let streamName = "Trakt"; // Default name
 
   if (action === 'mark_watched') {
     if (type === 'movie') {
@@ -475,24 +504,43 @@ function createStreamObject(title, action, type, imdbId, rating = null, season =
     } else if (season && episode) {
       streamTitle = `✅ Mark S${season}E${episode} as Watched`;
     }
+    streamName = "Trakt Marks";
   } else if (action === 'mark_unwatched') {
     if (type === 'movie') {
       streamTitle = `❌ Mark "${title}" as Unwatched`;
     } else if (season && episode) {
       streamTitle = `❌ Mark S${season}E${episode} as Unwatched`;
     }
+    streamName = "Trakt Marks";
   } else if (action === 'mark_season_watched') {
     streamTitle = `📅 Mark Season ${season} of "${title}" as Watched`;
+    streamName = "Trakt Marks";
   } else if (action === 'mark_series_watched') {
     streamTitle = `📺 Mark Entire "${title}" Series as Watched`;
+    streamName = "Trakt Marks";
   } else if (action === 'rate_only') {
-    if (type === 'movie') {
-      streamTitle = `⭐ Rate "${title}" ${rating}/10`;
-    } else if (season && episode) {
-      streamTitle = `⭐ Rate S${season}E${episode} ${rating}/10`;
-    } else {
-      streamTitle = `📺 Rate "${title}" Series ${rating}/10`;
+    // Get rating style from config (default to 'stars')
+    let ratingStyle = 'stars';
+    try {
+      const userConfig = decodeConfig(config);
+      if (userConfig && userConfig.ratingStyle) {
+        ratingStyle = userConfig.ratingStyle;
+      }
+    } catch (e) {
+      console.log('[STREAM] Could not decode config for rating style, using default');
     }
+    
+    // Generate visual rating based on style
+    const ratingVisual = generateRatingVisual(ratingStyle, rating);
+    
+    if (type === 'movie') {
+      streamTitle = `${ratingVisual}\n"${title}" ${rating}/10`;
+    } else if (season && episode) {
+      streamTitle = `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10`;
+    } else {
+      streamTitle = `${ratingVisual}\n"${title}" Series ${rating}/10`;
+    }
+    streamName = "Trakt Rating";
   }
 
   const params = new URLSearchParams({
@@ -509,7 +557,7 @@ function createStreamObject(title, action, type, imdbId, rating = null, season =
   const finalVideoUrl = `${SERVER_URL}/configured/${config}/trakt-action?${params.toString()}`;
 
   return {
-    name: "Trakt",
+    name: streamName,
     title: streamTitle,
     url: finalVideoUrl,
     behaviorHints: {
@@ -533,7 +581,7 @@ app.get("/configured/:config/manifest.json", (req, res) => {
     const userConfig = decodeConfig(config);
     let username = 'Trakt User';
     let showUsername = true;
-    
+
     if (userConfig) {
       if (userConfig.username) {
         username = userConfig.username;
@@ -567,7 +615,7 @@ app.get("/configured/:config/manifest.json", (req, res) => {
 
   } catch (error) {
     console.error(`[MANIFEST] ❌ Error generating manifest: ${error.message}`);
-    
+
     const fallbackManifest = {
       id: "org.stremio.trakt",
       version: "1.0.0",
@@ -578,7 +626,7 @@ app.get("/configured/:config/manifest.json", (req, res) => {
       catalogs: [],
       idPrefixes: ["tt"]
     };
-    
+
     res.json(fallbackManifest);
   }
 });
@@ -637,7 +685,7 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
       if (markAsWatched) {
         streams.push(createStreamObject(title, 'mark_watched', 'movie', parsedId.imdbId, null, null, null, config));
       }
-      
+
       if (markAsUnwatched) {
         streams.push(createStreamObject(title, 'mark_unwatched', 'movie', parsedId.imdbId, null, null, null, config));
       }
@@ -651,17 +699,17 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
     } else if (type === 'series') {
       if (parsedId.season !== null && parsedId.episode !== null) {
         console.log(`[STREAM] Episode view: S${parsedId.season}E${parsedId.episode}`);
-        
+
         if (markAsWatched) {
           streams.push(createStreamObject(title, 'mark_watched', 'series', parsedId.imdbId, null, parsedId.season, parsedId.episode, config));
-          
+
           if (enableSeasonWatched) {
             streams.push(createStreamObject(title, 'mark_season_watched', 'series', parsedId.imdbId, null, parsedId.season, null, config));
           }
-          
+
           streams.push(createStreamObject(title, 'mark_series_watched', 'series', parsedId.imdbId, null, null, null, config));
         }
-        
+
         if (markAsUnwatched) {
           streams.push(createStreamObject(title, 'mark_unwatched', 'series', parsedId.imdbId, null, parsedId.season, parsedId.episode, config));
         }
@@ -673,7 +721,7 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
         }
       } else {
         console.log(`[STREAM] Series overview`);
-        
+
         if (markAsWatched) {
           streams.push(createStreamObject(title, 'mark_series_watched', 'series', parsedId.imdbId, null, null, null, config));
         }
@@ -687,7 +735,7 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
     }
 
     console.log(`[STREAM] Returning ${streams.length} stream(s) for: "${title}"`);
-    console.log(`[STREAM] Stream titles: ${streams.map(s => s.title).join(', ')}`);
+    console.log(`[STREAM] Stream names: ${streams.map(s => s.name).join(', ')}`);
     res.json({ streams });
 
   } catch (error) {
@@ -723,6 +771,29 @@ app.get("/configured/:config/trakt-action", async (req, res) => {
     try {
       const userConfig = decodeConfig(config);
       if (userConfig && userConfig.access_token) {
+        
+        // If action is rate_only and markAsPlayedOnRate is enabled, also mark as watched
+        if (action === 'rate_only' && userConfig.markAsPlayedOnRate) {
+          console.log(`[TRAKT-ACTION] Also marking as played (markAsPlayedOnRate enabled)`);
+          
+          // First mark as watched
+          const markResult = await makeTraktRequest(
+            'mark_watched',
+            type,
+            imdbId,
+            decodeURIComponent(title),
+            userConfig,
+            null,
+            season,
+            episode
+          );
+          
+          if (markResult.success) {
+            console.log(`[TRAKT] ✅ ${markResult.message}`);
+          }
+        }
+        
+        // Then perform the main action (rating)
         const result = await makeTraktRequest(
           action,
           type,
