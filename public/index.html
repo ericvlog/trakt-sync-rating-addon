@@ -14,8 +14,8 @@
         .step h3 { color: #9f9; margin-bottom: 15px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #ccc; font-weight: 600; }
-        input { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #444; border-radius: 5px; color: #fff; font-size: 14px; }
-        input:focus { outline: none; border-color: #8ef; }
+        input, select { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #444; border-radius: 5px; color: #fff; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #8ef; }
         .btn { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600; margin-right: 10px; margin-bottom: 10px; transition: all 0.2s; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .btn-auth { background: #17a2b8; }
@@ -47,7 +47,7 @@
         /* Preview sections */
         .preview-section { background: #2a2a2a; padding: 15px; border-radius: 6px; margin: 15px 0; }
         .preview-section h4 { color: #8ef; margin-bottom: 10px; }
-        .preview-item { margin: 5px 0; padding: 8px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid #444; white-space: pre-line; }
+        .preview-item { margin: 5px 0; padding: 8px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid #444; white-space: pre-line; font-family: monospace; font-size: 13px; line-height: 1.4; }
         .preview-item.watched { border-left-color: #28a745; }
         .preview-item.unwatched { border-left-color: #dc3545; }
         .preview-item.rating { border-left-color: #ffd700; }
@@ -98,7 +98,7 @@
         .stars-example { color: #ffd700; font-size: 1.5rem; letter-spacing: 2px; }
         .hearts-example { color: #ff4081; font-size: 1.5rem; letter-spacing: 2px; }
         .progress-example { color: #8ef; font-size: 1.5rem; letter-spacing: 2px; }
-        .stremio-preview-text { font-family: monospace; background: #2c3e50; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.9rem; color: #ccc; white-space: pre-line; }
+        .stremio-preview-text { font-family: monospace; background: #2c3e50; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.9rem; color: #ccc; white-space: pre-line; line-height: 1.4; }
 
         /* Rating value slider */
         .rating-value-slider { margin: 20px 0; }
@@ -107,14 +107,61 @@
         .rating-slider { flex: 1; height: 8px; -webkit-appearance: none; background: linear-gradient(to right, #dc3545, #fd7e14, #ffc107, #28a745, #8ef); border-radius: 4px; outline: none; }
         .rating-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #fff; border-radius: 50%; cursor: pointer; border: 2px solid #8ef; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         .rating-slider::-moz-range-thumb { width: 24px; height: 24px; background: #fff; border-radius: 50%; cursor: pointer; border: 2px solid #8ef; }
-        
+
         /* Bulk rating selection */
         .bulk-rating-buttons { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
         .bulk-rating-btn { background: #17a2b8; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; }
         .bulk-rating-btn:hover { background: #138496; }
         .bulk-rating-btn.all { background: #28a745; }
         .bulk-rating-btn.none { background: #dc3545; }
-    </style>
+
+        /* Pattern preview boxes */
+        .pattern-preview { margin-top: 15px; }
+        .pattern-preview-box { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .pattern-preview-item { flex: 1; min-width: 200px; padding: 10px; background: #1a1a1a; border-radius: 5px; border: 1px solid #444; font-family: monospace; white-space: pre-line; font-size: 12px; line-height: 1.3; }
+        .pattern-preview-item.active { border-color: #28a745; background: rgba(40, 167, 69, 0.1); }
+
+        /* Pattern selection */
+        .pattern-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .pattern-option { display: flex; align-items: flex-start; padding: 15px; background: #1a1a1a; border: 2px solid #444; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+        .pattern-option:hover { border-color: #8ef; }
+        .pattern-option.selected { border-color: #28a745; background: rgba(40, 167, 69, 0.1); }
+        .pattern-radio { margin-right: 15px; margin-top: 3px; }
+        .pattern-info { flex: 1; }
+        .pattern-name { font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 5px; }
+        .pattern-description { color: #aaa; font-size: 0.9rem; margin-bottom: 10px; }
+        .pattern-example { background: #2c3e50; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-line; font-size: 0.85rem; line-height: 1.3; color: #ccc; }
+        
+        /* Stats format options */
+        .stats-format-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .stats-format-option { display: flex; align-items: flex-start; padding: 15px; background: #1a1a1a; border: 2px solid #444; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+        .stats-format-option:hover { border-color: #8ef; }
+        .stats-format-option.selected { border-color: #28a745; background: rgba(40, 167, 69, 0.1); }
+        .stats-format-radio { margin-right: 15px; margin-top: 3px; }
+        .stats-format-info { flex: 1; }
+        .stats-format-name { font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 5px; }
+        .stats-format-example { background: #2c3e50; padding: 8px; border-radius: 5px; font-family: monospace; white-space: pre-line; font-size: 0.8rem; line-height: 1.3; color: #ccc; }
+        
+        /* Stats info note */
+        .stats-info-note { background: #1e3a5f; padding: 12px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #ffd700; }
+        .stats-info-note h5 { color: #ffd700; margin-bottom: 5px; }
+        
+        /* Stats selection */
+        .stats-selection { margin-top: 20px; }
+        .stats-selectors { display: flex; gap: 15px; margin-top: 15px; }
+        .stats-selector { flex: 1; }
+        .stats-selector label { display: block; margin-bottom: 8px; font-weight: bold; color: #8ef; }
+        .stats-preview-box { margin-top: 15px; padding: 15px; background: #2c3e50; border-radius: 8px; }
+        .stats-preview-title { font-weight: bold; color: #fff; margin-bottom: 10px; }
+        .stats-preview-example { font-family: monospace; white-space: pre-line; font-size: 0.85rem; line-height: 1.4; color: #ccc; }
+        
+        /* Stat descriptions */
+        .stat-descriptions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+        .stat-description-item { background: #2a2a2a; padding: 10px; border-radius: 5px; border-left: 3px solid #8ef; }
+        .stat-description-emoji { font-size: 1.2rem; margin-right: 8px; }
+        .stat-description-name { font-weight: bold; color: #fff; }
+        .stat-description-text { color: #aaa; font-size: 0.8rem; margin-top: 5px; }
+</style>
 </head>
 <body>
     <div class="container">
@@ -199,13 +246,13 @@
 
                 <div id="ratingSection" class="rating-section" style="display: block;">
                     <p>Select your preferred ratings: <span id="selectedCount" class="rating-count">0/10</span></p>
-                    
+
                     <div class="bulk-rating-buttons">
                         <button type="button" onclick="selectAllRatings()" class="bulk-rating-btn all">Select All (1-10)</button>
                         <button type="button" onclick="selectDefaultRatings()" class="bulk-rating-btn">Use Default (5, 7, 10)</button>
                         <button type="button" onclick="clearAllRatings()" class="bulk-rating-btn none">Clear All</button>
                     </div>
-                    
+
                     <div class="rating-presets" id="ratingPresets">
                         <!-- Generated by JavaScript -->
                     </div>
@@ -213,11 +260,217 @@
                 </div>
             </div>
 
-            <!-- Rating Style Selection -->
-            <div class="config-section rating-style-selector">
-                <h4>🎨 Rating Display Style</h4>
+            <!-- NEW: Custom Stats Selection -->
+            <div class="config-section stats-selection">
+                <h4>📊 Custom Trakt Stats Selection</h4>
+                <p>Choose which 3 Trakt statistics to display (Line 4):</p>
+                
+                <div class="stats-selectors">
+                    <!-- Stat 1 -->
+                    <div class="stats-selector">
+                        <label for="stat1">Stat 1:</label>
+                        <select id="stat1" class="stat-selector">
+                            <option value="watchers">👁️ Watchers (currently watching)</option>
+                            <option value="plays" selected>▶️ Plays (total plays)</option>
+                            <option value="comments">💬 Comments</option>
+                            <option value="lists">📋 Lists</option>
+                            <option value="collectors">⭐ Collectors</option>
+                            <option value="votes">👍 Votes</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Stat 2 -->
+                    <div class="stats-selector">
+                        <label for="stat2">Stat 2:</label>
+                        <select id="stat2" class="stat-selector">
+                            <option value="watchers">👁️ Watchers (currently watching)</option>
+                            <option value="plays">▶️ Plays (total plays)</option>
+                            <option value="comments" selected>💬 Comments</option>
+                            <option value="lists">📋 Lists</option>
+                            <option value="collectors">⭐ Collectors</option>
+                            <option value="votes">👍 Votes</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Stat 3 -->
+                    <div class="stats-selector">
+                        <label for="stat3">Stat 3:</label>
+                        <select id="stat3" class="stat-selector">
+                            <option value="watchers" selected>👁️ Watchers (currently watching)</option>
+                            <option value="plays">▶️ Plays (total plays)</option>
+                            <option value="comments">💬 Comments</option>
+                            <option value="lists">📋 Lists</option>
+                            <option value="collectors">⭐ Collectors</option>
+                            <option value="votes">👍 Votes</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="help-text">Choose any 3 stats from Trakt's available statistics. Duplicate stats are allowed.</div>
+                
+                <!-- Stat Descriptions -->
+                <div class="stat-descriptions">
+                    <div class="stat-description-item">
+                        <div><span class="stat-description-emoji">👁️</span><span class="stat-description-name">Watchers</span></div>
+                        <div class="stat-description-text">Users currently watching RIGHT NOW (real-time)</div>
+                    </div>
+                    <div class="stat-description-item">
+                        <div><span class="stat-description-emoji">▶️</span><span class="stat-description-name">Plays</span></div>
+                        <div class="stat-description-text">Total number of plays (all-time)</div>
+                    </div>
+                    <div class="stat-description-item">
+                        <div><span class="stat-description-emoji">💬</span><span class="stat-description-name">Comments</span></div>
+                        <div class="stat-description-text">Number of user comments</div>
+                    </div>
+                    <div class="stat-description-item">
+                        <div><span class="stat-description-emoji">📋</span><span class="stat-description-name">Lists</span></div>
+                        <div class="stat-description-text">Appears in user lists</div>
+                    </div>
+                    <div class="stat-description-item">
+                        <div><span class="stat-description-emoji">⭐</span><span class="stat-description-name">Collectors</span></div>
+                        <div class="stat-description-text">Users who collected this</div>
+                    </div>
+                    <div class="stat-description-item">
+                        <div><span class="stat-description-emoji">👍</span><span class="stat-description-name">Votes</span></div>
+                        <div class="stat-description-text">Total votes/ratings</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Format Selection -->
+            <div class="config-section">
+                <h4>📐 Stats Display Format</h4>
+                <p>Choose how your selected stats appear:</p>
+                
+                <div class="stats-format-options">
+                    <!-- Option 1 -->
+                    <div class="stats-format-option selected" onclick="selectStatsFormat(1)" id="stats-option-1">
+                        <div class="stats-format-radio">
+                            <input type="radio" name="statsFormat" id="stats1" checked>
+                        </div>
+                        <div class="stats-format-info">
+                            <div class="stats-format-name">Format 1: Compact Stats</div>
+                            <div class="stats-format-example" id="stats-example-1">👁️ 3.1k watchers - ▶️ 5.8k plays - 💬 6 comments</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Option 2 -->
+                    <div class="stats-format-option" onclick="selectStatsFormat(2)" id="stats-option-2">
+                        <div class="stats-format-radio">
+                            <input type="radio" name="statsFormat" id="stats2">
+                        </div>
+                        <div class="stats-format-info">
+                            <div class="stats-format-name">Format 2: Detailed Stats</div>
+                            <div class="stats-format-example" id="stats-example-2">👁️ watchers: 3.1k | ▶️ plays: 5.8k | 💬 comments: 6</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Option 3 -->
+                    <div class="stats-format-option" onclick="selectStatsFormat(3)" id="stats-option-3">
+                        <div class="stats-format-radio">
+                            <input type="radio" name="statsFormat" id="stats3">
+                        </div>
+                        <div class="stats-format-info">
+                            <div class="stats-format-name">Format 3: Minimal Stats</div>
+                            <div class="stats-format-example" id="stats-example-3">👁️ 3.1k | ▶️ 5.8k | 💬 6</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Option 4 -->
+                    <div class="stats-format-option" onclick="selectStatsFormat(4)" id="stats-option-4">
+                        <div class="stats-format-radio">
+                            <input type="radio" name="statsFormat" id="stats4">
+                        </div>
+                        <div class="stats-format-info">
+                            <div class="stats-format-name">Format 4: Vertical Stats</div>
+                            <div class="stats-format-example" id="stats-example-4">👁️ 3.1k watchers
+▶️ 5.8k plays
+💬 6 comments</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Option 5 -->
+                    <div class="stats-format-option" onclick="selectStatsFormat(5)" id="stats-option-5">
+                        <div class="stats-format-radio">
+                            <input type="radio" name="statsFormat" id="stats5">
+                        </div>
+                        <div class="stats-format-info">
+                            <div class="stats-format-name">Format 5: Balanced Stats</div>
+                            <div class="stats-format-example" id="stats-example-5">👁️ 3.1k watching | ▶️ 5.8k played | 💬 6 commented</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-text">These are real Trakt stats fetched live from Trakt API (requires Client ID)</div>
+            </div>
+
+            <!-- Stats Information -->
+            <div class="stats-info-note">
+                <h5>📈 Real Trakt Statistics</h5>
+                <p><strong>Important:</strong> "Watchers" shows users CURRENTLY watching (real-time). This number changes constantly!</p>
+                <p class="help-text">Stats are cached for 30 minutes. Different content will show different stat values.</p>
+            </div>
+
+            <!-- Rating Display Pattern Selection -->
+            <div class="config-section">
+                <h4>🎬 Rating Display Pattern</h4>
                 <p>Choose how ratings appear in Stremio:</p>
                 
+                <div class="pattern-options">
+                    <!-- Pattern 0: Original -->
+                    <div class="pattern-option selected" onclick="selectRatingPattern(0)" id="pattern-option-0">
+                        <div class="pattern-radio">
+                            <input type="radio" name="ratingPattern" id="pattern0" checked>
+                        </div>
+                        <div class="pattern-info">
+                            <div class="pattern-name">Pattern 0: Original Layout</div>
+                            <div class="pattern-description">Simple rating visual followed by title</div>
+                            <div class="pattern-example" id="pattern0-example">★★★★★☆☆☆☆☆
+"The Matrix" 5/10</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pattern 1: Emoji-First Vertical -->
+                    <div class="pattern-option" onclick="selectRatingPattern(1)" id="pattern-option-1">
+                        <div class="pattern-radio">
+                            <input type="radio" name="ratingPattern" id="pattern1">
+                        </div>
+                        <div class="pattern-info">
+                            <div class="pattern-name">Pattern 1: Emoji-First Vertical</div>
+                            <div class="pattern-description">Star rating, title, visual rating, stats, score</div>
+                            <div class="pattern-example" id="pattern1-example">⭐ Rating: 5/10
+🎬 The Matrix (Movie)
+★★★★★☆☆☆☆☆
+👁️ 3.1k watchers - ▶️ 5.8k plays - 💬 6 comments
+📊 5 out of 10 stars</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pattern 6: Cinematic Rating Card -->
+                    <div class="pattern-option" onclick="selectRatingPattern(6)" id="pattern-option-6">
+                        <div class="pattern-radio">
+                            <input type="radio" name="ratingPattern" id="pattern6">
+                        </div>
+                        <div class="pattern-info">
+                            <div class="pattern-name">Pattern 6: Cinematic Rating Card</div>
+                            <div class="pattern-description">Media emoji, visual rating, target score, stats, star count</div>
+                            <div class="pattern-example" id="pattern6-example">🎬 The Matrix (1999)
+⭐ ★★★★★☆☆☆☆☆
+🎯 Rating 5/10 
+👁️ 3.1k watchers - ▶️ 5.8k plays - 💬 6 comments
+📊 5 out of 10 stars</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-text">Different patterns work better with different rating styles</div>
+            </div>
+
+            <!-- Rating Style Selection -->
+            <div class="config-section rating-style-selector">
+                <h4>🎨 Rating Visual Style</h4>
+                <p>Choose the visual style for ratings:</p>
+
                 <div class="rating-style-options">
                     <!-- Classic Stars -->
                     <div class="rating-style-option selected" onclick="selectRatingStyle('stars')" id="style-stars">
@@ -226,11 +479,9 @@
                             <div class="rating-style-name">Classic Stars</div>
                             <div class="rating-style-description">Traditional star ratings (★★★★★☆☆☆☆☆)</div>
                             <div class="rating-style-visual stars-example" id="stars-visual">★★★★★☆☆☆☆☆</div>
-                            <div class="stremio-preview-text" id="stars-preview">★★★★★☆☆☆☆☆
-"The Matrix" 5/10</div>
                         </div>
                     </div>
-                    
+
                     <!-- Emoji Hearts -->
                     <div class="rating-style-option" onclick="selectRatingStyle('hearts')" id="style-hearts">
                         <div class="rating-style-icon">❤️</div>
@@ -238,11 +489,9 @@
                             <div class="rating-style-name">Emoji Hearts</div>
                             <div class="rating-style-description">Heart emojis (❤️❤️❤️❤️❤️🤍🤍🤍🤍🤍)</div>
                             <div class="rating-style-visual hearts-example" id="hearts-visual">❤️❤️❤️❤️❤️🤍🤍🤍🤍🤍</div>
-                            <div class="stremio-preview-text" id="hearts-preview">❤️❤️❤️❤️❤️🤍🤍🤍🤍🤍
-"The Matrix" 5/10</div>
                         </div>
                     </div>
-                    
+
                     <!-- Progress Bar -->
                     <div class="rating-style-option" onclick="selectRatingStyle('progress')" id="style-progress">
                         <div class="rating-style-icon">▰</div>
@@ -250,12 +499,10 @@
                             <div class="rating-style-name">Progress Bar</div>
                             <div class="rating-style-description">Progress bar blocks (▰▰▰▰▰▱▱▱▱▱)</div>
                             <div class="rating-style-visual progress-example" id="progress-visual">▰▰▰▰▰▱▱▱▱▱</div>
-                            <div class="stremio-preview-text" id="progress-preview">▰▰▰▰▰▱▱▱▱▱
-"The Matrix" 5/10</div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Rating Value Slider -->
                 <div class="rating-value-slider">
                     <p>Preview with different rating values:</p>
@@ -312,6 +559,14 @@
                 </ol>
             </div>
 
+            <!-- Stats Preview Info -->
+            <div class="stats-info-note">
+                <h5>📈 Your Custom Stats Configuration</h5>
+                <p><strong>Selected Stats:</strong> <span id="selectedStatsDisplay">👁️ Watchers, ▶️ Plays, 💬 Comments</span></p>
+                <p><strong>Display Format:</strong> <span id="selectedFormatDisplay">Format 1: Compact Stats</span></p>
+                <p class="help-text">Line 4 will show these real Trakt stats when you rate content.</p>
+            </div>
+
             <div class="preview-section">
                 <h4>🎬 Movie Preview:</h4>
                 <div id="moviePreview">
@@ -322,8 +577,7 @@
                     </div>
                     <div id="movieRatingsPreview">
                         <strong>Trakt Rating:</strong>
-                        <div id="movieRatingsContent" class="preview-item rating">★★★★★☆☆☆☆☆
-"The Matrix" 5/10</div>
+                        <div id="movieRatingsContent"></div>
                     </div>
                     <div class="help-text">Total movie streams: <span id="movieStreamCount">2</span></div>
                 </div>
@@ -343,12 +597,20 @@
                     </div>
                     <div id="seriesRatingsPreview">
                         <strong>Trakt Rating:</strong>
-                        <div id="seriesRatingsContent">
-                            <div class="preview-item rating">★★★★★☆☆☆☆☆
-S1E1 "Breaking Bad" 5/10</div>
-                        </div>
+                        <div id="seriesRatingsContent"></div>
                     </div>
                     <div class="help-text">Total series streams (episode view): <span id="seriesStreamCount">5</span></div>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h4>🎭 Anime Series Preview:</h4>
+                <div id="animePreview">
+                    <div id="animeRatingsPreview">
+                        <strong>Trakt Rating (Pattern 6 Example):</strong>
+                        <div id="animeRatingsContent"></div>
+                    </div>
+                    <div class="help-text">Different media types get different emojis (🎬 for movies, 📺 for TV, 🐉 for anime)</div>
                 </div>
             </div>
         </div>
@@ -386,8 +648,21 @@ S1E1 "Breaking Bad" 5/10</div>
         let traktTokens = null;
         let currentUsername = 'TraktUser';
         let selectedRatingStyle = 'stars'; // Default: stars
+        let selectedRatingPattern = 0; // Default: Original pattern
+        let selectedStatsFormat = 1; // Default: Option 1
+        let selectedStats = ['plays', 'comments', 'watchers']; // Default stats
         let previewRatingValue = 5; // Default preview rating
         let markAsPlayedOnRate = false; // Default: don't mark as played when rating
+
+        // Available Trakt stats with emojis and descriptions
+        const traktStatsInfo = {
+            'watchers': { emoji: '👁️', name: 'watchers', description: 'Users currently watching NOW (real-time)' },
+            'plays': { emoji: '▶️', name: 'plays', description: 'Total play count (all-time)' },
+            'comments': { emoji: '💬', name: 'comments', description: 'User comments' },
+            'lists': { emoji: '📋', name: 'lists', description: 'Appears in lists' },
+            'collectors': { emoji: '⭐', name: 'collectors', description: 'Users who collected' },
+            'votes': { emoji: '👍', name: 'votes', description: 'Total votes' }
+        };
 
         // DOM Elements
         const clientIdInput = document.getElementById('clientId');
@@ -409,6 +684,13 @@ S1E1 "Breaking Bad" 5/10</div>
         const ratingSlider = document.getElementById('ratingSlider');
         const sliderValue = document.getElementById('sliderValue');
         const markAsPlayedOnRateCheckbox = document.getElementById('markAsPlayedOnRate');
+        const selectedStatsDisplay = document.getElementById('selectedStatsDisplay');
+        const selectedFormatDisplay = document.getElementById('selectedFormatDisplay');
+        
+        // Stats selectors
+        const stat1Select = document.getElementById('stat1');
+        const stat2Select = document.getElementById('stat2');
+        const stat3Select = document.getElementById('stat3');
 
         // Preview elements
         const movieWatchedContent = document.getElementById('movieWatchedContent');
@@ -418,6 +700,7 @@ S1E1 "Breaking Bad" 5/10</div>
         const seriesWatchedContent = document.getElementById('seriesWatchedContent');
         const seriesRatingsContent = document.getElementById('seriesRatingsContent');
         const seriesStreamCount = document.getElementById('seriesStreamCount');
+        const animeRatingsContent = document.getElementById('animeRatingsContent');
 
         // Rating style elements
         const styleStars = document.getElementById('style-stars');
@@ -426,9 +709,18 @@ S1E1 "Breaking Bad" 5/10</div>
         const starsVisual = document.getElementById('stars-visual');
         const heartsVisual = document.getElementById('hearts-visual');
         const progressVisual = document.getElementById('progress-visual');
-        const starsPreview = document.getElementById('stars-preview');
-        const heartsPreview = document.getElementById('hearts-preview');
-        const progressPreview = document.getElementById('progress-preview');
+        
+        // Pattern example elements
+        const pattern0Example = document.getElementById('pattern0-example');
+        const pattern1Example = document.getElementById('pattern1-example');
+        const pattern6Example = document.getElementById('pattern6-example');
+        
+        // Stats example elements
+        const statsExample1 = document.getElementById('stats-example-1');
+        const statsExample2 = document.getElementById('stats-example-2');
+        const statsExample3 = document.getElementById('stats-example-3');
+        const statsExample4 = document.getElementById('stats-example-4');
+        const statsExample5 = document.getElementById('stats-example-5');
 
         // Initialize
         function init() {
@@ -437,12 +729,18 @@ S1E1 "Breaking Bad" 5/10</div>
             updateSelectedCount();
             updateAddonNamePreview();
             updateRatingStyleVisuals();
-            
+            updatePatternExamples();
+            updateStatsExamples();
+            updateSelectedStatsDisplay();
+            updateSelectedFormatDisplay();
+
             // Setup rating slider
             ratingSlider.addEventListener('input', function(e) {
                 previewRatingValue = parseInt(e.target.value);
                 sliderValue.textContent = previewRatingValue;
                 updateRatingStyleVisuals();
+                updatePatternExamples();
+                updateStatsExamples();
                 updatePreview();
             });
 
@@ -455,12 +753,17 @@ S1E1 "Breaking Bad" 5/10</div>
                 ratingSection.style.display = this.checked ? 'block' : 'none';
                 updatePreview();
             });
-            
+
             // Update when mark as played setting changes
             markAsPlayedOnRateCheckbox.addEventListener('change', function() {
                 markAsPlayedOnRate = this.checked;
                 saveData();
             });
+            
+            // Update when stats selection changes
+            stat1Select.addEventListener('change', updateStatsSelection);
+            stat2Select.addEventListener('change', updateStatsSelection);
+            stat3Select.addEventListener('change', updateStatsSelection);
 
             // Load saved data
             loadSavedData();
@@ -468,22 +771,255 @@ S1E1 "Breaking Bad" 5/10</div>
             // Initial preview update
             updatePreview();
         }
+        
+        // Update stats selection
+        function updateStatsSelection() {
+            selectedStats = [
+                stat1Select.value,
+                stat2Select.value,
+                stat3Select.value
+            ];
+            updatePatternExamples();
+            updateStatsExamples();
+            updateSelectedStatsDisplay();
+            updatePreview();
+            saveData();
+        }
+        
+        // Update stats examples based on current selection
+        function updateStatsExamples() {
+            // Example values based on rating (for preview)
+            const exampleValues = {
+                'watchers': Math.round((previewRatingValue * 125) + 50),
+                'plays': Math.round((previewRatingValue * 510) + 1000),
+                'comments': Math.round(previewRatingValue * 2.4),
+                'lists': Math.round(previewRatingValue * 5),
+                'collectors': Math.round(previewRatingValue * 9),
+                'votes': Math.round(previewRatingValue * 36)
+            };
+            
+            // Format each example
+            const formattedStats = selectedStats.map(stat => {
+                const value = exampleValues[stat] || 0;
+                const formattedValue = formatNumber(value);
+                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
+                return {
+                    emoji: info.emoji,
+                    value: formattedValue,
+                    name: info.name
+                };
+            });
+            
+            // Update all format examples
+            // Format 1: Compact Stats
+            statsExample1.textContent = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+            
+            // Format 2: Detailed Stats
+            statsExample2.textContent = formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
+            
+            // Format 3: Minimal Stats
+            statsExample3.textContent = formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
+            
+            // Format 4: Vertical Stats
+            statsExample4.textContent = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
+            
+            // Format 5: Balanced Stats
+            const customNames = {
+                'watchers': 'watching',
+                'plays': 'played',
+                'comments': 'commented',
+                'lists': 'listed',
+                'collectors': 'collected',
+                'votes': 'voted'
+            };
+            statsExample5.textContent = formattedStats.map(s => {
+                const customName = customNames[s.name] || s.name;
+                return `${s.emoji} ${s.value} ${customName}`;
+            }).join(' | ');
+        }
+        
+        // Update selected stats display
+        function updateSelectedStatsDisplay() {
+            const statNames = selectedStats.map(stat => {
+                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
+                return `${info.emoji} ${info.name.charAt(0).toUpperCase() + info.name.slice(1)}`;
+            });
+            selectedStatsDisplay.textContent = statNames.join(', ');
+        }
+        
+        // Update selected format display
+        function updateSelectedFormatDisplay() {
+            const formatNames = {
+                1: 'Format 1: Compact Stats',
+                2: 'Format 2: Detailed Stats',
+                3: 'Format 3: Minimal Stats',
+                4: 'Format 4: Vertical Stats',
+                5: 'Format 5: Balanced Stats'
+            };
+            selectedFormatDisplay.textContent = formatNames[selectedStatsFormat] || 'Format 1: Compact Stats';
+        }
+
+        // Select stats format
+        function selectStatsFormat(format) {
+            selectedStatsFormat = format;
+            
+            // Update UI
+            document.querySelectorAll('.stats-format-option').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.querySelector('input[type="radio"]').checked = false;
+            });
+            
+            const selectedOption = document.getElementById(`stats-option-${format}`);
+            selectedOption.classList.add('selected');
+            selectedOption.querySelector('input[type="radio"]').checked = true;
+            
+            // Update display
+            updateSelectedFormatDisplay();
+            updatePatternExamples();
+            updatePreview();
+            
+            // Save to localStorage
+            saveData();
+        }
+
+        // Select rating pattern
+        function selectRatingPattern(pattern) {
+            selectedRatingPattern = pattern;
+            
+            // Update UI
+            document.querySelectorAll('.pattern-option').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.querySelector('input[type="radio"]').checked = false;
+            });
+            
+            const selectedOption = document.getElementById(`pattern-option-${pattern}`);
+            selectedOption.classList.add('selected');
+            selectedOption.querySelector('input[type="radio"]').checked = true;
+            
+            // Update preview
+            updatePatternExamples();
+            updatePreview();
+            
+            // Save to localStorage
+            saveData();
+        }
+        
+        // Update pattern examples based on current style and rating value
+        function updatePatternExamples() {
+            // Pattern 0 example
+            const visual0 = generateRatingVisual(selectedRatingStyle, previewRatingValue);
+            pattern0Example.textContent = `${visual0}\n"The Matrix" ${previewRatingValue}/10`;
+            
+            // Pattern 1 and 6 examples with stats
+            const visual1 = generateRatingVisual(selectedRatingStyle, previewRatingValue);
+            const statsLine = getStatsLinePreview(previewRatingValue);
+            
+            pattern1Example.textContent = `⭐ Rating: ${previewRatingValue}/10\n🎬 The Matrix (Movie)\n${visual1}\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
+            
+            pattern6Example.textContent = `🎬 The Matrix (1999)\n⭐ ${visual1}\n🎯 Rating ${previewRatingValue}/10\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
+        }
+        
+        // Get stats line for preview
+        function getStatsLinePreview(rating) {
+            // Example values based on rating (for preview)
+            const exampleValues = {
+                'watchers': Math.round((rating * 125) + 50),
+                'plays': Math.round((rating * 510) + 1000),
+                'comments': Math.round(rating * 2.4),
+                'lists': Math.round(rating * 5),
+                'collectors': Math.round(rating * 9),
+                'votes': Math.round(rating * 36)
+            };
+            
+            // Get values for selected stats
+            const statValues = selectedStats.map(stat => exampleValues[stat] || 0);
+            
+            // Format numbers and prepare display
+            const formattedStats = selectedStats.map((stat, index) => {
+                const value = statValues[index];
+                const formattedValue = formatNumber(value);
+                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
+                const displayName = getStatDisplayName(stat, value);
+                
+                return {
+                    emoji: info.emoji,
+                    value: formattedValue,
+                    name: displayName
+                };
+            });
+            
+            // Apply selected stats format
+            switch(selectedStatsFormat) {
+                case 1: // Option 1: Compact Stats
+                    return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+                case 2: // Option 2: Detailed Stats
+                    return formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
+                case 3: // Option 3: Minimal Stats
+                    return formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
+                case 4: // Option 4: Vertical Stats
+                    if (selectedRatingPattern === 6) {
+                        return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
+                    } else {
+                        return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' | ');
+                    }
+                case 5: // Option 5: Balanced Stats
+                    const customNames = {
+                        'watchers': 'watching',
+                        'plays': 'played',
+                        'comments': 'commented',
+                        'lists': 'listed',
+                        'collectors': 'collected',
+                        'votes': 'voted'
+                    };
+                    return formattedStats.map(s => {
+                        const customName = customNames[s.name] || s.name;
+                        return `${s.emoji} ${s.value} ${customName}`;
+                    }).join(' | ');
+                default:
+                    return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+            }
+        }
+        
+        // Get stat display name (singular/plural)
+        function getStatDisplayName(stat, value) {
+            const displayMap = {
+                'watchers': value === 1 ? 'watcher' : 'watchers',
+                'plays': value === 1 ? 'play' : 'plays',
+                'comments': value === 1 ? 'comment' : 'comments',
+                'lists': value === 1 ? 'list' : 'lists',
+                'collectors': value === 1 ? 'collector' : 'collectors',
+                'votes': value === 1 ? 'vote' : 'votes'
+            };
+            return displayMap[stat] || stat;
+        }
+        
+        // Format number for display
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+            }
+            return num.toString();
+        }
 
         // Select rating style
         function selectRatingStyle(style) {
             selectedRatingStyle = style;
-            
+
             // Update UI
             styleStars.classList.remove('selected');
             styleHearts.classList.remove('selected');
             styleProgress.classList.remove('selected');
-            
+
             document.getElementById(`style-${style}`).classList.add('selected');
-            
+
             // Update visuals
             updateRatingStyleVisuals();
+            updatePatternExamples();
             updatePreview();
-            
+
             // Save to localStorage
             saveData();
         }
@@ -496,29 +1032,26 @@ S1E1 "Breaking Bad" 5/10</div>
                 stars += i <= previewRatingValue ? '★' : '☆';
             }
             starsVisual.textContent = stars;
-            starsPreview.textContent = `${stars}\n"The Matrix" ${previewRatingValue}/10`;
-            
+
             // Update hearts visual
             let hearts = '';
             for (let i = 1; i <= 10; i++) {
                 hearts += i <= previewRatingValue ? '❤️' : '🤍';
             }
             heartsVisual.textContent = hearts;
-            heartsPreview.textContent = `${hearts}\n"The Matrix" ${previewRatingValue}/10`;
-            
+
             // Update progress bar visual
             let progress = '';
             for (let i = 1; i <= 10; i++) {
                 progress += i <= previewRatingValue ? '▰' : '▱';
             }
             progressVisual.textContent = progress;
-            progressPreview.textContent = `${progress}\n"The Matrix" ${previewRatingValue}/10`;
         }
 
         // Generate rating visual for a given style and rating
         function generateRatingVisual(style, rating) {
             let visual = '';
-            
+
             switch(style) {
                 case 'hearts':
                     for (let i = 1; i <= 10; i++) {
@@ -537,8 +1070,74 @@ S1E1 "Breaking Bad" 5/10</div>
                     }
                     break;
             }
-            
+
             return visual;
+        }
+        
+        // Format rating title for preview
+        function formatRatingTitlePreview(pattern, ratingStyle, rating, title, type, season = null, episode = null) {
+            const ratingVisual = generateRatingVisual(ratingStyle, rating);
+            const statsLine = getStatsLinePreview(rating);
+            
+            // Special case for Pattern 0 - no stats line needed
+            if (pattern === 0) {
+                if (type === 'movie') {
+                    return `${ratingVisual}\n"${title}" ${rating}/10`;
+                } else if (season && episode) {
+                    return `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10`;
+                } else {
+                    return `${ratingVisual}\n"${title}" Series ${rating}/10`;
+                }
+            }
+            
+            // Pattern 1: Emoji-First Vertical
+            if (pattern === 1) {
+                let displayTitle1 = title;
+                if (type === 'series') {
+                    if (season && episode) {
+                        displayTitle1 = `${title} S${season}E${episode}`;
+                    } else {
+                        displayTitle1 = `${title} Series`;
+                    }
+                } else {
+                    displayTitle1 = `${title} (Movie)`;
+                }
+                
+                return `⭐ Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n📊 ${rating} out of 10 stars`;
+            }
+            
+            // Pattern 6: Cinematic Rating Card
+            if (pattern === 6) {
+                if (type === 'movie') {
+                    const movieTitle = `🎬 ${title} (1999)`;
+                    return `${movieTitle}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                } else if (type === 'series') {
+                    if (season && episode) {
+                        // Detect series type for emoji
+                        let seriesEmoji = '📺';
+                        const animeKeywords = ['attack on titan', 'demon slayer', 'naruto', 'one piece'];
+                        const animationKeywords = ['rick and morty', 'south park', 'family guy', 'simpsons'];
+                        const docKeywords = ['planet earth', 'cosmos', 'blue planet', 'documentary'];
+                        
+                        const lowerTitle = title.toLowerCase();
+                        if (animeKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '🐉';
+                        else if (animationKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '🎨';
+                        else if (docKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '📽️';
+                        
+                        // Get episode type indicator
+                        let episodeIndicator = '';
+                        if (episode === 1) episodeIndicator = ' 🚀';
+                        if (episode >= 10) episodeIndicator = ' 🔚';
+                        
+                        return `${seriesEmoji} ${title} S${season}E${episode}${episodeIndicator}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                    } else {
+                        return `📺 ${title} (Series)\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                    }
+                }
+            }
+            
+            // Fallback
+            return `${ratingVisual}\n"${title}" ${rating}/10`;
         }
 
         // Update addon name preview
@@ -651,8 +1250,8 @@ S1E1 "Breaking Bad" 5/10</div>
 
             if (enableRatings && selectedRatings.length > 0) {
                 selectedRatings.forEach(rating => {
-                    const visual = generateRatingVisual(selectedRatingStyle, rating);
-                    movieRatingsHTML += `<div class="preview-item rating">${visual}\n"The Matrix" ${rating}/10</div>`;
+                    const ratingText = formatRatingTitlePreview(selectedRatingPattern, selectedRatingStyle, rating, 'The Matrix', 'movie');
+                    movieRatingsHTML += `<div class="preview-item rating">${ratingText}</div>`;
                     movieStreams += 1;
                 });
             }
@@ -687,8 +1286,8 @@ S1E1 "Breaking Bad" 5/10</div>
 
             if (enableRatings && selectedRatings.length > 0) {
                 selectedRatings.forEach(rating => {
-                    const visual = generateRatingVisual(selectedRatingStyle, rating);
-                    seriesRatingsHTML += `<div class="preview-item rating">${visual}\nS1E1 "Breaking Bad" ${rating}/10</div>`;
+                    const ratingText = formatRatingTitlePreview(selectedRatingPattern, selectedRatingStyle, rating, 'Breaking Bad', 'series', 1, 1);
+                    seriesRatingsHTML += `<div class="preview-item rating">${ratingText}</div>`;
                     seriesStreams += 1;
                 });
             }
@@ -696,6 +1295,19 @@ S1E1 "Breaking Bad" 5/10</div>
             seriesWatchedContent.innerHTML = seriesWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
             seriesRatingsContent.innerHTML = seriesRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
             seriesStreamCount.textContent = seriesStreams;
+            
+            // Anime preview (Pattern 6 example)
+            let animeRatingsHTML = '';
+            if (enableRatings && selectedRatingPattern === 6) {
+                const animeRating = previewRatingValue;
+                const ratingText = formatRatingTitlePreview(6, selectedRatingStyle, animeRating, 'Attack on Titan', 'series', 4, 5);
+                animeRatingsHTML = `<div class="preview-item rating">${ratingText}</div>`;
+            } else if (enableRatings && selectedRatingPattern === 6) {
+                const statsLine = getStatsLinePreview(8);
+                animeRatingsHTML = `<div class="preview-item rating">🐉 Attack on Titan S4E5<br>⭐ ★★★★★★★★☆☆<br>🎯 Rating 8/10<br>${statsLine}<br>📊 8 out of 10 stars</div>`;
+            }
+            
+            animeRatingsContent.innerHTML = animeRatingsHTML || '<div class="preview-item" style="color:#888;">Enable Pattern 6 and ratings to see anime example</div>';
         }
 
         // Start authentication
@@ -793,6 +1405,9 @@ S1E1 "Breaking Bad" 5/10</div>
                 enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
                 showUsernameInName: showUsernameCheckbox.checked,
                 ratingStyle: selectedRatingStyle,
+                ratingPattern: selectedRatingPattern,
+                statsFormat: selectedStatsFormat,
+                selectedStats: selectedStats,
                 markAsPlayedOnRate: markAsPlayedOnRate
             };
 
@@ -812,7 +1427,7 @@ S1E1 "Breaking Bad" 5/10</div>
 
             // Scroll to result
             resultSection.scrollIntoView({ behavior: 'smooth' });
-            
+
             // Save data
             saveData();
         }
@@ -885,6 +1500,9 @@ S1E1 "Breaking Bad" 5/10</div>
                 enableRatingsCheckbox.checked = true;
                 selectedRatings = [5, 7, 10];
                 selectedRatingStyle = 'stars';
+                selectedRatingPattern = 0;
+                selectedStatsFormat = 1;
+                selectedStats = ['plays', 'comments', 'watchers'];
                 previewRatingValue = 5;
                 markAsPlayedOnRate = false;
                 ratingSlider.value = '5';
@@ -896,14 +1514,39 @@ S1E1 "Breaking Bad" 5/10</div>
                 authStatus.textContent = 'Not connected to Trakt';
                 resultSection.style.display = 'none';
 
+                // Reset stat selectors
+                stat1Select.value = 'plays';
+                stat2Select.value = 'comments';
+                stat3Select.value = 'watchers';
+
                 // Reset style selection UI
                 styleStars.classList.add('selected');
                 styleHearts.classList.remove('selected');
                 styleProgress.classList.remove('selected');
+                
+                // Reset pattern selection UI
+                document.querySelectorAll('.pattern-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                    opt.querySelector('input[type="radio"]').checked = false;
+                });
+                document.getElementById('pattern-option-0').classList.add('selected');
+                document.getElementById('pattern0').checked = true;
+                
+                // Reset stats format UI
+                document.querySelectorAll('.stats-format-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                    opt.querySelector('input[type="radio"]').checked = false;
+                });
+                document.getElementById('stats-option-1').classList.add('selected');
+                document.getElementById('stats1').checked = true;
 
                 generateRatingPresets();
                 updateSelectedCount();
                 updateRatingStyleVisuals();
+                updatePatternExamples();
+                updateStatsExamples();
+                updateSelectedStatsDisplay();
+                updateSelectedFormatDisplay();
                 updateAddonNamePreview();
                 updatePreview();
 
@@ -926,6 +1569,9 @@ S1E1 "Breaking Bad" 5/10</div>
                     if (data.enableSeasonWatched !== undefined) enableSeasonWatchedCheckbox.checked = data.enableSeasonWatched;
                     if (data.enableRatings !== undefined) enableRatingsCheckbox.checked = data.enableRatings;
                     if (data.ratingStyle) selectedRatingStyle = data.ratingStyle;
+                    if (data.ratingPattern !== undefined) selectedRatingPattern = data.ratingPattern;
+                    if (data.statsFormat !== undefined) selectedStatsFormat = data.statsFormat;
+                    if (data.selectedStats) selectedStats = data.selectedStats;
                     if (data.markAsPlayedOnRate !== undefined) {
                         markAsPlayedOnRate = data.markAsPlayedOnRate;
                         markAsPlayedOnRateCheckbox.checked = markAsPlayedOnRate;
@@ -941,10 +1587,43 @@ S1E1 "Breaking Bad" 5/10</div>
                     styleHearts.classList.remove('selected');
                     styleProgress.classList.remove('selected');
                     document.getElementById(`style-${selectedRatingStyle}`).classList.add('selected');
+                    
+                    // Set pattern UI
+                    document.querySelectorAll('.pattern-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                        opt.querySelector('input[type="radio"]').checked = false;
+                    });
+                    const patternOption = document.getElementById(`pattern-option-${selectedRatingPattern}`);
+                    if (patternOption) {
+                        patternOption.classList.add('selected');
+                        patternOption.querySelector('input[type="radio"]').checked = true;
+                    }
+                    
+                    // Set stats format UI
+                    document.querySelectorAll('.stats-format-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                        opt.querySelector('input[type="radio"]').checked = false;
+                    });
+                    const statsOption = document.getElementById(`stats-option-${selectedStatsFormat}`);
+                    if (statsOption) {
+                        statsOption.classList.add('selected');
+                        statsOption.querySelector('input[type="radio"]').checked = true;
+                    }
+                    
+                    // Set stat selectors
+                    if (selectedStats.length >= 3) {
+                        stat1Select.value = selectedStats[0];
+                        stat2Select.value = selectedStats[1];
+                        stat3Select.value = selectedStats[2];
+                    }
 
                     generateRatingPresets();
                     updateSelectedCount();
                     updateRatingStyleVisuals();
+                    updatePatternExamples();
+                    updateStatsExamples();
+                    updateSelectedStatsDisplay();
+                    updateSelectedFormatDisplay();
                     updateAddonNamePreview();
                     ratingSection.style.display = enableRatingsCheckbox.checked ? 'block' : 'none';
                 } catch (e) {
@@ -965,6 +1644,9 @@ S1E1 "Breaking Bad" 5/10</div>
                 enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
                 enableRatings: enableRatingsCheckbox.checked,
                 ratingStyle: selectedRatingStyle,
+                ratingPattern: selectedRatingPattern,
+                statsFormat: selectedStatsFormat,
+                selectedStats: selectedStats,
                 markAsPlayedOnRate: markAsPlayedOnRate,
                 previewRatingValue: previewRatingValue
             };

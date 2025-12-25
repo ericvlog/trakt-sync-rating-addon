@@ -52,6 +52,11 @@ app.use(express.static('public'));
 const oauthStates = new Map();
 const pendingRequests = new Map();
 
+// Cache for TMDB and Trakt data
+const tmdbCache = new Map();
+const traktStatsCache = new Map();
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
 // ============================================
 // Helper Functions
 // ============================================
@@ -109,13 +114,112 @@ function parseStremioId(id, type) {
 }
 
 // ============================================
+// Number Formatting Helper
+// ============================================
+
+function formatNumber(num) {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toString();
+}
+
+// ============================================
+// Stat Emoji Mapping
+// ============================================
+
+function getStatEmoji(stat) {
+  const emojiMap = {
+    'watchers': '👁️',
+    'plays': '▶️',
+    'comments': '💬',
+    'lists': '📋',
+    'collectors': '⭐',
+    'votes': '👍',
+    'rating': '⭐'
+  };
+  return emojiMap[stat] || '📊';
+}
+
+// ============================================
+// Stat Display Name Mapping
+// ============================================
+
+function getStatDisplayName(stat, value) {
+  const displayMap = {
+    'watchers': value === 1 ? 'watcher' : 'watchers',
+    'plays': value === 1 ? 'play' : 'plays',
+    'comments': value === 1 ? 'comment' : 'comments',
+    'lists': value === 1 ? 'list' : 'lists',
+    'collectors': value === 1 ? 'collector' : 'collectors',
+    'votes': value === 1 ? 'vote' : 'votes',
+    'rating': 'rating'
+  };
+  return displayMap[stat] || stat;
+}
+
+// ============================================
+// Trakt Stats Fetcher
+// ============================================
+
+async function fetchTraktStats(imdbId, type, clientId) {
+  const cacheKey = `${imdbId}_${type}_stats`;
+  const now = Date.now();
+
+  // Check cache
+  const cached = traktStatsCache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    console.log(`[TRAKT STATS] Using cached stats for ${imdbId}`);
+    return cached.stats;
+  }
+
+  try {
+    console.log(`[TRAKT STATS] Fetching stats for ${imdbId} (${type})`);
+
+    const mediaType = type === 'movie' ? 'movies' : 'shows';
+    const url = `https://api.trakt.tv/${mediaType}/${imdbId}/stats`;
+
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        'trakt-api-version': '2',
+        'trakt-api-key': clientId
+      }
+    });
+
+    if (!response.ok) {
+      console.log(`[TRAKT STATS] Failed: ${response.status}`);
+      return null;
+    }
+
+    const stats = await response.json();
+
+    // Cache the result
+    traktStatsCache.set(cacheKey, {
+      stats: stats,
+      timestamp: now
+    });
+
+    console.log(`[TRAKT STATS] Found:`, stats);
+    return stats;
+
+  } catch (error) {
+    console.error(`[TRAKT STATS] Error: ${error.message}`);
+    return null;
+  }
+}
+
+// ============================================
 // Rating Visual Generator
 // ============================================
 
 function generateRatingVisual(style, rating) {
     let visual = '';
     const numRating = parseInt(rating);
-    
+
     if (!style || style === 'stars') {
         // Classic Stars (default)
         for (let i = 1; i <= 10; i++) {
@@ -132,8 +236,193 @@ function generateRatingVisual(style, rating) {
             visual += i <= numRating ? '▰' : '▱';
         }
     }
-    
+
     return visual;
+}
+
+// ============================================
+// Rating Title Formatter (UPDATED with Custom Stats)
+// ============================================
+
+async function formatRatingTitle(pattern, ratingStyle, rating, title, type, season = null, episode = null, year = null, userConfig = null, imdbId = null) {
+    const ratingVisual = generateRatingVisual(ratingStyle, rating);
+
+    // Default selected stats if not specified
+    const selectedStats = userConfig?.selectedStats || ['watchers', 'plays', 'comments'];
+    const statsFormat = userConfig?.statsFormat || 1;
+
+    // Get stats line based on user's selected stats and format
+    let statsLine = '';
+
+    if (userConfig && userConfig.clientId && imdbId) {
+        const stats = await fetchTraktStats(imdbId, type, userConfig.clientId);
+        if (stats) {
+            // Get values for selected stats
+            const statValues = selectedStats.map(stat => stats[stat] || 0);
+
+            // Format numbers and prepare display
+            const formattedStats = selectedStats.map((stat, index) => {
+                const value = statValues[index];
+                const formattedValue = formatNumber(value);
+                const emoji = getStatEmoji(stat);
+                const displayName = getStatDisplayName(stat, value);
+
+                return {
+                    emoji,
+                    value: formattedValue,
+                    name: displayName,
+                    rawValue: value
+                };
+            });
+
+            // Apply selected stats format
+            switch(statsFormat) {
+                case 1: // Option 1: Compact Stats
+                    statsLine = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+                    break;
+                case 2: // Option 2: Detailed Stats
+                    statsLine = formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
+                    break;
+                case 3: // Option 3: Minimal Stats
+                    statsLine = formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
+                    break;
+                case 4: // Option 4: Vertical Stats (3 lines)
+                    if (pattern === 6) {
+                        statsLine = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
+                    } else {
+                        statsLine = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' | ');
+                    }
+                    break;
+                case 5: // Option 5: Balanced Stats
+                    const customNames = {
+                        'watchers': 'watching',
+                        'plays': 'played',
+                        'comments': 'comments',
+                        'lists': 'lists',
+                        'collectors': 'collected',
+                        'votes': 'votes',
+                        'rating': 'rating'
+                    };
+                    statsLine = formattedStats.map(s => {
+                        const customName = customNames[s.name] || s.name;
+                        return `${s.emoji} ${s.value} ${customName}`;
+                    }).join(' | ');
+                    break;
+                default: // Fallback to Option 1
+                    statsLine = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+            }
+        }
+    }
+
+    // If no stats available, use fallback with selected stats
+    if (!statsLine) {
+        const exampleValues = {
+            'watchers': '3.1k',
+            'plays': '5.8k',
+            'comments': '6',
+            'lists': '25',
+            'collectors': '45',
+            'votes': '180',
+            'rating': '8.5'
+        };
+
+        const fallbackStats = selectedStats.map(stat => {
+            const emoji = getStatEmoji(stat);
+            const value = exampleValues[stat] || '0';
+            const name = getStatDisplayName(stat, 2); // Use plural for fallback
+
+            return { emoji, value, name };
+        });
+
+        switch(statsFormat) {
+            case 1:
+                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+                break;
+            case 2:
+                statsLine = fallbackStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
+                break;
+            case 3:
+                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
+                break;
+            case 4:
+                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
+                break;
+            case 5:
+                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' | ');
+                break;
+            default:
+                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+        }
+    }
+
+    // Special case for Pattern 0 - no stats line needed
+    if (pattern === 0) {
+        if (type === 'movie') {
+            return `${ratingVisual}\n"${title}" ${rating}/10`;
+        } else if (season && episode) {
+            return `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10`;
+        } else {
+            return `${ratingVisual}\n"${title}" Series ${rating}/10`;
+        }
+    }
+
+    // Pattern 1: Emoji-First Vertical
+    if (pattern === 1) {
+        let displayTitle1 = title;
+        if (type === 'series') {
+            if (season && episode) {
+                displayTitle1 = `${title} S${season}E${episode}`;
+            } else {
+                displayTitle1 = `${title} Series`;
+            }
+        } else {
+            displayTitle1 = `${title}${year ? ` (${year})` : ' (Movie)'}`;
+        }
+
+        return `⭐ Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n📊 ${rating} out of 10 stars`;
+    }
+
+    // Pattern 6: Cinematic Rating Card
+    if (pattern === 6) {
+        if (type === 'movie') {
+            const movieTitle = year ? `🎬 ${title} (${year})` : `🎬 ${title}`;
+            return `${movieTitle}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+        } else if (type === 'series') {
+            if (season && episode) {
+                // Detect series type for emoji
+                let seriesEmoji = '📺';
+                const animeKeywords = ['attack on titan', 'demon slayer', 'naruto', 'one piece',
+                                      'dragon ball', 'my hero academia', 'bleach', 'hunter x hunter'];
+                const animationKeywords = ['rick and morty', 'south park', 'family guy', 'simpsons'];
+                const docKeywords = ['planet earth', 'cosmos', 'blue planet', 'documentary'];
+
+                const lowerTitle = title.toLowerCase();
+                if (animeKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '🐉';
+                else if (animationKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '🎨';
+                else if (docKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '📽️';
+
+                // Get episode type indicator
+                let episodeIndicator = '';
+                if (episode === 1) episodeIndicator = ' 🚀';
+                if (episode >= 10) episodeIndicator = ' 🔚';
+
+                return `${seriesEmoji} ${title} S${season}E${episode}${episodeIndicator}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+            } else if (season) {
+                return `📺 ${title} Season ${season}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+            } else {
+                return `📺 ${title} (Series)\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+            }
+        }
+    }
+
+    // Fallback to original pattern
+    if (type === 'movie') {
+        return `${ratingVisual}\n"${title}" ${rating}/10`;
+    } else if (season && episode) {
+        return `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10`;
+    } else {
+        return `${ratingVisual}\n"${title}" Series ${rating}/10`;
+    }
 }
 
 // ============================================
@@ -494,9 +783,31 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 // Stream Object Creator
 // ============================================
 
-function createStreamObject(title, action, type, imdbId, rating = null, season = null, episode = null, config = '') {
+async function createStreamObject(title, action, type, imdbId, rating = null, season = null, episode = null, config = '', year = null, userConfig = null) {
   let streamTitle;
   let streamName = "Trakt"; // Default name
+
+  // Decode config to get user preferences
+  let decodedConfig = userConfig;
+  let ratingPattern = 0; // Default pattern
+  let ratingStyle = 'stars'; // Default style
+  let statsFormat = 1; // Default stats format
+  let selectedStats = ['watchers', 'plays', 'comments']; // Default stats
+
+  if (!decodedConfig) {
+    try {
+      decodedConfig = decodeConfig(config);
+    } catch (e) {
+      console.log('[STREAM] Could not decode config, using defaults');
+    }
+  }
+
+  if (decodedConfig) {
+    ratingPattern = decodedConfig.ratingPattern || 0;
+    ratingStyle = decodedConfig.ratingStyle || 'stars';
+    statsFormat = decodedConfig.statsFormat || 1;
+    selectedStats = decodedConfig.selectedStats || ['watchers', 'plays', 'comments'];
+  }
 
   if (action === 'mark_watched') {
     if (type === 'movie') {
@@ -519,27 +830,8 @@ function createStreamObject(title, action, type, imdbId, rating = null, season =
     streamTitle = `📺 Mark Entire "${title}" Series as Watched`;
     streamName = "Trakt Marks";
   } else if (action === 'rate_only') {
-    // Get rating style from config (default to 'stars')
-    let ratingStyle = 'stars';
-    try {
-      const userConfig = decodeConfig(config);
-      if (userConfig && userConfig.ratingStyle) {
-        ratingStyle = userConfig.ratingStyle;
-      }
-    } catch (e) {
-      console.log('[STREAM] Could not decode config for rating style, using default');
-    }
-    
-    // Generate visual rating based on style
-    const ratingVisual = generateRatingVisual(ratingStyle, rating);
-    
-    if (type === 'movie') {
-      streamTitle = `${ratingVisual}\n"${title}" ${rating}/10`;
-    } else if (season && episode) {
-      streamTitle = `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10`;
-    } else {
-      streamTitle = `${ratingVisual}\n"${title}" Series ${rating}/10`;
-    }
+    // Use the new formatRatingTitle function with stats support
+    streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId);
     streamName = "Trakt Rating";
   }
 
@@ -568,7 +860,37 @@ function createStreamObject(title, action, type, imdbId, rating = null, season =
 }
 
 // ============================================
-// Configured Manifest Endpoint
+// FIXED: DEFAULT MANIFEST (WITH CONFIGURE BUTTON)
+// ============================================
+
+app.get("/manifest.json", (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+
+  const manifest = {
+    id: "org.stremio.trakt",
+    version: "1.0.0",
+    name: "Trakt Sync & Rate",
+    description: "Sync watched states and rate content on Trakt.tv - configure your instance",
+    resources: ["stream"],
+    types: ["movie", "series"],
+    catalogs: [],
+    idPrefixes: ["tt"],
+    // CRITICAL: This tells Stremio to show the "Configure" button
+    behaviorHints: {
+      configurable: true,
+      configurationRequired: true
+    },
+    background: "https://i.imgur.com/sO4pC8H.png",
+    logo: "https://i.imgur.com/8Q3Zz5y.png",
+    contactEmail: ""
+  };
+
+  console.log(`[MANIFEST] Default manifest requested (shows Configure button)`);
+  res.json(manifest);
+});
+
+// ============================================
+// FIXED: CONFIGURED MANIFEST (NO CONFIGURE BUTTON)
 // ============================================
 
 app.get("/configured/:config/manifest.json", (req, res) => {
@@ -605,6 +927,11 @@ app.get("/configured/:config/manifest.json", (req, res) => {
       types: ["movie", "series"],
       catalogs: [],
       idPrefixes: ["tt"],
+      // CRITICAL: Already configured, so no Configure button needed
+      behaviorHints: {
+        configurable: true,
+        configurationRequired: false
+      },
       background: "https://i.imgur.com/sO4pC8H.png",
       logo: "https://i.imgur.com/8Q3Zz5y.png",
       contactEmail: ""
@@ -624,11 +951,26 @@ app.get("/configured/:config/manifest.json", (req, res) => {
       resources: ["stream"],
       types: ["movie", "series"],
       catalogs: [],
-      idPrefixes: ["tt"]
+      idPrefixes: ["tt"],
+      behaviorHints: {
+        configurable: true,
+        configurationRequired: true
+      }
     };
 
     res.json(fallbackManifest);
   }
+});
+
+// ============================================
+// ALSO ADD THIS ROUTE FOR COMPATIBILITY WITH STREMIO-ADDONS.NET
+// ============================================
+
+app.get("/:config/manifest.json", (req, res) => {
+  const { config } = req.params;
+  
+  // Redirect to the configured manifest endpoint
+  res.redirect(`/configured/${config}/manifest.json`);
 });
 
 // ============================================
@@ -656,6 +998,9 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
     }
 
     let title = `IMDb: ${parsedId.imdbId}`;
+    let year = null;
+
+    // Fetch title and year from TMDB if API key is available
     if (userConfig.tmdbKey) {
       try {
         const mediaType = type === 'movie' ? 'movie' : 'tv';
@@ -668,7 +1013,15 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
           const results = type === 'movie' ? tmdbData.movie_results : tmdbData.tv_results;
           if (results && results.length > 0) {
             title = results[0].title || results[0].name || title;
-            console.log(`[STREAM] Found title: "${title}" via TMDB`);
+
+            // Extract year from release_date or first_air_date
+            if (results[0].release_date) {
+              year = results[0].release_date.split('-')[0];
+            } else if (results[0].first_air_date) {
+              year = results[0].first_air_date.split('-')[0];
+            }
+
+            console.log(`[STREAM] Found title: "${title}" year: ${year || 'N/A'} via TMDB`);
           }
         }
       } catch (error) {
@@ -683,17 +1036,17 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
 
     if (type === 'movie') {
       if (markAsWatched) {
-        streams.push(createStreamObject(title, 'mark_watched', 'movie', parsedId.imdbId, null, null, null, config));
+        streams.push(await createStreamObject(title, 'mark_watched', 'movie', parsedId.imdbId, null, null, null, config, year, userConfig));
       }
 
       if (markAsUnwatched) {
-        streams.push(createStreamObject(title, 'mark_unwatched', 'movie', parsedId.imdbId, null, null, null, config));
+        streams.push(await createStreamObject(title, 'mark_unwatched', 'movie', parsedId.imdbId, null, null, null, config, year, userConfig));
       }
 
       if (ratings && ratings.length > 0) {
-        ratings.forEach(rating => {
-          streams.push(createStreamObject(title, 'rate_only', 'movie', parsedId.imdbId, rating, null, null, config));
-        });
+        for (const rating of ratings) {
+          streams.push(await createStreamObject(title, 'rate_only', 'movie', parsedId.imdbId, rating, null, null, config, year, userConfig));
+        }
       }
 
     } else if (type === 'series') {
@@ -701,35 +1054,35 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
         console.log(`[STREAM] Episode view: S${parsedId.season}E${parsedId.episode}`);
 
         if (markAsWatched) {
-          streams.push(createStreamObject(title, 'mark_watched', 'series', parsedId.imdbId, null, parsedId.season, parsedId.episode, config));
+          streams.push(await createStreamObject(title, 'mark_watched', 'series', parsedId.imdbId, null, parsedId.season, parsedId.episode, config, year, userConfig));
 
           if (enableSeasonWatched) {
-            streams.push(createStreamObject(title, 'mark_season_watched', 'series', parsedId.imdbId, null, parsedId.season, null, config));
+            streams.push(await createStreamObject(title, 'mark_season_watched', 'series', parsedId.imdbId, null, parsedId.season, null, config, year, userConfig));
           }
 
-          streams.push(createStreamObject(title, 'mark_series_watched', 'series', parsedId.imdbId, null, null, null, config));
+          streams.push(await createStreamObject(title, 'mark_series_watched', 'series', parsedId.imdbId, null, null, null, config, year, userConfig));
         }
 
         if (markAsUnwatched) {
-          streams.push(createStreamObject(title, 'mark_unwatched', 'series', parsedId.imdbId, null, parsedId.season, parsedId.episode, config));
+          streams.push(await createStreamObject(title, 'mark_unwatched', 'series', parsedId.imdbId, null, parsedId.season, parsedId.episode, config, year, userConfig));
         }
 
         if (ratings && ratings.length > 0) {
-          ratings.forEach(rating => {
-            streams.push(createStreamObject(title, 'rate_only', 'series', parsedId.imdbId, rating, parsedId.season, parsedId.episode, config));
-          });
+          for (const rating of ratings) {
+            streams.push(await createStreamObject(title, 'rate_only', 'series', parsedId.imdbId, rating, parsedId.season, parsedId.episode, config, year, userConfig));
+          }
         }
       } else {
         console.log(`[STREAM] Series overview`);
 
         if (markAsWatched) {
-          streams.push(createStreamObject(title, 'mark_series_watched', 'series', parsedId.imdbId, null, null, null, config));
+          streams.push(await createStreamObject(title, 'mark_series_watched', 'series', parsedId.imdbId, null, null, null, config, year, userConfig));
         }
 
         if (ratings && ratings.length > 0) {
-          ratings.forEach(rating => {
-            streams.push(createStreamObject(title, 'rate_only', 'series', parsedId.imdbId, rating, null, null, config));
-          });
+          for (const rating of ratings) {
+            streams.push(await createStreamObject(title, 'rate_only', 'series', parsedId.imdbId, rating, null, null, config, year, userConfig));
+          }
         }
       }
     }
@@ -771,11 +1124,11 @@ app.get("/configured/:config/trakt-action", async (req, res) => {
     try {
       const userConfig = decodeConfig(config);
       if (userConfig && userConfig.access_token) {
-        
+
         // If action is rate_only and markAsPlayedOnRate is enabled, also mark as watched
         if (action === 'rate_only' && userConfig.markAsPlayedOnRate) {
           console.log(`[TRAKT-ACTION] Also marking as played (markAsPlayedOnRate enabled)`);
-          
+
           // First mark as watched
           const markResult = await makeTraktRequest(
             'mark_watched',
@@ -787,12 +1140,12 @@ app.get("/configured/:config/trakt-action", async (req, res) => {
             season,
             episode
           );
-          
+
           if (markResult.success) {
             console.log(`[TRAKT] ✅ ${markResult.message}`);
           }
         }
-        
+
         // Then perform the main action (rating)
         const result = await makeTraktRequest(
           action,
@@ -820,26 +1173,8 @@ app.get("/configured/:config/trakt-action", async (req, res) => {
 });
 
 // ============================================
-// Default Routes
+// Default Stream Route (for unconfigured)
 // ============================================
-
-app.get("/manifest.json", (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-
-  const manifest = {
-    id: "org.stremio.trakt",
-    version: "1.0.0",
-    name: "Trakt Sync & Rate",
-    description: "Sync watched states and rate content on Trakt.tv - configure your instance",
-    resources: ["stream"],
-    types: ["movie", "series"],
-    catalogs: [],
-    idPrefixes: ["tt"]
-  };
-
-  console.log(`[MANIFEST] Default manifest requested`);
-  res.json(manifest);
-});
 
 app.get("/stream/:type/:id.json", (req, res) => {
   res.setHeader('Content-Type', 'application/json');
@@ -869,12 +1204,16 @@ if (process.env.NODE_ENV !== 'production' || process.env.RUN_SERVER) {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Trakt Addon Server Started`);
     console.log(`📋 Configuration: ${SERVER_URL}/configure`);
-    console.log(`📦 Manifest: ${SERVER_URL}/manifest.json`);
+    console.log(`📦 Default Manifest: ${SERVER_URL}/manifest.json`);
+    console.log(`📦 Configured Manifest Example: ${SERVER_URL}/configured/eyJjbGllbnRJZCI6Ii4uLiJ9/manifest.json`);
     console.log(`🔐 OAuth: ${SERVER_URL}/oauth/initiate`);
     console.log(`🧪 Health: ${SERVER_URL}/health`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`⚡ Server URL: ${SERVER_URL}`);
     console.log(`🔧 Features: Watched/Unwatched, Season Watched, Ratings`);
+    console.log(`🎨 Rating Patterns: Original, Pattern 1, Pattern 6`);
+    console.log(`📊 Stats Display: Customizable Trakt stats (choose any 3)`);
+    console.log(`\n🔧 IMPORTANT: Addon now shows "Configure" button in Stremio!`);
   });
 }
 
