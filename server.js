@@ -824,63 +824,65 @@ async function refreshTraktTokens(userConfig) {
 
     console.log(`[TOKEN REFRESH] Refreshing tokens for configId: ${configId}`);
 
-    const response = await fetch('https://api.trakt.tv/oauth/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        refresh_token: refresh_token,
-        client_id: clientId,
-        client_secret: '',
-        redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
-        grant_type: 'refresh_token'
-      })
-    });
+    // Add timeout and better error handling for Vercel
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Token refresh failed: ${response.status} - ${errorText}`);
-    }
+    try {
+      const response = await fetch('https://api.trakt.tv/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          refresh_token: refresh_token,
+          client_id: clientId,
+          client_secret: '',
+          redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+          grant_type: 'refresh_token'
+        }),
+        signal: controller.signal
+      });
 
-    const newTokens = await response.json();
-    newTokens.expires_at = Date.now() + (newTokens.expires_in * 1000);
+      clearTimeout(timeoutId);
 
-    // Update user info
-    const userResponse = await fetch('https://api.trakt.tv/users/settings', {
-      headers: {
-        'Authorization': `Bearer ${newTokens.access_token}`,
-        'trakt-api-version': '2',
-        'trakt-api-key': clientId
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Token refresh failed: ${response.status} - ${errorText}`);
       }
-    });
 
-    if (userResponse.ok) {
-      const userData = await userResponse.json();
-      newTokens.username = userData.user?.username || 'Trakt User';
-    }
+      const newTokens = await response.json();
+      newTokens.expires_at = Date.now() + (newTokens.expires_in * 1000);
 
-    // Update Upstash if using Upstash storage
-    if (upstashUrl && upstashToken && configId) {
-      try {
-        const tokensKey = `trakt_tokens:${configId}`;
-        await upstashSet(upstashUrl, upstashToken, tokensKey, JSON.stringify(newTokens), 90 * 24 * 60 * 60);
-
-        // Update local cache
-        upstashTokenCache.set(configId, {
-          tokens: newTokens,
-          timestamp: Date.now()
-        });
-
-        console.log(`[TOKEN REFRESH] Updated tokens in Upstash for ${configId}`);
-      } catch (upstashError) {
-        console.error(`[TOKEN REFRESH] Failed to update Upstash: ${upstashError.message}`);
+      // Skip Upstash update on Vercel if network is problematic
+      const isVercel = process.env.VERCEL || process.env.VERCEL_URL;
+      
+      if (!isVercel && upstashUrl && upstashToken && configId) {
+        try {
+          const tokensKey = `trakt_tokens:${configId}`;
+          await upstashSet(upstashUrl, upstashToken, tokensKey, JSON.stringify(newTokens), 90 * 24 * 60 * 60);
+          upstashTokenCache.set(configId, {
+            tokens: newTokens,
+            timestamp: Date.now()
+          });
+          console.log(`[TOKEN REFRESH] Updated tokens in Upstash for ${configId}`);
+        } catch (upstashError) {
+          console.error(`[TOKEN REFRESH] Failed to update Upstash: ${upstashError.message}`);
+        }
       }
-    }
 
-    return newTokens;
+      return newTokens;
+
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        console.error('[TOKEN REFRESH] Request timeout');
+        throw new Error('Token refresh timeout - please try again');
+      }
+      throw fetchError;
+    }
 
   } catch (error) {
     console.error(`[TOKEN REFRESH] Error: ${error.message}`);
-    throw error;
+    // Don't throw the error, just return null so we can continue with existing token
+    return null;
   }
 }
 
