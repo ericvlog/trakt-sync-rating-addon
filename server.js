@@ -56,7 +56,7 @@ app.options('*', (req, res) => {
 });
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(join(__dirname, 'public')));
 
 // Store OAuth states and pending requests
 const oauthStates = new Map();
