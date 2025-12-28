@@ -799,42 +799,43 @@
                 <span id="upstashStatus" style="margin-left: 10px; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem;"></span>
             </div>
 
+            <div class="warning-box">
+                <strong>⚠️ Docker Network Issue Detected:</strong> If testing Upstash fails in Docker but works in browser, the addon will now use local cache as fallback. Streams will still appear in Stremio.
+            </div>
+
             <div class="form-group">
-<label for="clientId">
-    Trakt Client ID 
-    <a href="https://trakt.tv/oauth/applications" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
-         (Get it here)
-    </a>
-    <span class="tooltip" style="margin-left: 5px;">
-        ⓘ
-        <span class="tooltiptext">
-            Steps:<br>
-            1. Click "NEW APPLICATION"<br>
-            2. Name: "Stremio Trakt Addon"<br>
-            3. Redirect URI: <code>urn:ietf:wg:oauth:2.0:oob</code><br>
-            4. Copy the Client ID
-        </span>
-    </span>
-</label>
+                <label for="clientId">Trakt Client ID
+                    <span class="tooltip">
+                        ⓘ
+                        <span class="tooltiptext">
+                            Get your Trakt Client ID from:<br>
+                            <a href="https://trakt.tv/oauth/applications" target="_blank" class="info-link">https://trakt.tv/oauth/applications</a><br><br>
+                            Steps:<br>
+                            1. Click "NEW APPLICATION"<br>
+                            2. Name: "Stremio Trakt Addon"<br>
+                            3. Redirect URI: <code>urn:ietf:wg:oauth:2.0:oob</code><br>
+                            4. Copy the Client ID
+                        </span>
+                    </span>
+                </label>
                 <input type="text" id="clientId" placeholder="Enter your Trakt Client ID">
             </div>
 
-<div class="form-group">
-    <label for="tmdbKey">
-        TMDB API Key (Optional)
-        <a href="https://www.themoviedb.org/settings/api" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
-             (Get it here)
-        </a>
-        <span class="tooltip" style="margin-left: 5px;">
-            ⓘ
-            <span class="tooltiptext">
-                Used to fetch movie/show titles for better display.<br>
-                Not required for basic functionality.
-            </span>
-        </span>
-    </label>
-    <input type="password" id="tmdbKey" placeholder="Enter TMDB API Key (optional)">
-</div>
+            <div class="form-group">
+                <label for="tmdbKey">TMDB API Key (Optional)
+                    <span class="tooltip">
+                        ⓘ
+                        <span class="tooltiptext">
+                            Get from:<br>
+                            <a href="https://www.themoviedb.org/settings/api" target="_blank" class="info-link">https://www.themoviedb.org/settings/api</a><br><br>
+                            Used to fetch movie/show titles for better display.<br>
+                            Not required for basic functionality.
+                        </span>
+                    </span>
+                </label>
+                <input type="password" id="tmdbKey" placeholder="Enter TMDB API Key (optional)">
+            </div>
+
             <div class="btn-group">
                 <button class="btn" onclick="startAuth()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
