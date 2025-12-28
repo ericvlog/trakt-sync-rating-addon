@@ -3,301 +3,1161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trakt Sync & Rating - Stremio Addon</title>
+    <title>Trakt Sync & Rate - Stremio Addon</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: #2a2a2a; border-radius: 10px; }
-        h1 { color: #8ef; margin-bottom: 10px; }
-        .step { background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #667eea; }
-        .step h3 { color: #9f9; margin-bottom: 15px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #ccc; font-weight: 600; }
-        input, select { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #444; border-radius: 5px; color: #fff; font-size: 14px; }
-        input:focus, select:focus { outline: none; border-color: #8ef; }
-        .btn { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 600; margin-right: 10px; margin-bottom: 10px; transition: all 0.2s; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .btn-auth { background: #17a2b8; }
-        .btn-auth:hover { background: #138496; }
-        .btn-warning { background: #fd7e14; }
-        .btn-warning:hover { background: #e8590c; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-        .btn-stremio { background: #2c3e50; }
-        .btn-stremio:hover { background: #34495e; }
-        .help-text { color: #888; font-size: 12px; margin-top: 5px; }
-        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
-        .status-success { background: #155724; color: #d4edda; }
-        .status-warning { background: #856404; color: #fff3cd; }
-        .status-error { background: #721c24; color: #f8d7da; }
-        .addon-url { background: #1a1a1a; padding: 15px; border-radius: 5px; margin: 15px 0; font-family: monospace; word-break: break-all; border: 1px solid #444; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        /* Rating presets */
-        .rating-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #444; }
-        .rating-presets { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
-        .rating-preset { background: #1a1a1a; border: 2px solid #444; border-radius: 5px; padding: 12px; min-width: 60px; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .rating-preset:hover { border-color: #8ef; }
-        .rating-preset.selected { background: #155724; border-color: #28a745; }
-        .rating-preset.selected .stars { color: #ffd700; }
-        .rating-preset .stars { color: #666; font-size: 12px; margin-bottom: 5px; }
-        .rating-preset .value { font-weight: bold; font-size: 16px; }
-        .rating-count { color: #8ef; font-weight: bold; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
 
-        /* Preview sections */
-        .preview-section { background: #2a2a2a; padding: 15px; border-radius: 6px; margin: 15px 0; }
-        .preview-section h4 { color: #8ef; margin-bottom: 10px; }
-        .preview-item { margin: 5px 0; padding: 8px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid #444; white-space: pre-line; font-family: monospace; font-size: 13px; line-height: 1.4; }
-        .preview-item.watched { border-left-color: #28a745; }
-        .preview-item.unwatched { border-left-color: #dc3545; }
-        .preview-item.rating { border-left-color: #ffd700; }
-        .preview-item.season { border-left-color: #17a2b8; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-        /* Configuration sections */
-        .config-section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #444; }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
 
-        /* Toggle switch */
-        .toggle { display: flex; align-items: center; margin: 15px 0; }
-        .toggle input[type="checkbox"] { display: none; }
-        .toggle-slider { width: 50px; height: 26px; background: #444; border-radius: 13px; position: relative; cursor: pointer; margin-right: 10px; transition: background 0.3s; }
-        .toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s; }
-        .toggle input:checked + .toggle-slider { background: #28a745; }
-        .toggle input:checked + .toggle-slider:before { transform: translateX(24px); }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
 
-        /* Auth popup */
-        #authPopup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
-        .auth-popup-content { background:white; color:#333; padding:2rem; border-radius:10px; max-width:500px; width:90%; text-align:center; }
-        .auth-popup-content h2 { color:#17a2b8; margin-bottom:15px; }
+        .tagline {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
 
-        /* Instructions */
-        .instructions { background: #1e3a5f; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #667eea; }
-        .instructions ol { margin-left: 20px; margin-top: 10px; }
-        .instructions li { margin-bottom: 8px; }
+        .section {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
 
-        /* Button group */
-        .button-group { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+        .section:hover {
+            transform: translateY(-2px);
+        }
 
-        /* Stremio install info */
-        .stremio-install-info { background: #2c3e50; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #3498db; }
-        .stremio-install-info h4 { color: #3498db; margin-bottom: 10px; }
+        .section-title {
+            font-size: 1.4rem;
+            color: #60a5fa;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-        /* Addon name preview */
-        .addon-name-preview { background: #2a2a2a; padding: 10px; border-radius: 5px; margin: 10px 0; font-weight: bold; }
+        .section-title svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #60a5fa;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
 
         /* Rating Style Selection */
-        .rating-style-selector { margin-top: 20px; }
-        .rating-style-options { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-        .rating-style-option { display: flex; align-items: center; padding: 15px; background: #1a1a1a; border: 2px solid #444; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
-        .rating-style-option:hover { border-color: #8ef; }
-        .rating-style-option.selected { border-color: #28a745; background: rgba(40, 167, 69, 0.1); }
-        .rating-style-icon { font-size: 2.5rem; min-width: 60px; text-align: center; margin-right: 15px; }
-        .rating-style-info { flex: 1; }
-        .rating-style-name { font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 5px; }
-        .rating-style-description { color: #aaa; font-size: 0.9rem; }
-        .rating-style-visual { margin-top: 10px; text-align: center; }
-        .stars-example { color: #ffd700; font-size: 1.5rem; letter-spacing: 2px; }
-        .hearts-example { color: #ff4081; font-size: 1.5rem; letter-spacing: 2px; }
-        .progress-example { color: #8ef; font-size: 1.5rem; letter-spacing: 2px; }
-        .stremio-preview-text { font-family: monospace; background: #2c3e50; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.9rem; color: #ccc; white-space: pre-line; line-height: 1.4; }
+        .rating-style-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
 
-        /* Rating value slider */
-        .rating-value-slider { margin: 20px 0; }
-        .slider-container { display: flex; align-items: center; gap: 15px; }
-        .slider-value { min-width: 40px; text-align: center; font-weight: bold; color: #8ef; }
-        .rating-slider { flex: 1; height: 8px; -webkit-appearance: none; background: linear-gradient(to right, #dc3545, #fd7e14, #ffc107, #28a745, #8ef); border-radius: 4px; outline: none; }
-        .rating-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #fff; border-radius: 50%; cursor: pointer; border: 2px solid #8ef; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .rating-slider::-moz-range-thumb { width: 24px; height: 24px; background: #fff; border-radius: 50%; cursor: pointer; border: 2px solid #8ef; }
+        .rating-style-option {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-        /* Bulk rating selection */
-        .bulk-rating-buttons { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
-        .bulk-rating-btn { background: #17a2b8; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; }
-        .bulk-rating-btn:hover { background: #138496; }
-        .bulk-rating-btn.all { background: #28a745; }
-        .bulk-rating-btn.none { background: #dc3545; }
+        .rating-style-option:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+            transform: translateY(-2px);
+        }
 
-        /* Pattern preview boxes */
-        .pattern-preview { margin-top: 15px; }
-        .pattern-preview-box { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .pattern-preview-item { flex: 1; min-width: 200px; padding: 10px; background: #1a1a1a; border-radius: 5px; border: 1px solid #444; font-family: monospace; white-space: pre-line; font-size: 12px; line-height: 1.3; }
-        .pattern-preview-item.active { border-color: #28a745; background: rgba(40, 167, 69, 0.1); }
+        .rating-style-option.selected {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
 
-        /* Pattern selection */
-        .pattern-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .pattern-option { display: flex; align-items: flex-start; padding: 15px; background: #1a1a1a; border: 2px solid #444; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
-        .pattern-option:hover { border-color: #8ef; }
-        .pattern-option.selected { border-color: #28a745; background: rgba(40, 167, 69, 0.1); }
-        .pattern-radio { margin-right: 15px; margin-top: 3px; }
-        .pattern-info { flex: 1; }
-        .pattern-name { font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 5px; }
-        .pattern-description { color: #aaa; font-size: 0.9rem; margin-bottom: 10px; }
-        .pattern-example { background: #2c3e50; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-line; font-size: 0.85rem; line-height: 1.3; color: #ccc; }
-        
-        /* Stats format options */
-        .stats-format-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .stats-format-option { display: flex; align-items: flex-start; padding: 15px; background: #1a1a1a; border: 2px solid #444; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
-        .stats-format-option:hover { border-color: #8ef; }
-        .stats-format-option.selected { border-color: #28a745; background: rgba(40, 167, 69, 0.1); }
-        .stats-format-radio { margin-right: 15px; margin-top: 3px; }
-        .stats-format-info { flex: 1; }
-        .stats-format-name { font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 5px; }
-        .stats-format-example { background: #2c3e50; padding: 8px; border-radius: 5px; font-family: monospace; white-space: pre-line; font-size: 0.8rem; line-height: 1.3; color: #ccc; }
-        
-        /* Stats info note */
-        .stats-info-note { background: #1e3a5f; padding: 12px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #ffd700; }
-        .stats-info-note h5 { color: #ffd700; margin-bottom: 5px; }
-        
-        /* Stats selection */
-        .stats-selection { margin-top: 20px; }
-        .stats-selectors { display: flex; gap: 15px; margin-top: 15px; }
-        .stats-selector { flex: 1; }
-        .stats-selector label { display: block; margin-bottom: 8px; font-weight: bold; color: #8ef; }
-        .stats-preview-box { margin-top: 15px; padding: 15px; background: #2c3e50; border-radius: 8px; }
-        .stats-preview-title { font-weight: bold; color: #fff; margin-bottom: 10px; }
-        .stats-preview-example { font-family: monospace; white-space: pre-line; font-size: 0.85rem; line-height: 1.4; color: #ccc; }
-        
-        /* Stat descriptions */
-        .stat-descriptions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
-        .stat-description-item { background: #2a2a2a; padding: 10px; border-radius: 5px; border-left: 3px solid #8ef; }
-        .stat-description-emoji { font-size: 1.2rem; margin-right: 8px; }
-        .stat-description-name { font-weight: bold; color: #fff; }
-        .stat-description-text { color: #aaa; font-size: 0.8rem; margin-top: 5px; }
-</style>
+        .style-preview {
+            font-size: 24px;
+            margin-bottom: 10px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .style-label {
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        /* Rating Presets */
+        .rating-presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .rating-preset {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .rating-preset:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        .rating-preset.selected {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .rating-preset .stars {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #fbbf24;
+        }
+
+        .rating-preset .value {
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        /* Pattern Options - COMPACT VERSION */
+        .pattern-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pattern-option {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pattern-option:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        .pattern-option.selected {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .pattern-option input[type="radio"] {
+            margin-right: 10px;
+            accent-color: #60a5fa;
+        }
+
+        .pattern-preview-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pattern-preview-title {
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 10px;
+        }
+
+        .pattern-preview {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Stats Format Options */
+        .stats-format-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stats-format-option {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .stats-format-option:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        .stats-format-option.selected {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .stats-format-option input[type="radio"] {
+            margin-right: 10px;
+            accent-color: #60a5fa;
+        }
+
+        /* Stats Selection */
+        .stats-selection {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-select {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .selected-stats-display {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+        }
+
+        /* Preview Section */
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .preview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .preview-category {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .preview-category-title {
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stream-count {
+            background: rgba(96, 165, 250, 0.2);
+            color: #60a5fa;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .preview-content {
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .preview-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #60a5fa;
+        }
+
+        .preview-item.watched {
+            border-left-color: #10b981;
+        }
+
+        .preview-item.unwatched {
+            border-left-color: #ef4444;
+        }
+
+        .preview-item.season {
+            border-left-color: #8b5cf6;
+        }
+
+        .preview-item.rating {
+            border-left-color: #f59e0b;
+        }
+
+        .preview-item.watchlist {
+            border-left-color: #3b82f6;
+        }
+
+        .preview-item.watchlist-remove {
+            border-left-color: #ef4444;
+        }
+
+        /* Auth Popup */
+        .auth-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-content {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-title {
+            color: #60a5fa;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .auth-steps {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 10px;
+        }
+
+        .auth-step {
+            margin-bottom: 15px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .auth-step:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            background: #60a5fa;
+            border-radius: 50%;
+        }
+
+        .auth-status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status {
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .status-success {
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-error {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-warning {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        /* Result Section */
+        .result-section {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid #10b981;
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .addon-url {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Slider Styles */
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .slider-value {
+            background: rgba(96, 165, 250, 0.2);
+            color: #60a5fa;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #60a5fa;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #3b82f6;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .rating-style-options,
+            .stats-selection {
+                flex-direction: column;
+            }
+
+            .rating-style-option,
+            .stat-select {
+                min-width: 100%;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 300px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -150px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            font-weight: normal;
+            line-height: 1.4;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Stats Examples */
+        .stats-examples {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-example {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-family: monospace;
+            color: #94a3b8;
+        }
+
+        /* Compact pattern labels */
+        .pattern-label {
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .pattern-description {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        /* Upstash status indicator */
+        .upstash-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .upstash-connected {
+            background-color: #10b981;
+        }
+
+        .upstash-disconnected {
+            background-color: #ef4444;
+        }
+
+        .upstash-warning {
+            background-color: #f59e0b;
+        }
+
+        .info-link {
+            color: #60a5fa;
+            text-decoration: none;
+            border-bottom: 1px dashed #60a5fa;
+        }
+
+        .info-link:hover {
+            color: #3b82f6;
+            border-bottom-style: solid;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            color: #f59e0b;
+            font-size: 0.9rem;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            color: #60a5fa;
+            font-size: 0.9rem;
+        }
+
+        .feature-description {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-left: 28px;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎬 Trakt Sync & Rating Addon</h1>
-            <p>Sync watched states and rate content on Trakt.tv</p>
-        </div>
+        <header>
+            <h1>🎬 Trakt Sync & Rate v2.2.1</h1>
+            <p class="tagline">Create your personalized Stremio addon to sync watched states, rate content, and manage watchlist on Trakt.tv with persistent Upstash Redis storage</p>
+            <div class="info-box">
+                <strong>🆕 NEW FEATURE:</strong> "Keep only latest watched state" - Automatically deletes older duplicates when marking as watched! Now with emoji selection: 🔄 🧹 ⚡
+            </div>
+        </header>
 
-        <div class="step">
-            <h3>1. Create Trakt API App</h3>
-            <p>Go to <a href="https://trakt.tv/oauth/applications" target="_blank" style="color:#8ef;">Trakt API Applications</a> and create a new app:</p>
-            <ul style="margin-left: 20px; margin-top: 10px; color: #ccc;">
-                <li>Name: "Stremio Trakt Sync"</li>
-                <li>Redirect URI: <code>urn:ietf:wg:oauth:2.0:oob</code></li>
-                <li>Click "Save App" and copy the Client ID</li>
-            </ul>
-        </div>
+        <!-- Authentication Section -->
+        <section class="section">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Authentication & Storage
+            </h2>
 
-        <div class="step">
-            <h3>2. Configure Your Addon</h3>
+            <!-- Upstash Redis Configuration -->
+            <div class="form-group">
+                <label for="upstashUrl">Upstash Redis URL (For Persistent Storage)
+                    <span class="tooltip">
+                        ⓘ
+                        <span class="tooltiptext">
+                            <strong>Trakt tokens expire every 3 months!</strong><br><br>
+                            For persistent connection, get a free Redis database from:<br>
+                            <a href="https://upstash.com/?ref=stremio-trakt" target="_blank" class="info-link">https://upstash.com/</a><br><br>
+                            Steps:<br>
+                            1. Create free account at Upstash<br>
+                            2. Create a new Redis database<br>
+                            3. Copy the "REST URL"<br>
+                            4. Paste it here
+                        </span>
+                    </span>
+                </label>
+                <input type="text" id="upstashUrl" placeholder="https://us1-cool-sun-12345.upstash.io">
+                <div style="margin-top: 8px; font-size: 0.9rem; color: #94a3b8;">
+                    <a href="https://upstash.com/?ref=stremio-trakt" target="_blank" class="info-link">
+                        ↗ Get free Upstash Redis database (required for persistent connection)
+                    </a>
+                </div>
+            </div>
 
             <div class="form-group">
-                <label for="clientId">Trakt Client ID *</label>
-                <input type="text" id="clientId" placeholder="Enter your Trakt Client ID" required>
+                <label for="upstashToken">Upstash Token
+                    <span class="tooltip">
+                        ⓘ
+                        <span class="tooltiptext">
+                            Get your Upstash token from the database dashboard:<br>
+                            1. Go to your Upstash dashboard<br>
+                            2. Select your Redis database<br>
+                            3. Click "Show" next to REST Token<br>
+                            4. Copy the token and paste here<br><br>
+                            <em>Note: This token is only stored in your browser and addon URL</em>
+                        </span>
+                    </span>
+                </label>
+                <input type="password" id="upstashToken" placeholder="Enter your Upstash REST Token">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-small btn-secondary" onclick="testUpstashConnection()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    Test Upstash Connection
+                </button>
+                <span id="upstashStatus" style="margin-left: 10px; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem;"></span>
             </div>
 
             <div class="form-group">
-                <label for="tmdbKey">TMDB API Key (Optional)</label>
-                <input type="text" id="tmdbKey" placeholder="For better titles - get from themoviedb.org">
-                <div class="help-text">Get free API key from: https://www.themoviedb.org/settings/api</div>
+<label for="clientId">
+    Trakt Client ID 
+    <a href="https://trakt.tv/oauth/applications" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
+         (Get it here)
+    </a>
+    <span class="tooltip" style="margin-left: 5px;">
+        ⓘ
+        <span class="tooltiptext">
+            Steps:<br>
+            1. Click "NEW APPLICATION"<br>
+            2. Name: "Stremio Trakt Addon"<br>
+            3. Redirect URI: <code>urn:ietf:wg:oauth:2.0:oob</code><br>
+            4. Copy the Client ID
+        </span>
+    </span>
+</label>
+                <input type="text" id="clientId" placeholder="Enter your Trakt Client ID">
             </div>
 
-            <div class="config-section">
-                <h4>👤 Addon Display Name</h4>
-                <div class="toggle">
-                    <input type="checkbox" id="showUsernameInName" checked>
-                    <label for="showUsernameInName" class="toggle-slider"></label>
-                    <label for="showUsernameInName" style="cursor: pointer;">Show username in addon name</label>
-                </div>
-                <div class="help-text">If enabled, addon will appear as "Trakt Sync & Rate (username)" in Stremio</div>
-                <div id="addonNamePreview" class="addon-name-preview">Trakt Sync & Rate (TraktUser)</div>
+<div class="form-group">
+    <label for="tmdbKey">
+        TMDB API Key (Optional)
+        <a href="https://www.themoviedb.org/settings/api" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
+             (Get it here)
+        </a>
+        <span class="tooltip" style="margin-left: 5px;">
+            ⓘ
+            <span class="tooltiptext">
+                Used to fetch movie/show titles for better display.<br>
+                Not required for basic functionality.
+            </span>
+        </span>
+    </label>
+    <input type="password" id="tmdbKey" placeholder="Enter TMDB API Key (optional)">
+</div>
+            <div class="btn-group">
+                <button class="btn" onclick="startAuth()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    Connect to Trakt
+                </button>
             </div>
 
-            <div class="config-section">
-                <h4>✅ Watched State Sync</h4>
-                <div class="toggle">
-                    <input type="checkbox" id="enableWatched" checked>
-                    <label for="enableWatched" class="toggle-slider"></label>
-                    <label for="enableWatched" style="cursor: pointer;">Enable Watched State Sync</label>
-                </div>
-                <div class="help-text">Shows "Mark as Watched" options for movies and episodes</div>
+            <div id="mainAuthStatus" class="status status-warning">
+                <span class="upstash-indicator upstash-warning"></span>
+                Not connected to Trakt
             </div>
 
-            <div class="config-section">
-                <h4>❌ Unwatched State Sync</h4>
-                <div class="toggle">
-                    <input type="checkbox" id="enableUnwatched" checked>
-                    <label for="enableUnwatched" class="toggle-slider"></label>
-                    <label for="enableUnwatched" style="cursor: pointer;">Enable Unwatched State Sync</label>
+            <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <strong>💡 Important:</strong> Without Upstash Redis, Trakt tokens expire every 3 months and you'll need to reconnect. With Upstash, your connection remains persistent. <strong>v2.2.1 now includes "Keep Single Watched State" feature with emoji selection!</strong>
+            </div>
+        </section>
+
+        <!-- Addon Settings Section -->
+        <section class="section">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+                </svg>
+                Addon Settings
+            </h2>
+
+            <div class="form-group">
+                <label for="addonName">Addon Display Name</label>
+                <div id="addonNamePreview" style="background: rgba(15, 23, 42, 0.8); border-radius: 10px; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    Trakt Sync & Rate
                 </div>
-                <div class="help-text">Shows "Mark as Unwatched" options for movies and episodes</div>
             </div>
 
-            <div class="config-section">
-                <h4>📅 Season Watched Option</h4>
-                <div class="toggle">
-                    <input type="checkbox" id="enableSeasonWatched" checked>
-                    <label for="enableSeasonWatched" class="toggle-slider"></label>
-                    <label for="enableSeasonWatched" style="cursor: pointer;">Enable Mark Season as Watched</label>
-                </div>
-                <div class="help-text">When viewing an episode, show option to mark the entire season as watched</div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="showUsername" checked>
+                <label for="showUsername">Show username in addon name</label>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="section">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 12 20 22 4 22 4 12"/>
+                    <rect x="2" y="7" width="20" height="5"/>
+                    <line x1="12" y1="22" x2="12" y2="7"/>
+                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+                </svg>
+                Features to Enable
+            </h2>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableWatched" checked>
+                <label for="enableWatched">Mark as Watched</label>
             </div>
 
-            <div class="config-section">
-                <h4>⭐ Rating Options</h4>
-                <div class="toggle">
-                    <input type="checkbox" id="enableRatings" checked>
-                    <label for="enableRatings" class="toggle-slider"></label>
-                    <label for="enableRatings" style="cursor: pointer;">Enable Ratings</label>
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableUnwatched" checked>
+                <label for="enableUnwatched">Mark as Unwatched</label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableSeasonWatched" checked>
+                <label for="enableSeasonWatched">Mark Entire Season as Watched (Series)</label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableWatchlist" checked>
+                <label for="enableWatchlist">Add to Watchlist</label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableRemoveFromWatchlist" checked>
+                <label for="enableRemoveFromWatchlist">Remove from Watchlist</label>
+            </div>
+
+            <!-- NEW FEATURE: Keep Single Watched State -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="keepSingleWatchedState">
+                <label for="keepSingleWatchedState">
+                    <strong>Keep only latest watched state (delete duplicates)</strong>
+                </label>
+            </div>
+            <div class="feature-description">
+                When enabled, older watched entries for the same movie/episode will be automatically deleted when:<br>
+                1. Marking as watched directly<br>
+                2. Rating with "Automatically mark as played when rating" enabled<br>
+                This helps maintain a clean Trakt history.
+            </div>
+
+            <!-- NEW: Keep Single State Display Options -->
+            <div class="checkbox-group" id="keepSingleStateDisplayGroup" style="margin-left: 20px; display: none;">
+                <label for="keepSingleStateDisplay">Display option for "Keep Single State" text:</label>
+                <div style="margin-top: 8px; margin-left: 10px;">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div>
+                            <input type="radio" id="keepSingleInline" name="keepSingleDisplay" value="inline" checked>
+                            <label for="keepSingleInline">Show inline "Keeps only latest watched state"</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="keepSingleNewline" name="keepSingleDisplay" value="newline">
+                            <label for="keepSingleNewline">Show on new line</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="keepSingleNone" name="keepSingleDisplay" value="none">
+                            <label for="keepSingleNone">Don't show text</label>
+                        </div>
+                    </div>
                 </div>
-                <div class="help-text">Shows rating options for content</div>
 
-                <div id="ratingSection" class="rating-section" style="display: block;">
-                    <p>Select your preferred ratings: <span id="selectedCount" class="rating-count">0/10</span></p>
+                <!-- NEW: Emoji Selection for Keep Single State -->
+                <div style="margin-top: 12px;">
+                    <label for="keepSingleStateEmoji">Choose emoji style for "Keeps only latest watched state":</label>
+                    <div style="margin-top: 8px; margin-left: 10px;">
+                        <div style="display: flex; gap: 12px;">
+                            <div>
+                                <input type="radio" id="emojiRefresh" name="keepSingleStateEmoji" value="🔄" checked>
+                                <label for="emojiRefresh">🔄 Refresh</label>
+                            </div>
+                            <div>
+                                <input type="radio" id="emojiBroom" name="keepSingleStateEmoji" value="🧹">
+                                <label for="emojiBroom">🧹 Broom</label>
+                            </div>
+                            <div>
+                                <input type="radio" id="emojiZap" name="keepSingleStateEmoji" value="⚡">
+                                <label for="emojiZap">⚡ Zap</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    <div class="bulk-rating-buttons">
-                        <button type="button" onclick="selectAllRatings()" class="bulk-rating-btn all">Select All (1-10)</button>
-                        <button type="button" onclick="selectDefaultRatings()" class="bulk-rating-btn">Use Default (5, 7, 10)</button>
-                        <button type="button" onclick="clearAllRatings()" class="bulk-rating-btn none">Clear All</button>
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableRatings" checked>
+                <label for="enableRatings">Enable Ratings</label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="markAsPlayedOnRate">
+                <label for="markAsPlayedOnRate">Automatically mark as played when rating</label>
+            </div>
+        </section>
+
+        <!-- Ratings Section -->
+        <section id="ratingSection" class="section" style="display: block;">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                Ratings Configuration
+            </h2>
+
+            <div class="form-group">
+                <label>Select Rating Values to Show
+                    <span id="selectedCount" class="slider-value" style="margin-left: 10px;">3/10</span>
+                </label>
+
+                <div class="rating-presets" id="ratingPresets">
+                    <!-- Rating presets will be generated here -->
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-small btn-secondary" onclick="selectAllRatings()">Select All</button>
+                    <button class="btn btn-small btn-secondary" onclick="clearAllRatings()">Clear All</button>
+                    <button class="btn btn-small btn-secondary" onclick="selectDefaultRatings()">Default (5, 7, 10)</button>
+                </div>
+            </div>
+
+            <!-- Rating Style Selection -->
+            <div class="form-group">
+                <label>Rating Visual Style
+                    <span class="tooltip">
+                        ⓘ
+                        <span class="tooltiptext">
+                            Choose how ratings will be displayed in Stremio:<br>
+                            • Stars: ★★★★★☆☆☆☆☆<br>
+                            • Hearts: ❤️❤️❤️🤍🤍🤍🤍🤍🤍🤍<br>
+                            • Progress: ▰▰▰▱▱▱▱▱▱▱
+                        </span>
+                    </span>
+                </label>
+
+                <div class="rating-style-options">
+                    <div class="rating-style-option selected" id="style-stars" onclick="selectRatingStyle('stars')">
+                        <div class="style-preview" id="starsVisual">★★★★★☆☆☆☆☆</div>
+                        <div class="style-label">Stars</div>
+                    </div>
+                    <div class="rating-style-option" id="style-hearts" onclick="selectRatingStyle('hearts')">
+                        <div class="style-preview" id="heartsVisual">❤️❤️❤️❤️❤️🤍🤍🤍🤍🤍</div>
+                        <div class="style-label">Hearts</div>
+                    </div>
+                    <div class="rating-style-option" id="style-progress" onclick="selectRatingStyle('progress')">
+                        <div class="style-preview" id="progressVisual">▰▰▰▰▰▱▱▱▱▱</div>
+                        <div class="style-label">Progress</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rating Pattern Selection - COMPACT VERSION -->
+            <div class="form-group">
+                <label>Rating Display Pattern</label>
+
+                <div class="pattern-options">
+                    <div class="pattern-option selected" id="pattern-option-0" onclick="selectRatingPattern(0)">
+                        <div style="display: flex; align-items: center;">
+                            <input type="radio" name="ratingPattern" id="pattern0" checked>
+                            <div>
+                                <div class="pattern-label">Simple Rating</div>
+                                <div class="pattern-description">Basic rating with visual stars</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="rating-presets" id="ratingPresets">
-                        <!-- Generated by JavaScript -->
+                    <div class="pattern-option" id="pattern-option-1" onclick="selectRatingPattern(1)">
+                        <div style="display: flex; align-items: center;">
+                            <input type="radio" name="ratingPattern" id="pattern1">
+                            <div>
+                                <div class="pattern-label">Emoji-First Vertical</div>
+                                <div class="pattern-description">Detailed rating with stats in vertical format</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="help-text">Click to select/deselect. These will appear as separate rating options in Stremio.</div>
+
+                    <div class="pattern-option" id="pattern-option-6" onclick="selectRatingPattern(6)">
+                        <div style="display: flex; align-items: center;">
+                            <input type="radio" name="ratingPattern" id="pattern6">
+                            <div>
+                                <div class="pattern-label">Cinematic Rating Card</div>
+                                <div class="pattern-description">Professional rating card with media type</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pattern-preview-container">
+                    <div class="pattern-preview-title">Preview:</div>
+                    <div class="pattern-preview" id="currentPatternPreview">
+                        ★★★★★☆☆☆☆☆
+                        "The Matrix" 5/10
+                    </div>
                 </div>
             </div>
 
-            <!-- NEW: Custom Stats Selection -->
-            <div class="config-section stats-selection">
-                <h4>📊 Custom Trakt Stats Selection</h4>
-                <p>Choose which 3 Trakt statistics to display (Line 4):</p>
-                
-                <div class="stats-selectors">
-                    <!-- Stat 1 -->
-                    <div class="stats-selector">
-                        <label for="stat1">Stat 1:</label>
-                        <select id="stat1" class="stat-selector">
-                            <option value="watchers">👁️ Watchers (currently watching)</option>
-                            <option value="plays" selected>▶️ Plays (total plays)</option>
+            <!-- Stats Format Selection -->
+            <div class="form-group">
+                <label>Stats Display Format</label>
+
+                <div class="stats-format-options">
+                    <div class="stats-format-option selected" id="stats-option-1" onclick="selectStatsFormat(1)">
+                        <input type="radio" name="statsFormat" id="stats1" checked>
+                        <label for="stats1" style="display: inline;">Format 1: Compact Stats (👁️ 3.1k watchers - ▶️ 5.8k plays)</label>
+                    </div>
+
+                    <div class="stats-format-option" id="stats-option-2" onclick="selectStatsFormat(2)">
+                        <input type="radio" name="statsFormat" id="stats2">
+                        <label for="stats2" style="display: inline;">Format 2: Detailed Stats (👁️ watchers: 3.1k | ▶️ plays: 5.8k)</label>
+                    </div>
+
+                    <div class="stats-format-option" id="stats-option-3" onclick="selectStatsFormat(3)">
+                        <input type="radio" name="statsFormat" id="stats3">
+                        <label for="stats3" style="display: inline;">Format 3: Minimal Stats (👁️ 3.1k | ▶️ 5.8k)</label>
+                    </div>
+
+                    <div class="stats-format-option" id="stats-option-4" onclick="selectStatsFormat(4)">
+                        <input type="radio" name="statsFormat" id="stats4">
+                        <label for="stats4" style="display: inline;">Format 4: Vertical Stats (multi-line)</label>
+                    </div>
+
+                    <div class="stats-format-option" id="stats-option-5" onclick="selectStatsFormat(5)">
+                        <input type="radio" name="statsFormat" id="stats5">
+                        <label for="stats5" style="display: inline;">Format 5: Balanced Stats (👁️ 3.1k watching | ▶️ 5.8k played)</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Selection -->
+            <div class="form-group">
+                <label>Select Trakt Stats to Display
+                    <span class="tooltip">
+                        ⓘ
+                        <span class="tooltiptext">
+                            Choose up to 3 stats from Trakt to display with ratings.<br>
+                            These will be shown in the rating stream titles.
+                        </span>
+                    </span>
+                </label>
+
+                <div class="stats-selection">
+                    <div class="stat-select">
+                        <label for="stat1">Stat 1</label>
+                        <select id="stat1Select">
+                            <option value="watchers">👁️ Watchers</option>
+                            <option value="plays" selected>▶️ Plays</option>
                             <option value="comments">💬 Comments</option>
                             <option value="lists">📋 Lists</option>
                             <option value="collectors">⭐ Collectors</option>
                             <option value="votes">👍 Votes</option>
                         </select>
                     </div>
-                    
-                    <!-- Stat 2 -->
-                    <div class="stats-selector">
-                        <label for="stat2">Stat 2:</label>
-                        <select id="stat2" class="stat-selector">
-                            <option value="watchers">👁️ Watchers (currently watching)</option>
-                            <option value="plays">▶️ Plays (total plays)</option>
+
+                    <div class="stat-select">
+                        <label for="stat2">Stat 2</label>
+                        <select id="stat2Select">
+                            <option value="watchers">👁️ Watchers</option>
+                            <option value="plays">▶️ Plays</option>
                             <option value="comments" selected>💬 Comments</option>
                             <option value="lists">📋 Lists</option>
                             <option value="collectors">⭐ Collectors</option>
                             <option value="votes">👍 Votes</option>
                         </select>
                     </div>
-                    
-                    <!-- Stat 3 -->
-                    <div class="stats-selector">
-                        <label for="stat3">Stat 3:</label>
-                        <select id="stat3" class="stat-selector">
-                            <option value="watchers" selected>👁️ Watchers (currently watching)</option>
-                            <option value="plays">▶️ Plays (total plays)</option>
+
+                    <div class="stat-select">
+                        <label for="stat3">Stat 3</label>
+                        <select id="stat3Select">
+                            <option value="watchers" selected>👁️ Watchers</option>
+                            <option value="plays">▶️ Plays</option>
                             <option value="comments">💬 Comments</option>
                             <option value="lists">📋 Lists</option>
                             <option value="collectors">⭐ Collectors</option>
@@ -305,1356 +1165,1481 @@
                         </select>
                     </div>
                 </div>
-                
-                <div class="help-text">Choose any 3 stats from Trakt's available statistics. Duplicate stats are allowed.</div>
-                
-                <!-- Stat Descriptions -->
-                <div class="stat-descriptions">
-                    <div class="stat-description-item">
-                        <div><span class="stat-description-emoji">👁️</span><span class="stat-description-name">Watchers</span></div>
-                        <div class="stat-description-text">Users currently watching RIGHT NOW (real-time)</div>
-                    </div>
-                    <div class="stat-description-item">
-                        <div><span class="stat-description-emoji">▶️</span><span class="stat-description-name">Plays</span></div>
-                        <div class="stat-description-text">Total number of plays (all-time)</div>
-                    </div>
-                    <div class="stat-description-item">
-                        <div><span class="stat-description-emoji">💬</span><span class="stat-description-name">Comments</span></div>
-                        <div class="stat-description-text">Number of user comments</div>
-                    </div>
-                    <div class="stat-description-item">
-                        <div><span class="stat-description-emoji">📋</span><span class="stat-description-name">Lists</span></div>
-                        <div class="stat-description-text">Appears in user lists</div>
-                    </div>
-                    <div class="stat-description-item">
-                        <div><span class="stat-description-emoji">⭐</span><span class="stat-description-name">Collectors</span></div>
-                        <div class="stat-description-text">Users who collected this</div>
-                    </div>
-                    <div class="stat-description-item">
-                        <div><span class="stat-description-emoji">👍</span><span class="stat-description-name">Votes</span></div>
-                        <div class="stat-description-text">Total votes/ratings</div>
-                    </div>
+
+                <div class="selected-stats-display">
+                    Selected Stats: <span id="selectedStatsDisplay">👁️ Watchers, ▶️ Plays, 💬 Comments</span>
                 </div>
             </div>
 
-            <!-- Stats Format Selection -->
-            <div class="config-section">
-                <h4>📐 Stats Display Format</h4>
-                <p>Choose how your selected stats appear:</p>
-                
-                <div class="stats-format-options">
-                    <!-- Option 1 -->
-                    <div class="stats-format-option selected" onclick="selectStatsFormat(1)" id="stats-option-1">
-                        <div class="stats-format-radio">
-                            <input type="radio" name="statsFormat" id="stats1" checked>
-                        </div>
-                        <div class="stats-format-info">
-                            <div class="stats-format-name">Format 1: Compact Stats</div>
-                            <div class="stats-format-example" id="stats-example-1">👁️ 3.1k watchers - ▶️ 5.8k plays - 💬 6 comments</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Option 2 -->
-                    <div class="stats-format-option" onclick="selectStatsFormat(2)" id="stats-option-2">
-                        <div class="stats-format-radio">
-                            <input type="radio" name="statsFormat" id="stats2">
-                        </div>
-                        <div class="stats-format-info">
-                            <div class="stats-format-name">Format 2: Detailed Stats</div>
-                            <div class="stats-format-example" id="stats-example-2">👁️ watchers: 3.1k | ▶️ plays: 5.8k | 💬 comments: 6</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Option 3 -->
-                    <div class="stats-format-option" onclick="selectStatsFormat(3)" id="stats-option-3">
-                        <div class="stats-format-radio">
-                            <input type="radio" name="statsFormat" id="stats3">
-                        </div>
-                        <div class="stats-format-info">
-                            <div class="stats-format-name">Format 3: Minimal Stats</div>
-                            <div class="stats-format-example" id="stats-example-3">👁️ 3.1k | ▶️ 5.8k | 💬 6</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Option 4 -->
-                    <div class="stats-format-option" onclick="selectStatsFormat(4)" id="stats-option-4">
-                        <div class="stats-format-radio">
-                            <input type="radio" name="statsFormat" id="stats4">
-                        </div>
-                        <div class="stats-format-info">
-                            <div class="stats-format-name">Format 4: Vertical Stats</div>
-                            <div class="stats-format-example" id="stats-example-4">👁️ 3.1k watchers
-▶️ 5.8k plays
-💬 6 comments</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Option 5 -->
-                    <div class="stats-format-option" onclick="selectStatsFormat(5)" id="stats-option-5">
-                        <div class="stats-format-radio">
-                            <input type="radio" name="statsFormat" id="stats5">
-                        </div>
-                        <div class="stats-format-info">
-                            <div class="stats-format-name">Format 5: Balanced Stats</div>
-                            <div class="stats-format-example" id="stats-example-5">👁️ 3.1k watching | ▶️ 5.8k played | 💬 6 commented</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="help-text">These are real Trakt stats fetched live from Trakt API (requires Client ID)</div>
-            </div>
-
-            <!-- Stats Information -->
-            <div class="stats-info-note">
-                <h5>📈 Real Trakt Statistics</h5>
-                <p><strong>Important:</strong> "Watchers" shows users CURRENTLY watching (real-time). This number changes constantly!</p>
-                <p class="help-text">Stats are cached for 30 minutes. Different content will show different stat values.</p>
-            </div>
-
-            <!-- Rating Display Pattern Selection -->
-            <div class="config-section">
-                <h4>🎬 Rating Display Pattern</h4>
-                <p>Choose how ratings appear in Stremio:</p>
-                
-                <div class="pattern-options">
-                    <!-- Pattern 0: Original -->
-                    <div class="pattern-option selected" onclick="selectRatingPattern(0)" id="pattern-option-0">
-                        <div class="pattern-radio">
-                            <input type="radio" name="ratingPattern" id="pattern0" checked>
-                        </div>
-                        <div class="pattern-info">
-                            <div class="pattern-name">Pattern 0: Original Layout</div>
-                            <div class="pattern-description">Simple rating visual followed by title</div>
-                            <div class="pattern-example" id="pattern0-example">★★★★★☆☆☆☆☆
-"The Matrix" 5/10</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Pattern 1: Emoji-First Vertical -->
-                    <div class="pattern-option" onclick="selectRatingPattern(1)" id="pattern-option-1">
-                        <div class="pattern-radio">
-                            <input type="radio" name="ratingPattern" id="pattern1">
-                        </div>
-                        <div class="pattern-info">
-                            <div class="pattern-name">Pattern 1: Emoji-First Vertical</div>
-                            <div class="pattern-description">Star rating, title, visual rating, stats, score</div>
-                            <div class="pattern-example" id="pattern1-example">⭐ Rating: 5/10
-🎬 The Matrix (Movie)
-★★★★★☆☆☆☆☆
-👁️ 3.1k watchers - ▶️ 5.8k plays - 💬 6 comments
-📊 5 out of 10 stars</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Pattern 6: Cinematic Rating Card -->
-                    <div class="pattern-option" onclick="selectRatingPattern(6)" id="pattern-option-6">
-                        <div class="pattern-radio">
-                            <input type="radio" name="ratingPattern" id="pattern6">
-                        </div>
-                        <div class="pattern-info">
-                            <div class="pattern-name">Pattern 6: Cinematic Rating Card</div>
-                            <div class="pattern-description">Media emoji, visual rating, target score, stats, star count</div>
-                            <div class="pattern-example" id="pattern6-example">🎬 The Matrix (1999)
-⭐ ★★★★★☆☆☆☆☆
-🎯 Rating 5/10 
-👁️ 3.1k watchers - ▶️ 5.8k plays - 💬 6 comments
-📊 5 out of 10 stars</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="help-text">Different patterns work better with different rating styles</div>
-            </div>
-
-            <!-- Rating Style Selection -->
-            <div class="config-section rating-style-selector">
-                <h4>🎨 Rating Visual Style</h4>
-                <p>Choose the visual style for ratings:</p>
-
-                <div class="rating-style-options">
-                    <!-- Classic Stars -->
-                    <div class="rating-style-option selected" onclick="selectRatingStyle('stars')" id="style-stars">
-                        <div class="rating-style-icon">⭐</div>
-                        <div class="rating-style-info">
-                            <div class="rating-style-name">Classic Stars</div>
-                            <div class="rating-style-description">Traditional star ratings (★★★★★☆☆☆☆☆)</div>
-                            <div class="rating-style-visual stars-example" id="stars-visual">★★★★★☆☆☆☆☆</div>
-                        </div>
-                    </div>
-
-                    <!-- Emoji Hearts -->
-                    <div class="rating-style-option" onclick="selectRatingStyle('hearts')" id="style-hearts">
-                        <div class="rating-style-icon">❤️</div>
-                        <div class="rating-style-info">
-                            <div class="rating-style-name">Emoji Hearts</div>
-                            <div class="rating-style-description">Heart emojis (❤️❤️❤️❤️❤️🤍🤍🤍🤍🤍)</div>
-                            <div class="rating-style-visual hearts-example" id="hearts-visual">❤️❤️❤️❤️❤️🤍🤍🤍🤍🤍</div>
-                        </div>
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div class="rating-style-option" onclick="selectRatingStyle('progress')" id="style-progress">
-                        <div class="rating-style-icon">▰</div>
-                        <div class="rating-style-info">
-                            <div class="rating-style-name">Progress Bar</div>
-                            <div class="rating-style-description">Progress bar blocks (▰▰▰▰▰▱▱▱▱▱)</div>
-                            <div class="rating-style-visual progress-example" id="progress-visual">▰▰▰▰▰▱▱▱▱▱</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Rating Value Slider -->
-                <div class="rating-value-slider">
-                    <p>Preview with different rating values:</p>
-                    <div class="slider-container">
+            <!-- Preview Slider -->
+            <div class="form-group">
+                <label>Preview with different rating values</label>
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Adjust preview rating:</span>
                         <span class="slider-value" id="sliderValue">5</span>
-                        <input type="range" min="1" max="10" value="5" class="rating-slider" id="ratingSlider">
                     </div>
-                    <div class="help-text">Drag to preview how each style displays different ratings</div>
+                    <input type="range" id="ratingSlider" min="1" max="10" value="5" step="1">
                 </div>
             </div>
+        </section>
 
-            <!-- Mark as played when rating option -->
-            <div class="config-section">
-                <h4>🎬 Auto-Mark as Watched When Rating</h4>
-                <div class="toggle">
-                    <input type="checkbox" id="markAsPlayedOnRate">
-                    <label for="markAsPlayedOnRate" class="toggle-slider"></label>
-                    <label for="markAsPlayedOnRate" style="cursor: pointer;">Mark as played automatically when rating</label>
+        <!-- Preview Section -->
+        <section class="section">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                    <line x1="7" y1="2" x2="7" y2="22"/>
+                    <line x1="17" y1="2" x2="17" y2="22"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <line x1="2" y1="7" x2="7" y2="7"/>
+                    <line x1="2" y1="17" x2="7" y2="17"/>
+                    <line x1="17" y1="17" x2="22" y2="17"/>
+                    <line x1="17" y1="7" x2="22" y2="7"/>
+                </svg>
+                Addon Preview
+            </h2>
+
+            <div class="preview-grid">
+                <!-- Movie Preview -->
+                <div class="preview-category">
+                    <div class="preview-category-title">
+                        <span>Movie Options</span>
+                        <span class="stream-count" id="movieStreamCount">0</span>
+                    </div>
+                    <div class="preview-content" id="movieWatchedContent">
+                        <!-- Watched options will appear here -->
+                    </div>
+                    <div class="preview-content" id="movieUnwatchedContent">
+                        <!-- Unwatched options will appear here -->
+                    </div>
+                    <div class="preview-content" id="movieWatchlistContent">
+                        <!-- Watchlist options will appear here -->
+                    </div>
+                    <div class="preview-content" id="movieRatingsContent">
+                        <!-- Rating options will appear here -->
+                    </div>
                 </div>
-                <div class="help-text">When enabled, clicking any rating will also mark the item as watched on Trakt. Useful if Stremio doesn't sync watched state to Trakt automatically.</div>
+
+                <!-- Series Preview -->
+                <div class="preview-category">
+                    <div class="preview-category-title">
+                        <span>Series Options</span>
+                        <span class="stream-count" id="seriesStreamCount">0</span>
+                    </div>
+                    <div class="preview-content" id="seriesWatchedContent">
+                        <!-- Watched options will appear here -->
+                    </div>
+                    <div class="preview-content" id="seriesWatchlistContent">
+                        <!-- Watchlist options will appear here -->
+                    </div>
+                    <div class="preview-content" id="seriesRatingsContent">
+                        <!-- Rating options will appear here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Generate Addon Section -->
+        <section class="section">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Generate Your Addon
+            </h2>
+
+            <p style="margin-bottom: 20px; color: #94a3b8;">
+                Make sure you're connected to Trakt and all settings are configured before generating your addon.
+            </p>
+
+            <div class="btn-group">
+                <button class="btn" onclick="generateAddonUrl()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 2v6h-6"/>
+                        <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                        <path d="M3 22v-6h6"/>
+                        <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                    </svg>
+                    Generate Addon URL
+                </button>
+            </div>
+        </section>
+
+        <!-- Result Section -->
+        <div id="resultSection" class="result-section">
+            <h2 class="section-title" style="color: #10b981;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Your Addon is Ready!
+            </h2>
+
+            <p style="margin-bottom: 15px; color: #94a3b8;">
+                Copy the URL below and add it to Stremio as a Community Addon:
+            </p>
+
+            <div class="addon-url" id="addonUrlDiv">
+                <!-- Addon URL will appear here -->
             </div>
 
-            <div id="authSection" style="margin-top: 20px;">
-                <button onclick="startAuth()" class="btn btn-auth">🔐 Connect to Trakt</button>
-                <div id="authStatus" class="status status-warning">Not connected to Trakt</div>
+            <div class="btn-group">
+                <button class="btn" onclick="installInStremioDesktop()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    Install in Stremio Desktop
+                </button>
+                <button class="btn btn-secondary" onclick="installInStremioWeb()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <circle cx="12" cy="12" r="4"/>
+                        <line x1="21.17" y1="8" x2="12" y2="8"/>
+                        <line x1="3.95" y1="6.06" x2="8.54" y2="14"/>
+                        <line x1="10.88" y1="21.94" x2="15.46" y2="14"/>
+                    </svg>
+                    Install in Stremio Web
+                </button>
+                <button class="btn btn-secondary" onclick="copyToClipboard()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    Copy URL
+                </button>
+                <button class="btn btn-secondary" onclick="testAddon()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                    Test Addon
+                </button>
+                <button class="btn btn-secondary" onclick="resetConfig()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/>
+                    </svg>
+                    Reset Configuration
+                </button>
             </div>
         </div>
 
-        <div class="step" id="resultSection" style="display: none;">
-            <h3>3. Your Addon URL</h3>
-            <div class="addon-url" id="addonUrl"></div>
-
-            <div class="stremio-install-info">
-                <h4>🎬 Install in Stremio</h4>
-                <p>Choose one of the following methods to install this addon:</p>
-            </div>
-
-            <div class="button-group">
-                <button onclick="installInStremioWeb()" class="btn btn-stremio">🌐 Install via Stremio Web</button>
-                <button onclick="copyToClipboard()" class="btn btn-warning">📋 Copy URL</button>
-                <button onclick="installInStremioDesktop()" class="btn">💻 Install in Stremio Desktop</button>
-                <button onclick="testAddon()" class="btn">🧪 Test Addon</button>
-                <button onclick="resetConfig()" class="btn btn-danger">🔄 Reset</button>
-            </div>
-
-            <div class="instructions">
-                <p><strong>Manual Installation:</strong></p>
-                <ol>
-                    <li>Open Stremio Desktop</li>
-                    <li>Click the puzzle icon (Addons)</li>
-                    <li>Click "Community Addons"</li>
-                    <li>Click the "+" button and paste the URL above</li>
-                    <li>Click "Install"</li>
-                </ol>
-            </div>
-
-            <!-- Stats Preview Info -->
-            <div class="stats-info-note">
-                <h5>📈 Your Custom Stats Configuration</h5>
-                <p><strong>Selected Stats:</strong> <span id="selectedStatsDisplay">👁️ Watchers, ▶️ Plays, 💬 Comments</span></p>
-                <p><strong>Display Format:</strong> <span id="selectedFormatDisplay">Format 1: Compact Stats</span></p>
-                <p class="help-text">Line 4 will show these real Trakt stats when you rate content.</p>
-            </div>
-
-            <div class="preview-section">
-                <h4>🎬 Movie Preview:</h4>
-                <div id="moviePreview">
-                    <div id="movieWatchedPreview" style="margin-bottom: 10px;">
-                        <strong>Trakt Marks:</strong>
-                        <div id="movieWatchedContent" class="preview-item watched">✅ Mark "The Matrix" as Watched</div>
-                        <div id="movieUnwatchedContent" class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>
-                    </div>
-                    <div id="movieRatingsPreview">
-                        <strong>Trakt Rating:</strong>
-                        <div id="movieRatingsContent"></div>
-                    </div>
-                    <div class="help-text">Total movie streams: <span id="movieStreamCount">2</span></div>
-                </div>
-            </div>
-
-            <div class="preview-section">
-                <h4>📺 Series Preview:</h4>
-                <div id="seriesPreview">
-                    <div id="seriesWatchedPreview" style="margin-bottom: 10px;">
-                        <strong>Trakt Marks:</strong>
-                        <div id="seriesWatchedContent">
-                            <div class="preview-item watched">✅ Mark S1E1 of "Breaking Bad" as Watched</div>
-                            <div class="preview-item season">📅 Mark Season 1 of "Breaking Bad" as Watched</div>
-                            <div class="preview-item watched">📺 Mark Entire "Breaking Bad" Series as Watched</div>
-                            <div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>
-                        </div>
-                    </div>
-                    <div id="seriesRatingsPreview">
-                        <strong>Trakt Rating:</strong>
-                        <div id="seriesRatingsContent"></div>
-                    </div>
-                    <div class="help-text">Total series streams (episode view): <span id="seriesStreamCount">5</span></div>
-                </div>
-            </div>
-            
-            <div class="preview-section">
-                <h4>🎭 Anime Series Preview:</h4>
-                <div id="animePreview">
-                    <div id="animeRatingsPreview">
-                        <strong>Trakt Rating (Pattern 6 Example):</strong>
-                        <div id="animeRatingsContent"></div>
-                    </div>
-                    <div class="help-text">Different media types get different emojis (🎬 for movies, 📺 for TV, 🐉 for anime)</div>
-                </div>
-            </div>
-        </div>
+        <!-- Footer -->
+        <footer style="text-align: center; margin-top: 40px; padding: 20px; color: #64748b; font-size: 0.9rem;">
+            <p>Trakt Sync & Rate v2.2.1 - A Stremio Community Addon with Upstash Redis Support</p>
+            <p style="margin-top: 10px;">
+                Need help? Check the
+                <a href="https://github.com/ericvlog/trakt-sync-rating-addon" style="color: #60a5fa; text-decoration: none;" target="_blank">
+                    GitHub Repository
+                </a>
+                |
+                <a href="https://upstash.com/docs/redis/overall/getstarted" style="color: #60a5fa; text-decoration: none;" target="_blank">
+                    Upstash Redis Guide
+                </a>
+            </p>
+        </footer>
     </div>
 
     <!-- Auth Popup -->
-    <div id="authPopup">
-        <div class="auth-popup-content">
-            <h2>Authorize with Trakt</h2>
-            <p>1. Click the button below to open Trakt authorization</p>
-            <p>2. Authorize the application</p>
-            <p>3. Copy the authorization code</p>
-            <p>4. Paste it here:</p>
+    <div id="authPopup" class="auth-popup">
+        <div class="auth-content">
+            <h2 class="auth-title">Connect to Trakt.tv</h2>
 
-            <div style="margin: 20px 0;">
-                <button onclick="openTraktAuth()" class="btn" style="background:#17a2b8;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">
-                    Open Trakt Authorization
+            <div class="auth-steps">
+                <div class="auth-step">Click "Open Trakt.tv" button below</div>
+                <div class="auth-step">Log in to your Trakt account (if not already)</div>
+                <div class="auth-step">Authorize the application</div>
+                <div class="auth-step">Copy the authorization code from the page</div>
+                <div class="auth-step">Paste the code below and submit</div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" onclick="openTraktAuth()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                    Open Trakt.tv
+                </button>
+                <button class="btn btn-secondary" onclick="closeAuthPopup()">Cancel</button>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="authCode">Authorization Code</label>
+                <input type="text" id="authCode" placeholder="Paste the authorization code here">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" onclick="submitAuthCode()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13"/>
+                        <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                    Submit Code
                 </button>
             </div>
 
-            <div class="form-group">
-                <input type="text" id="authCode" placeholder="Paste authorization code here" style="width:100%;padding:10px;margin:10px 0;color:#333;">
-            </div>
-
-            <div style="display:flex;gap:10px;justify-content:center;">
-                <button onclick="submitAuthCode()" class="btn" style="background:#28a745;">Submit Code</button>
-                <button onclick="closeAuthPopup()" style="background:#6c757d;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">Cancel</button>
+            <div id="popupAuthStatus" class="auth-status status">
+                Waiting for authorization...
             </div>
         </div>
     </div>
 
-    <script>
-        // Configuration
-        let selectedRatings = [5, 7, 10]; // Default presets
-        let traktTokens = null;
-        let currentUsername = 'TraktUser';
-        let selectedRatingStyle = 'stars'; // Default: stars
-        let selectedRatingPattern = 0; // Default: Original pattern
-        let selectedStatsFormat = 1; // Default: Option 1
-        let selectedStats = ['plays', 'comments', 'watchers']; // Default stats
-        let previewRatingValue = 5; // Default preview rating
-        let markAsPlayedOnRate = false; // Default: don't mark as played when rating
+<script>
+    // State variables
+    let traktTokens = null;
+    let currentUsername = 'TraktUser';
+    let selectedRatings = [5, 7, 10];
+    let selectedRatingStyle = 'stars';
+    let selectedRatingPattern = 0;
+    let selectedStatsFormat = 1;
+    let selectedStats = ['plays', 'comments', 'watchers'];
+    let previewRatingValue = 5;
+    let markAsPlayedOnRate = false;
+    let enableWatchlist = true;
+    let enableRemoveFromWatchlist = true;
+    let keepSingleWatchedState = false;
+    let keepSingleStateDisplay = 'inline';
+    let keepSingleStateEmoji = '🔄';
+    let upstashUrl = '';
+    let upstashToken = '';
+    let storageMethod = 'url';
+    let configId = null;
+    let upstashConnected = false;
 
-        // Available Trakt stats with emojis and descriptions
-        const traktStatsInfo = {
-            'watchers': { emoji: '👁️', name: 'watchers', description: 'Users currently watching NOW (real-time)' },
-            'plays': { emoji: '▶️', name: 'plays', description: 'Total play count (all-time)' },
-            'comments': { emoji: '💬', name: 'comments', description: 'User comments' },
-            'lists': { emoji: '📋', name: 'lists', description: 'Appears in lists' },
-            'collectors': { emoji: '⭐', name: 'collectors', description: 'Users who collected' },
-            'votes': { emoji: '👍', name: 'votes', description: 'Total votes' }
+    // DOM Elements
+    const upstashUrlInput = document.getElementById('upstashUrl');
+    const upstashTokenInput = document.getElementById('upstashToken');
+    const upstashStatus = document.getElementById('upstashStatus');
+    const clientIdInput = document.getElementById('clientId');
+    const tmdbKeyInput = document.getElementById('tmdbKey');
+    const showUsernameCheckbox = document.getElementById('showUsername');
+    const enableWatchedCheckbox = document.getElementById('enableWatched');
+    const enableUnwatchedCheckbox = document.getElementById('enableUnwatched');
+    const enableSeasonWatchedCheckbox = document.getElementById('enableSeasonWatched');
+    const enableWatchlistCheckbox = document.getElementById('enableWatchlist');
+    const enableRemoveFromWatchlistCheckbox = document.getElementById('enableRemoveFromWatchlist');
+    const keepSingleWatchedStateCheckbox = document.getElementById('keepSingleWatchedState');
+    const keepSingleStateDisplayGroup = document.getElementById('keepSingleStateDisplayGroup');
+    const keepSingleInlineRadio = document.getElementById('keepSingleInline');
+    const keepSingleNewlineRadio = document.getElementById('keepSingleNewline');
+    const keepSingleNoneRadio = document.getElementById('keepSingleNone');
+    const emojiRefreshRadio = document.getElementById('emojiRefresh');
+    const emojiBroomRadio = document.getElementById('emojiBroom');
+    const emojiZapRadio = document.getElementById('emojiZap');
+    const enableRatingsCheckbox = document.getElementById('enableRatings');
+    const markAsPlayedOnRateCheckbox = document.getElementById('markAsPlayedOnRate');
+    const ratingSection = document.getElementById('ratingSection');
+    const ratingPresetsDiv = document.getElementById('ratingPresets');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const starsVisual = document.getElementById('starsVisual');
+    const heartsVisual = document.getElementById('heartsVisual');
+    const progressVisual = document.getElementById('progressVisual');
+    const currentPatternPreview = document.getElementById('currentPatternPreview');
+    const selectedStatsDisplay = document.getElementById('selectedStatsDisplay');
+    const addonNamePreview = document.getElementById('addonNamePreview');
+    const ratingSlider = document.getElementById('ratingSlider');
+    const sliderValue = document.getElementById('sliderValue');
+    const stat1Select = document.getElementById('stat1Select');
+    const stat2Select = document.getElementById('stat2Select');
+    const stat3Select = document.getElementById('stat3Select');
+
+    // Preview elements
+    const movieWatchedContent = document.getElementById('movieWatchedContent');
+    const movieUnwatchedContent = document.getElementById('movieUnwatchedContent');
+    const movieWatchlistContent = document.getElementById('movieWatchlistContent');
+    const movieRatingsContent = document.getElementById('movieRatingsContent');
+    const movieStreamCount = document.getElementById('movieStreamCount');
+    const seriesWatchedContent = document.getElementById('seriesWatchedContent');
+    const seriesWatchlistContent = document.getElementById('seriesWatchlistContent');
+    const seriesRatingsContent = document.getElementById('seriesRatingsContent');
+    const seriesStreamCount = document.getElementById('seriesStreamCount');
+
+    // Auth elements
+    const authPopup = document.getElementById('authPopup');
+    const authCodeInput = document.getElementById('authCode');
+    const mainAuthStatus = document.getElementById('mainAuthStatus');
+    const popupAuthStatus = document.getElementById('popupAuthStatus');
+
+    // Result elements
+    const resultSection = document.getElementById('resultSection');
+    const addonUrlDiv = document.getElementById('addonUrlDiv');
+
+    // Trakt stats info
+    const traktStatsInfo = {
+        'watchers': { emoji: '👁️', name: 'watchers' },
+        'plays': { emoji: '▶️', name: 'plays' },
+        'comments': { emoji: '💬', name: 'comments' },
+        'lists': { emoji: '📋', name: 'lists' },
+        'collectors': { emoji: '⭐', name: 'collectors' },
+        'votes': { emoji: '👍', name: 'votes' }
+    };
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', init);
+
+    function init() {
+        // Set up event listeners
+        showUsernameCheckbox.addEventListener('change', updateAddonNamePreview);
+        enableRatingsCheckbox.addEventListener('change', function() {
+            ratingSection.style.display = this.checked ? 'block' : 'none';
+            updatePreview();
+            saveData();
+        });
+
+        enableWatchedCheckbox.addEventListener('change', updatePreviewAndSave);
+        enableUnwatchedCheckbox.addEventListener('change', updatePreviewAndSave);
+        enableSeasonWatchedCheckbox.addEventListener('change', updatePreviewAndSave);
+        enableWatchlistCheckbox.addEventListener('change', function() {
+            enableWatchlist = this.checked;
+            updatePreview();
+            saveData();
+        });
+        enableRemoveFromWatchlistCheckbox.addEventListener('change', function() {
+            enableRemoveFromWatchlist = this.checked;
+            updatePreview();
+            saveData();
+        });
+
+        // Keep single state checkbox
+        keepSingleWatchedStateCheckbox.addEventListener('change', function() {
+            keepSingleWatchedState = this.checked;
+            if (this.checked) {
+                keepSingleStateDisplayGroup.style.display = 'block';
+            } else {
+                keepSingleStateDisplayGroup.style.display = 'none';
+            }
+            updatePreview();
+            saveData();
+        });
+
+        // Keep single state display options
+        keepSingleInlineRadio.addEventListener('change', function() {
+            if (this.checked) keepSingleStateDisplay = 'inline';
+            updatePreview();
+            saveData();
+        });
+        keepSingleNewlineRadio.addEventListener('change', function() {
+            if (this.checked) keepSingleStateDisplay = 'newline';
+            updatePreview();
+            saveData();
+        });
+        keepSingleNoneRadio.addEventListener('change', function() {
+            if (this.checked) keepSingleStateDisplay = 'none';
+            updatePreview();
+            saveData();
+        });
+
+        // Emoji selection event listeners
+        emojiRefreshRadio.addEventListener('change', function() {
+            if (this.checked) keepSingleStateEmoji = '🔄';
+            updatePreview();
+            saveData();
+        });
+        emojiBroomRadio.addEventListener('change', function() {
+            if (this.checked) keepSingleStateEmoji = '🧹';
+            updatePreview();
+            saveData();
+        });
+        emojiZapRadio.addEventListener('change', function() {
+            if (this.checked) keepSingleStateEmoji = '⚡';
+            updatePreview();
+            saveData();
+        });
+
+        markAsPlayedOnRateCheckbox.addEventListener('change', function() {
+            markAsPlayedOnRate = this.checked;
+            saveData();
+        });
+
+        // Rating slider
+        ratingSlider.addEventListener('input', function() {
+            previewRatingValue = parseInt(this.value);
+            sliderValue.textContent = previewRatingValue;
+            updateRatingStyleVisuals();
+            updatePatternPreview();
+            updatePreview();
+            saveData();
+        });
+
+        // Stats selection
+        stat1Select.addEventListener('change', updateStats);
+        stat2Select.addEventListener('change', updateStats);
+        stat3Select.addEventListener('change', updateStats);
+
+        // Upstash inputs
+        upstashUrlInput.addEventListener('change', function() {
+            upstashUrl = this.value.trim();
+            saveData();
+        });
+
+        upstashTokenInput.addEventListener('change', function() {
+            upstashToken = this.value.trim();
+            saveData();
+        });
+
+        // Initialize components
+        generateRatingPresets();
+        updateSelectedCount();
+        updateRatingStyleVisuals();
+        updatePatternPreview();
+        updateSelectedStatsDisplay();
+        updateAddonNamePreview();
+        updatePreview();
+
+        // Load saved data
+        loadSavedData();
+    }
+
+    function updatePreviewAndSave() {
+        updatePreview();
+        saveData();
+    }
+
+    function formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+        }
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+        }
+        return num.toString();
+    }
+
+    function updateStats() {
+        selectedStats = [
+            stat1Select.value,
+            stat2Select.value,
+            stat3Select.value
+        ];
+        updateSelectedStatsDisplay();
+        updatePatternPreview();
+        updatePreview();
+        saveData();
+    }
+
+    function updateSelectedStatsDisplay() {
+        const statNames = selectedStats.map(stat => {
+            const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
+            return `${info.emoji} ${info.name.charAt(0).toUpperCase() + info.name.slice(1)}`;
+        });
+        selectedStatsDisplay.textContent = statNames.join(', ');
+    }
+
+    function selectStatsFormat(format) {
+        selectedStatsFormat = format;
+        document.querySelectorAll('.stats-format-option').forEach(opt => {
+            opt.classList.remove('selected');
+            opt.querySelector('input[type="radio"]').checked = false;
+        });
+        const selectedOption = document.getElementById(`stats-option-${format}`);
+        selectedOption.classList.add('selected');
+        selectedOption.querySelector('input[type="radio"]').checked = true;
+        updatePatternPreview();
+        updatePreview();
+        saveData();
+    }
+
+    function selectRatingPattern(pattern) {
+        selectedRatingPattern = pattern;
+        document.querySelectorAll('.pattern-option').forEach(opt => {
+            opt.classList.remove('selected');
+            opt.querySelector('input[type="radio"]').checked = false;
+        });
+        const selectedOption = document.getElementById(`pattern-option-${pattern}`);
+        selectedOption.classList.add('selected');
+        selectedOption.querySelector('input[type="radio"]').checked = true;
+        updatePatternPreview();
+        updatePreview();
+        saveData();
+    }
+
+    function updatePatternPreview() {
+        const visual = generateRatingVisual(selectedRatingStyle, previewRatingValue);
+        const statsLine = getStatsLinePreview(previewRatingValue);
+
+        let previewText = '';
+
+        switch(selectedRatingPattern) {
+            case 0:
+                previewText = `${visual}\n"The Matrix" ${previewRatingValue}/10`;
+                break;
+            case 1:
+                previewText = `⭐ Rating: ${previewRatingValue}/10\n🎬 The Matrix (Movie)\n${visual}\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
+                break;
+            case 6:
+                previewText = `🎬 The Matrix (1999)\n⭐ ${visual}\n🎯 Rating ${previewRatingValue}/10\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
+                break;
+            default:
+                previewText = `${visual}\n"The Matrix" ${previewRatingValue}/10`;
+        }
+
+        currentPatternPreview.textContent = previewText;
+    }
+
+    function getStatsLinePreview(rating) {
+        const exampleValues = {
+            'watchers': Math.round((rating * 125) + 50),
+            'plays': Math.round((rating * 510) + 1000),
+            'comments': Math.round(rating * 2.4),
+            'lists': Math.round(rating * 5),
+            'collectors': Math.round(rating * 9),
+            'votes': Math.round(rating * 36)
         };
 
-        // DOM Elements
-        const clientIdInput = document.getElementById('clientId');
-        const tmdbKeyInput = document.getElementById('tmdbKey');
-        const showUsernameCheckbox = document.getElementById('showUsernameInName');
-        const enableWatchedCheckbox = document.getElementById('enableWatched');
-        const enableUnwatchedCheckbox = document.getElementById('enableUnwatched');
-        const enableSeasonWatchedCheckbox = document.getElementById('enableSeasonWatched');
-        const enableRatingsCheckbox = document.getElementById('enableRatings');
-        const ratingSection = document.getElementById('ratingSection');
-        const ratingPresetsDiv = document.getElementById('ratingPresets');
-        const authStatus = document.getElementById('authStatus');
-        const resultSection = document.getElementById('resultSection');
-        const addonUrlDiv = document.getElementById('addonUrl');
-        const authPopup = document.getElementById('authPopup');
-        const authCodeInput = document.getElementById('authCode');
-        const selectedCountSpan = document.getElementById('selectedCount');
-        const addonNamePreview = document.getElementById('addonNamePreview');
-        const ratingSlider = document.getElementById('ratingSlider');
-        const sliderValue = document.getElementById('sliderValue');
-        const markAsPlayedOnRateCheckbox = document.getElementById('markAsPlayedOnRate');
-        const selectedStatsDisplay = document.getElementById('selectedStatsDisplay');
-        const selectedFormatDisplay = document.getElementById('selectedFormatDisplay');
-        
-        // Stats selectors
-        const stat1Select = document.getElementById('stat1');
-        const stat2Select = document.getElementById('stat2');
-        const stat3Select = document.getElementById('stat3');
-
-        // Preview elements
-        const movieWatchedContent = document.getElementById('movieWatchedContent');
-        const movieUnwatchedContent = document.getElementById('movieUnwatchedContent');
-        const movieRatingsContent = document.getElementById('movieRatingsContent');
-        const movieStreamCount = document.getElementById('movieStreamCount');
-        const seriesWatchedContent = document.getElementById('seriesWatchedContent');
-        const seriesRatingsContent = document.getElementById('seriesRatingsContent');
-        const seriesStreamCount = document.getElementById('seriesStreamCount');
-        const animeRatingsContent = document.getElementById('animeRatingsContent');
-
-        // Rating style elements
-        const styleStars = document.getElementById('style-stars');
-        const styleHearts = document.getElementById('style-hearts');
-        const styleProgress = document.getElementById('style-progress');
-        const starsVisual = document.getElementById('stars-visual');
-        const heartsVisual = document.getElementById('hearts-visual');
-        const progressVisual = document.getElementById('progress-visual');
-        
-        // Pattern example elements
-        const pattern0Example = document.getElementById('pattern0-example');
-        const pattern1Example = document.getElementById('pattern1-example');
-        const pattern6Example = document.getElementById('pattern6-example');
-        
-        // Stats example elements
-        const statsExample1 = document.getElementById('stats-example-1');
-        const statsExample2 = document.getElementById('stats-example-2');
-        const statsExample3 = document.getElementById('stats-example-3');
-        const statsExample4 = document.getElementById('stats-example-4');
-        const statsExample5 = document.getElementById('stats-example-5');
-
-        // Initialize
-        function init() {
-            // Generate rating preset buttons
-            generateRatingPresets();
-            updateSelectedCount();
-            updateAddonNamePreview();
-            updateRatingStyleVisuals();
-            updatePatternExamples();
-            updateStatsExamples();
-            updateSelectedStatsDisplay();
-            updateSelectedFormatDisplay();
-
-            // Setup rating slider
-            ratingSlider.addEventListener('input', function(e) {
-                previewRatingValue = parseInt(e.target.value);
-                sliderValue.textContent = previewRatingValue;
-                updateRatingStyleVisuals();
-                updatePatternExamples();
-                updateStatsExamples();
-                updatePreview();
-            });
-
-            // Update preview when settings change
-            showUsernameCheckbox.addEventListener('change', updateAddonNamePreview);
-            enableWatchedCheckbox.addEventListener('change', updatePreview);
-            enableUnwatchedCheckbox.addEventListener('change', updatePreview);
-            enableSeasonWatchedCheckbox.addEventListener('change', updatePreview);
-            enableRatingsCheckbox.addEventListener('change', function() {
-                ratingSection.style.display = this.checked ? 'block' : 'none';
-                updatePreview();
-            });
-
-            // Update when mark as played setting changes
-            markAsPlayedOnRateCheckbox.addEventListener('change', function() {
-                markAsPlayedOnRate = this.checked;
-                saveData();
-            });
-            
-            // Update when stats selection changes
-            stat1Select.addEventListener('change', updateStatsSelection);
-            stat2Select.addEventListener('change', updateStatsSelection);
-            stat3Select.addEventListener('change', updateStatsSelection);
-
-            // Load saved data
-            loadSavedData();
-
-            // Initial preview update
-            updatePreview();
-        }
-        
-        // Update stats selection
-        function updateStatsSelection() {
-            selectedStats = [
-                stat1Select.value,
-                stat2Select.value,
-                stat3Select.value
-            ];
-            updatePatternExamples();
-            updateStatsExamples();
-            updateSelectedStatsDisplay();
-            updatePreview();
-            saveData();
-        }
-        
-        // Update stats examples based on current selection
-        function updateStatsExamples() {
-            // Example values based on rating (for preview)
-            const exampleValues = {
-                'watchers': Math.round((previewRatingValue * 125) + 50),
-                'plays': Math.round((previewRatingValue * 510) + 1000),
-                'comments': Math.round(previewRatingValue * 2.4),
-                'lists': Math.round(previewRatingValue * 5),
-                'collectors': Math.round(previewRatingValue * 9),
-                'votes': Math.round(previewRatingValue * 36)
+        const statValues = selectedStats.map(stat => exampleValues[stat] || 0);
+        const formattedStats = selectedStats.map((stat, index) => {
+            const value = statValues[index];
+            const formattedValue = formatNumber(value);
+            const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
+            const displayName = getStatDisplayName(stat, value);
+            return {
+                emoji: info.emoji,
+                value: formattedValue,
+                name: displayName
             };
-            
-            // Format each example
-            const formattedStats = selectedStats.map(stat => {
-                const value = exampleValues[stat] || 0;
-                const formattedValue = formatNumber(value);
-                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
-                return {
-                    emoji: info.emoji,
-                    value: formattedValue,
-                    name: info.name
+        });
+
+        switch(selectedStatsFormat) {
+            case 1: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+            case 2: return formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
+            case 3: return formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
+            case 4: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
+            case 5:
+                const customNames = {
+                    'watchers': 'watching',
+                    'plays': 'played',
+                    'comments': 'commented',
+                    'lists': 'listed',
+                    'collectors': 'collected',
+                    'votes': 'voted'
                 };
-            });
-            
-            // Update all format examples
-            // Format 1: Compact Stats
-            statsExample1.textContent = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-            
-            // Format 2: Detailed Stats
-            statsExample2.textContent = formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
-            
-            // Format 3: Minimal Stats
-            statsExample3.textContent = formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
-            
-            // Format 4: Vertical Stats
-            statsExample4.textContent = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
-            
-            // Format 5: Balanced Stats
-            const customNames = {
-                'watchers': 'watching',
-                'plays': 'played',
-                'comments': 'commented',
-                'lists': 'listed',
-                'collectors': 'collected',
-                'votes': 'voted'
-            };
-            statsExample5.textContent = formattedStats.map(s => {
-                const customName = customNames[s.name] || s.name;
-                return `${s.emoji} ${s.value} ${customName}`;
-            }).join(' | ');
+                return formattedStats.map(s => {
+                    const customName = customNames[s.name] || s.name;
+                    return `${s.emoji} ${s.value} ${customName}`;
+                }).join(' | ');
+            default: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
         }
-        
-        // Update selected stats display
-        function updateSelectedStatsDisplay() {
-            const statNames = selectedStats.map(stat => {
-                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
-                return `${info.emoji} ${info.name.charAt(0).toUpperCase() + info.name.slice(1)}`;
-            });
-            selectedStatsDisplay.textContent = statNames.join(', ');
+    }
+
+    function getStatDisplayName(stat, value) {
+        const displayMap = {
+            'watchers': value === 1 ? 'watcher' : 'watchers',
+            'plays': value === 1 ? 'play' : 'plays',
+            'comments': value === 1 ? 'comment' : 'comments',
+            'lists': value === 1 ? 'list' : 'lists',
+            'collectors': value === 1 ? 'collector' : 'collectors',
+            'votes': value === 1 ? 'vote' : 'votes'
+        };
+        return displayMap[stat] || stat;
+    }
+
+    function selectRatingStyle(style) {
+        selectedRatingStyle = style;
+        document.querySelectorAll('.rating-style-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        document.getElementById(`style-${style}`).classList.add('selected');
+        updateRatingStyleVisuals();
+        updatePatternPreview();
+        updatePreview();
+        saveData();
+    }
+
+    function updateRatingStyleVisuals() {
+        let stars = '';
+        for (let i = 1; i <= 10; i++) {
+            stars += i <= previewRatingValue ? '★' : '☆';
         }
-        
-        // Update selected format display
-        function updateSelectedFormatDisplay() {
-            const formatNames = {
-                1: 'Format 1: Compact Stats',
-                2: 'Format 2: Detailed Stats',
-                3: 'Format 3: Minimal Stats',
-                4: 'Format 4: Vertical Stats',
-                5: 'Format 5: Balanced Stats'
-            };
-            selectedFormatDisplay.textContent = formatNames[selectedStatsFormat] || 'Format 1: Compact Stats';
+        starsVisual.textContent = stars;
+
+        let hearts = '';
+        for (let i = 1; i <= 10; i++) {
+            hearts += i <= previewRatingValue ? '❤️' : '🤍';
+        }
+        heartsVisual.textContent = hearts;
+
+        let progress = '';
+        for (let i = 1; i <= 10; i++) {
+            progress += i <= previewRatingValue ? '▰' : '▱';
+        }
+        progressVisual.textContent = progress;
+    }
+
+    function generateRatingVisual(style, rating) {
+        let visual = '';
+        switch(style) {
+            case 'hearts':
+                for (let i = 1; i <= 10; i++) {
+                    visual += i <= rating ? '❤️' : '🤍';
+                }
+                break;
+            case 'progress':
+                for (let i = 1; i <= 10; i++) {
+                    visual += i <= rating ? '▰' : '▱';
+                }
+                break;
+            default:
+                for (let i = 1; i <= 10; i++) {
+                    visual += i <= rating ? '★' : '☆';
+                }
+                break;
+        }
+        return visual;
+    }
+
+    function updateAddonNamePreview() {
+        const showUsername = showUsernameCheckbox.checked;
+        if (showUsername && currentUsername) {
+            addonNamePreview.textContent = `Trakt Sync & Rate (${currentUsername})`;
+        } else {
+            addonNamePreview.textContent = `Trakt Sync & Rate`;
+        }
+    }
+
+    function generateRatingPresets() {
+        ratingPresetsDiv.innerHTML = '';
+        for (let rating = 1; rating <= 10; rating++) {
+            const isSelected = selectedRatings.includes(rating);
+            let stars = '';
+            for (let i = 1; i <= 10; i++) {
+                stars += i <= rating ? '★' : '☆';
+            }
+            const preset = document.createElement('div');
+            preset.className = `rating-preset ${isSelected ? 'selected' : ''}`;
+            preset.innerHTML = `
+                <div class="stars">${stars}</div>
+                <div class="value">${rating}/10</div>
+            `;
+            preset.onclick = () => toggleRatingPreset(rating);
+            ratingPresetsDiv.appendChild(preset);
+        }
+    }
+
+    function toggleRatingPreset(rating) {
+        const index = selectedRatings.indexOf(rating);
+        if (index > -1) {
+            selectedRatings.splice(index, 1);
+        } else {
+            selectedRatings.push(rating);
+            selectedRatings.sort((a, b) => a - b);
+        }
+        generateRatingPresets();
+        updateSelectedCount();
+        updatePreview();
+        saveData();
+    }
+
+    function selectAllRatings() {
+        selectedRatings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        generateRatingPresets();
+        updateSelectedCount();
+        updatePreview();
+        saveData();
+    }
+
+    function clearAllRatings() {
+        selectedRatings = [];
+        generateRatingPresets();
+        updateSelectedCount();
+        updatePreview();
+        saveData();
+    }
+
+    function selectDefaultRatings() {
+        selectedRatings = [5, 7, 10];
+        generateRatingPresets();
+        updateSelectedCount();
+        updatePreview();
+        saveData();
+    }
+
+    function updateSelectedCount() {
+        selectedCountSpan.textContent = `${selectedRatings.length}/10`;
+    }
+
+    function updatePreview() {
+        const enableWatched = enableWatchedCheckbox.checked;
+        const enableUnwatched = enableUnwatchedCheckbox.checked;
+        const enableSeasonWatched = enableSeasonWatchedCheckbox.checked;
+        const enableRatings = enableRatingsCheckbox.checked;
+        const enableWatchlist = enableWatchlistCheckbox.checked;
+        const enableRemoveFromWatchlist = enableRemoveFromWatchlistCheckbox.checked;
+        const keepSingleWatchedState = keepSingleWatchedStateCheckbox.checked;
+
+        // Movie preview
+        let movieWatchedHTML = '';
+        let movieUnwatchedHTML = '';
+        let movieWatchlistHTML = '';
+        let movieRatingsHTML = '';
+        let movieStreams = 0;
+
+        if (enableWatched) {
+            let watchedTitle = '✅ Mark "The Matrix" as Watched';
+            if (keepSingleWatchedState) {
+                if (keepSingleStateDisplay === 'none') {
+                    watchedTitle = '✅ Mark "The Matrix" as Watched';
+                } else if (keepSingleStateDisplay === 'newline') {
+                    watchedTitle = `✅ Mark "The Matrix" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                } else {
+                    watchedTitle = `✅ Mark "The Matrix" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                }
+            }
+            movieWatchedHTML = `<div class="preview-item watched">${watchedTitle}</div>`;
+            movieStreams += 1;
         }
 
-        // Select stats format
-        function selectStatsFormat(format) {
-            selectedStatsFormat = format;
-            
-            // Update UI
-            document.querySelectorAll('.stats-format-option').forEach(opt => {
-                opt.classList.remove('selected');
-                opt.querySelector('input[type="radio"]').checked = false;
+        if (enableUnwatched) {
+            movieUnwatchedHTML = '<div class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>';
+            movieStreams += 1;
+        }
+
+        if (enableWatchlist) {
+            movieWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>🎬 "The Matrix" (1999)<br>✅ Add movie to your Trakt watchlist</div>';
+            movieStreams += 1;
+        }
+
+        if (enableRemoveFromWatchlist) {
+            movieWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>🎬 "The Matrix" (1999)<br>🗑️ Remove movie from your Trakt watchlist</div>';
+            movieStreams += 1;
+        }
+
+        if (enableRatings && selectedRatings.length > 0) {
+            selectedRatings.forEach(rating => {
+                movieRatingsHTML += `<div class="preview-item rating">${formatRatingPreview(rating, 'movie', 'The Matrix', '1999')}</div>`;
+                movieStreams += 1;
             });
+        }
+
+        movieWatchedContent.innerHTML = movieWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
+        movieUnwatchedContent.innerHTML = movieUnwatchedHTML || '<div class="preview-item" style="color:#888;">No unwatched options enabled</div>';
+        movieWatchlistContent.innerHTML = movieWatchlistHTML || '<div class="preview-item" style="color:#888;">No watchlist options enabled</div>';
+        movieRatingsContent.innerHTML = movieRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
+        movieStreamCount.textContent = movieStreams;
+
+        // Series preview (episode view)
+        let seriesWatchedHTML = '';
+        let seriesWatchlistHTML = '';
+        let seriesRatingsHTML = '';
+        let seriesStreams = 0;
+
+        if (enableWatched) {
+            let watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched`;
+            if (keepSingleWatchedState) {
+                if (keepSingleStateDisplay === 'none') {
+                    watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched`;
+                } else if (keepSingleStateDisplay === 'newline') {
+                    watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                } else {
+                    watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                }
+            }
+            seriesWatchedHTML = `<div class="preview-item watched">${watchedTitle}</div>`;
+            seriesStreams += 1;
+
+            if (enableSeasonWatched) {
+                let seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched`;
+                if (keepSingleWatchedState) {
+                    if (keepSingleStateDisplay === 'none') {
+                        seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched`;
+                    } else if (keepSingleStateDisplay === 'newline') {
+                        seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                    } else {
+                        seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                    }
+                }
+                seriesWatchedHTML += `<div class="preview-item season">${seasonTitle}</div>`;
+                seriesStreams += 1;
+            }
+
+            let seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched`;
+            if (keepSingleWatchedState) {
+                if (keepSingleStateDisplay === 'none') {
+                    seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched`;
+                } else if (keepSingleStateDisplay === 'newline') {
+                    seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                } else {
+                    seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                }
+            }
+            seriesWatchedHTML += `<div class="preview-item watched">${seriesTitle}</div>`;
+            seriesStreams += 1;
+        }
+
+        if (enableUnwatched) {
+            seriesWatchedHTML += `<div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>`;
+            seriesStreams += 1;
+        }
+
+        if (enableWatchlist) {
+            seriesWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>📺 "Breaking Bad" (Series)<br>✅ Add series to your Trakt watchlist</div>';
+            seriesStreams += 1;
+        }
+
+        if (enableRemoveFromWatchlist) {
+            seriesWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>📺 "Breaking Bad" (Series)<br>🗑️ Remove series from your Trakt watchlist</div>';
+            seriesStreams += 1;
+        }
+
+        if (enableRatings && selectedRatings.length > 0) {
+            selectedRatings.forEach(rating => {
+                seriesRatingsHTML += `<div class="preview-item rating">${formatRatingPreview(rating, 'series', 'Breaking Bad', null, 1, 1)}</div>`;
+                seriesStreams += 1;
+            });
+        }
+
+        seriesWatchedContent.innerHTML = seriesWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
+        seriesWatchlistContent.innerHTML = seriesWatchlistHTML || '<div class="preview-item" style="color:#888;">No watchlist options enabled</div>';
+        seriesRatingsContent.innerHTML = seriesRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
+        seriesStreamCount.textContent = seriesStreams;
+    }
+
+    function formatRatingPreview(rating, type, title, year, season = null, episode = null) {
+        const visual = generateRatingVisual(selectedRatingStyle, rating);
+        const statsLine = getStatsLinePreview(rating);
+
+        // Check if both features are enabled
+        const keepSingleState = keepSingleWatchedStateCheckbox.checked;
+        const markAsPlayed = markAsPlayedOnRateCheckbox.checked;
+
+        let extraText = '';
+        if (markAsPlayed) {
+            if (keepSingleState) {
+                if (keepSingleStateDisplay === 'none') {
+                    extraText = ' (marks as watched)';
+                } else if (keepSingleStateDisplay === 'newline') {
+                    extraText = '\n(marks as watched + cleans duplicates)';
+                } else {
+                    extraText = ' (marks as watched + cleans duplicates)';
+                }
+            } else {
+                extraText = ' (marks as watched)';
+            }
+        }
+
+        switch(selectedRatingPattern) {
+            case 0:
+                if (type === 'movie') {
+                    return `${visual}<br>"${title}" ${rating}/10${extraText}`;
+                } else if (season && episode) {
+                    return `${visual}<br>S${season}E${episode} "${title}" ${rating}/10${extraText}`;
+                } else {
+                    return `${visual}<br>"${title}" Series ${rating}/10${extraText}`;
+                }
+            case 1:
+                if (type === 'movie') {
+                    return `⭐ Rating: ${rating}/10<br>🎬 ${title}${year ? ` (${year})` : ' (Movie)'}<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                } else if (season && episode) {
+                    return `⭐ Rating: ${rating}/10<br>📺 ${title} S${season}E${episode}<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                } else {
+                    return `⭐ Rating: ${rating}/10<br>📺 ${title} (Series)<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                }
+            case 6:
+                if (type === 'movie') {
+                    return `🎬 ${title}${year ? ` (${year})` : ''}<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                } else if (season && episode) {
+                    return `📺 ${title} S${season}E${episode}<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                } else {
+                    return `📺 ${title} (Series)<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                }
+            default:
+                return `${visual}<br>"${title}" ${rating}/10${extraText}`;
+        }
+    }
+
+    // Upstash Functions
+    async function testUpstashConnection() {
+        upstashUrl = upstashUrlInput.value.trim();
+        upstashToken = upstashTokenInput.value.trim();
+
+        if (!upstashUrl || !upstashToken) {
+            upstashStatus.textContent = 'Please enter Upstash URL and Token';
+            upstashStatus.style.color = '#ef4444';
+            upstashStatus.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            upstashStatus.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            upstashConnected = false;
+            return;
+        }
+
+        upstashStatus.textContent = 'Testing connection...';
+        upstashStatus.style.color = '#fbbf24';
+        upstashStatus.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+        upstashStatus.style.border = '1px solid rgba(251, 191, 36, 0.3)';
+
+        try {
+            const response = await fetch('/upstash/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ upstashUrl, upstashToken })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                upstashStatus.textContent = '✓ Upstash connected successfully';
+                upstashStatus.style.color = '#10b981';
+                upstashStatus.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                upstashStatus.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                upstashConnected = true;
+                storageMethod = 'upstash';
+            } else {
+                upstashStatus.textContent = '✗ Upstash connection failed (using fallback mode)';
+                upstashStatus.style.color = '#f59e0b';
+                upstashStatus.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+                upstashStatus.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+                upstashConnected = false;
+                storageMethod = 'upstash';
+            }
+        } catch (error) {
+            upstashStatus.textContent = '✗ Connection error (using fallback mode)';
+            upstashStatus.style.color = '#f59e0b';
+            upstashStatus.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+            upstashStatus.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+            upstashConnected = false;
+            storageMethod = 'upstash';
+            console.error('Upstash test error:', error);
+        }
+
+        saveData();
+    }
+
+    function startAuth() {
+        const clientId = clientIdInput.value.trim();
+        if (!clientId) {
+            alert('Please enter your Trakt Client ID');
+            return;
+        }
+
+        // Check Upstash credentials
+        upstashUrl = upstashUrlInput.value.trim();
+        upstashToken = upstashTokenInput.value.trim();
+
+        if (upstashUrl && upstashToken) {
+            storageMethod = 'upstash';
+        } else {
+            storageMethod = 'url';
+            if (confirm('Upstash not configured. Trakt tokens expire every 3 months. Without Upstash, you will need to reconnect after 3 months. Continue anyway?')) {
+                // Continue without Upstash
+            } else {
+                return;
+            }
+        }
+
+        saveData();
+        authPopup.style.display = 'flex';
+    }
+
+    function openTraktAuth() {
+        const clientId = clientIdInput.value.trim();
+        if (!clientId) return;
+        const authUrl = `${window.location.origin}/oauth/initiate?clientId=${encodeURIComponent(clientId)}`;
+        window.open(authUrl, '_blank', 'width=600,height=700');
+    }
+
+    function closeAuthPopup() {
+        authPopup.style.display = 'none';
+        authCodeInput.value = '';
+    }
+
+    async function submitAuthCode() {
+        const clientId = clientIdInput.value.trim();
+        const authCode = authCodeInput.value.trim();
+
+        if (!clientId || !authCode) {
+            alert('Please enter both Client ID and Authorization Code');
+            return;
+        }
+
+        try {
+            popupAuthStatus.className = 'status';
+            popupAuthStatus.textContent = 'Authenticating...';
+
+            const requestData = {
+                code: authCode,
+                clientId: clientId
+            };
+
+            // Add Upstash credentials if using Upstash
+            if (storageMethod === 'upstash' && upstashUrl && upstashToken) {
+                requestData.upstashUrl = upstashUrl;
+                requestData.upstashToken = upstashToken;
+            }
+
+            const response = await fetch('/oauth/exchange', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Store tokens regardless of storage method
+                traktTokens = data.tokens;
+                currentUsername = data.username;
+
+                if (data.storage === 'upstash') {
+                    // Upstash storage
+                    configId = data.configId;
+
+                    // Update indicator in main auth status
+                    const indicator = mainAuthStatus.querySelector('.upstash-indicator');
+                    if (indicator) {
+                        indicator.className = 'upstash-indicator upstash-connected';
+                    }
+
+                    mainAuthStatus.className = 'status status-success';
+                    mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-connected"></span> Connected via Upstash as: <strong>${data.username}</strong>`;
+
+                    popupAuthStatus.className = 'status status-success';
+                    popupAuthStatus.innerHTML = `Connected via Upstash as: <strong>${data.username}</strong><br><small>Tokens stored in Upstash with local fallback</small>`;
+                } else {
+                    // URL storage (fallback)
+                    mainAuthStatus.className = 'status status-success';
+                    mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-warning"></span> Connected as: <strong>${data.username}</strong> (URL storage - expires in 3 months)`;
+
+                    popupAuthStatus.className = 'status status-success';
+                    popupAuthStatus.innerHTML = `Connected as: <strong>${data.username}</strong>`;
+                }
+
+                closeAuthPopup();
+                updateAddonNamePreview();
+
+                // AUTO-GENERATE THE URL AFTER SUCCESSFUL AUTH
+                generateAddonUrl();
+            } else {
+                popupAuthStatus.className = 'status status-error';
+                popupAuthStatus.textContent = `Error: ${data.error}`;
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            popupAuthStatus.className = 'status status-error';
+            popupAuthStatus.textContent = `Authorization failed: ${error.message}`;
+            console.error('Auth error:', error);
+        }
+    }
+
+    function generateAddonUrl() {
+        console.log('DEBUG: generateAddonUrl called');
+        console.log('DEBUG: traktTokens:', traktTokens ? 'Exists' : 'Null');
+        console.log('DEBUG: configId:', configId);
+        console.log('DEBUG: storageMethod:', storageMethod);
+
+        if (!traktTokens && !configId) {
+            console.log('DEBUG: Both traktTokens and configId are null');
+            alert('Please connect to Trakt first');
+            return;
+        }
+
+        const config = {
+            clientId: clientIdInput.value.trim(),
+            username: currentUsername,
+            tmdbKey: tmdbKeyInput.value.trim() || undefined,
+            ratings: enableRatingsCheckbox.checked ? selectedRatings : [],
+            markAsWatched: enableWatchedCheckbox.checked,
+            markAsUnwatched: enableUnwatchedCheckbox.checked,
+            enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
+            enableWatchlist: enableWatchlistCheckbox.checked,
+            enableRemoveFromWatchlist: enableRemoveFromWatchlistCheckbox.checked,
+            keepSingleWatchedState: keepSingleWatchedStateCheckbox.checked,
+            keepSingleStateDisplay: keepSingleStateDisplay,
+            keepSingleStateEmoji: keepSingleStateEmoji,
+            showUsernameInName: showUsernameCheckbox.checked,
+            ratingStyle: selectedRatingStyle,
+            ratingPattern: selectedRatingPattern,
+            statsFormat: selectedStatsFormat,
+            selectedStats: selectedStats,
+            markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked
+        };
+
+        // Add storage method specific data
+        if (storageMethod === 'upstash' && configId && upstashUrl && upstashToken) {
+            config.storage = 'upstash';
+            config.upstashUrl = upstashUrl;
+            config.upstashToken = upstashToken;
+            config.configId = configId;
+
+            // ALWAYS include tokens in config for fallback
+            if (traktTokens) {
+                config.access_token = traktTokens.access_token;
+                config.refresh_token = traktTokens.refresh_token;
+                config.expires_in = traktTokens.expires_in;
+                config.expires_at = traktTokens.expires_at;
+                config.created_at = traktTokens.created_at;
+            }
+        } else if (traktTokens) {
+            // URL storage or fallback
+            config.storage = 'url';
+            config.access_token = traktTokens.access_token;
+            config.refresh_token = traktTokens.refresh_token;
+            config.expires_in = traktTokens.expires_in;
+            config.expires_at = traktTokens.expires_at;
+            config.created_at = traktTokens.created_at;
+        }
+
+        Object.keys(config).forEach(key => config[key] === undefined && delete config[key]);
+
+        const configJson = JSON.stringify(config);
+
+        try {
+            // FIXED: Use UTF-8 safe encoding for base64
+            const configBase64 = utf8ToBase64UrlSafe(configJson);
             
-            const selectedOption = document.getElementById(`stats-option-${format}`);
-            selectedOption.classList.add('selected');
-            selectedOption.querySelector('input[type="radio"]').checked = true;
-            
-            // Update display
-            updateSelectedFormatDisplay();
-            updatePatternExamples();
-            updatePreview();
-            
-            // Save to localStorage
+            const addonUrl = `${window.location.origin}/configured/${configBase64}/manifest.json`;
+            addonUrlDiv.textContent = addonUrl;
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
             saveData();
+        } catch (error) {
+            console.error('Error encoding config:', error);
+            alert('Error generating addon URL: ' + error.message);
         }
+    }
 
-        // Select rating pattern
-        function selectRatingPattern(pattern) {
-            selectedRatingPattern = pattern;
-            
-            // Update UI
+    function installInStremioDesktop() {
+        const addonUrl = addonUrlDiv.textContent;
+        if (addonUrl) {
+            const stremioUrl = 'stremio://' + addonUrl.replace(/^https?:\/\//, '');
+            window.location.href = stremioUrl;
+        }
+    }
+
+    function installInStremioWeb() {
+        const addonUrl = addonUrlDiv.textContent;
+        if (addonUrl) {
+            const installUrl = `https://web.stremio.com/#/addons?addon=${encodeURIComponent(addonUrl)}`;
+            window.open(installUrl, '_blank');
+        }
+    }
+
+    function copyToClipboard() {
+        const addonUrl = addonUrlDiv.textContent;
+        if (addonUrl) {
+            navigator.clipboard.writeText(addonUrl).then(() => {
+                alert('Addon URL copied to clipboard!');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = addonUrl;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('Addon URL copied to clipboard!');
+            });
+        }
+    }
+
+    async function testAddon() {
+        const addonUrl = addonUrlDiv.textContent;
+        if (!addonUrl) return;
+
+        try {
+            const response = await fetch(addonUrl);
+            if (response.ok) {
+                const manifest = await response.json();
+                alert(`✅ Addon works!\n\nName: ${manifest.name}\nDescription: ${manifest.description}\nID: ${manifest.id}\nVersion: ${manifest.version}`);
+            } else {
+                alert(`❌ Failed to fetch manifest: ${response.status}\n\nMake sure the addon server is running and accessible.`);
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+
+    function resetConfig() {
+        if (confirm('Are you sure you want to reset all configuration? This will clear your settings and disconnect from Trakt.')) {
+            localStorage.removeItem('trakt_config');
+
+            // Reset all inputs
+            clientIdInput.value = '';
+            tmdbKeyInput.value = '';
+            upstashUrlInput.value = '';
+            upstashTokenInput.value = '';
+            showUsernameCheckbox.checked = true;
+            enableWatchedCheckbox.checked = true;
+            enableUnwatchedCheckbox.checked = true;
+            enableSeasonWatchedCheckbox.checked = true;
+            enableWatchlistCheckbox.checked = true;
+            enableRemoveFromWatchlistCheckbox.checked = true;
+            keepSingleWatchedStateCheckbox.checked = false;
+            enableRatingsCheckbox.checked = true;
+            markAsPlayedOnRateCheckbox.checked = false;
+
+            // Reset state variables
+            selectedRatings = [5, 7, 10];
+            selectedRatingStyle = 'stars';
+            selectedRatingPattern = 0;
+            selectedStatsFormat = 1;
+            selectedStats = ['plays', 'comments', 'watchers'];
+            previewRatingValue = 5;
+            keepSingleWatchedState = false;
+            keepSingleStateDisplay = 'inline';
+            keepSingleStateEmoji = '🔄';
+            storageMethod = 'url';
+            configId = null;
+            upstashConnected = false;
+            traktTokens = null;
+            currentUsername = 'TraktUser';
+
+            // Reset UI elements
+            ratingSlider.value = '5';
+            sliderValue.textContent = '5';
+            upstashStatus.textContent = '';
+            upstashStatus.style = '';
+            keepSingleStateDisplayGroup.style.display = 'none';
+            keepSingleInlineRadio.checked = true;
+            emojiRefreshRadio.checked = true;
+
+            // Update auth status indicator
+            const indicator = mainAuthStatus.querySelector('.upstash-indicator');
+            if (indicator) {
+                indicator.className = 'upstash-indicator upstash-warning';
+            }
+            mainAuthStatus.className = 'status status-warning';
+            mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-warning"></span> Not connected to Trakt`;
+
+            resultSection.style.display = 'none';
+
+            stat1Select.value = 'plays';
+            stat2Select.value = 'comments';
+            stat3Select.value = 'watchers';
+
+            // Update visual selections
+            document.querySelectorAll('.rating-style-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.getElementById('style-stars').classList.add('selected');
+
             document.querySelectorAll('.pattern-option').forEach(opt => {
                 opt.classList.remove('selected');
                 opt.querySelector('input[type="radio"]').checked = false;
             });
-            
-            const selectedOption = document.getElementById(`pattern-option-${pattern}`);
-            selectedOption.classList.add('selected');
-            selectedOption.querySelector('input[type="radio"]').checked = true;
-            
-            // Update preview
-            updatePatternExamples();
-            updatePreview();
-            
-            // Save to localStorage
-            saveData();
-        }
-        
-        // Update pattern examples based on current style and rating value
-        function updatePatternExamples() {
-            // Pattern 0 example
-            const visual0 = generateRatingVisual(selectedRatingStyle, previewRatingValue);
-            pattern0Example.textContent = `${visual0}\n"The Matrix" ${previewRatingValue}/10`;
-            
-            // Pattern 1 and 6 examples with stats
-            const visual1 = generateRatingVisual(selectedRatingStyle, previewRatingValue);
-            const statsLine = getStatsLinePreview(previewRatingValue);
-            
-            pattern1Example.textContent = `⭐ Rating: ${previewRatingValue}/10\n🎬 The Matrix (Movie)\n${visual1}\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
-            
-            pattern6Example.textContent = `🎬 The Matrix (1999)\n⭐ ${visual1}\n🎯 Rating ${previewRatingValue}/10\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
-        }
-        
-        // Get stats line for preview
-        function getStatsLinePreview(rating) {
-            // Example values based on rating (for preview)
-            const exampleValues = {
-                'watchers': Math.round((rating * 125) + 50),
-                'plays': Math.round((rating * 510) + 1000),
-                'comments': Math.round(rating * 2.4),
-                'lists': Math.round(rating * 5),
-                'collectors': Math.round(rating * 9),
-                'votes': Math.round(rating * 36)
-            };
-            
-            // Get values for selected stats
-            const statValues = selectedStats.map(stat => exampleValues[stat] || 0);
-            
-            // Format numbers and prepare display
-            const formattedStats = selectedStats.map((stat, index) => {
-                const value = statValues[index];
-                const formattedValue = formatNumber(value);
-                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
-                const displayName = getStatDisplayName(stat, value);
-                
-                return {
-                    emoji: info.emoji,
-                    value: formattedValue,
-                    name: displayName
-                };
+            document.getElementById('pattern-option-0').classList.add('selected');
+            document.getElementById('pattern0').checked = true;
+
+            document.querySelectorAll('.stats-format-option').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.querySelector('input[type="radio"]').checked = false;
             });
-            
-            // Apply selected stats format
-            switch(selectedStatsFormat) {
-                case 1: // Option 1: Compact Stats
-                    return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-                case 2: // Option 2: Detailed Stats
-                    return formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
-                case 3: // Option 3: Minimal Stats
-                    return formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
-                case 4: // Option 4: Vertical Stats
-                    if (selectedRatingPattern === 6) {
-                        return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
-                    } else {
-                        return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' | ');
-                    }
-                case 5: // Option 5: Balanced Stats
-                    const customNames = {
-                        'watchers': 'watching',
-                        'plays': 'played',
-                        'comments': 'commented',
-                        'lists': 'listed',
-                        'collectors': 'collected',
-                        'votes': 'voted'
-                    };
-                    return formattedStats.map(s => {
-                        const customName = customNames[s.name] || s.name;
-                        return `${s.emoji} ${s.value} ${customName}`;
-                    }).join(' | ');
-                default:
-                    return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-            }
-        }
-        
-        // Get stat display name (singular/plural)
-        function getStatDisplayName(stat, value) {
-            const displayMap = {
-                'watchers': value === 1 ? 'watcher' : 'watchers',
-                'plays': value === 1 ? 'play' : 'plays',
-                'comments': value === 1 ? 'comment' : 'comments',
-                'lists': value === 1 ? 'list' : 'lists',
-                'collectors': value === 1 ? 'collector' : 'collectors',
-                'votes': value === 1 ? 'vote' : 'votes'
-            };
-            return displayMap[stat] || stat;
-        }
-        
-        // Format number for display
-        function formatNumber(num) {
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-            }
-            if (num >= 1000) {
-                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-            }
-            return num.toString();
-        }
+            document.getElementById('stats-option-1').classList.add('selected');
+            document.getElementById('stats1').checked = true;
 
-        // Select rating style
-        function selectRatingStyle(style) {
-            selectedRatingStyle = style;
-
-            // Update UI
-            styleStars.classList.remove('selected');
-            styleHearts.classList.remove('selected');
-            styleProgress.classList.remove('selected');
-
-            document.getElementById(`style-${style}`).classList.add('selected');
-
-            // Update visuals
+            generateRatingPresets();
+            updateSelectedCount();
             updateRatingStyleVisuals();
-            updatePatternExamples();
+            updatePatternPreview();
+            updateSelectedStatsDisplay();
+            updateAddonNamePreview();
             updatePreview();
 
-            // Save to localStorage
-            saveData();
+            alert('Configuration reset successfully!');
         }
+    }
 
-        // Update rating style visuals based on current rating value
-        function updateRatingStyleVisuals() {
-            // Update stars visual
-            let stars = '';
-            for (let i = 1; i <= 10; i++) {
-                stars += i <= previewRatingValue ? '★' : '☆';
-            }
-            starsVisual.textContent = stars;
-
-            // Update hearts visual
-            let hearts = '';
-            for (let i = 1; i <= 10; i++) {
-                hearts += i <= previewRatingValue ? '❤️' : '🤍';
-            }
-            heartsVisual.textContent = hearts;
-
-            // Update progress bar visual
-            let progress = '';
-            for (let i = 1; i <= 10; i++) {
-                progress += i <= previewRatingValue ? '▰' : '▱';
-            }
-            progressVisual.textContent = progress;
-        }
-
-        // Generate rating visual for a given style and rating
-        function generateRatingVisual(style, rating) {
-            let visual = '';
-
-            switch(style) {
-                case 'hearts':
-                    for (let i = 1; i <= 10; i++) {
-                        visual += i <= rating ? '❤️' : '🤍';
-                    }
-                    break;
-                case 'progress':
-                    for (let i = 1; i <= 10; i++) {
-                        visual += i <= rating ? '▰' : '▱';
-                    }
-                    break;
-                case 'stars':
-                default:
-                    for (let i = 1; i <= 10; i++) {
-                        visual += i <= rating ? '★' : '☆';
-                    }
-                    break;
-            }
-
-            return visual;
-        }
-        
-        // Format rating title for preview
-        function formatRatingTitlePreview(pattern, ratingStyle, rating, title, type, season = null, episode = null) {
-            const ratingVisual = generateRatingVisual(ratingStyle, rating);
-            const statsLine = getStatsLinePreview(rating);
-            
-            // Special case for Pattern 0 - no stats line needed
-            if (pattern === 0) {
-                if (type === 'movie') {
-                    return `${ratingVisual}\n"${title}" ${rating}/10`;
-                } else if (season && episode) {
-                    return `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10`;
-                } else {
-                    return `${ratingVisual}\n"${title}" Series ${rating}/10`;
-                }
-            }
-            
-            // Pattern 1: Emoji-First Vertical
-            if (pattern === 1) {
-                let displayTitle1 = title;
-                if (type === 'series') {
-                    if (season && episode) {
-                        displayTitle1 = `${title} S${season}E${episode}`;
-                    } else {
-                        displayTitle1 = `${title} Series`;
-                    }
-                } else {
-                    displayTitle1 = `${title} (Movie)`;
-                }
-                
-                return `⭐ Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n📊 ${rating} out of 10 stars`;
-            }
-            
-            // Pattern 6: Cinematic Rating Card
-            if (pattern === 6) {
-                if (type === 'movie') {
-                    const movieTitle = `🎬 ${title} (1999)`;
-                    return `${movieTitle}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
-                } else if (type === 'series') {
-                    if (season && episode) {
-                        // Detect series type for emoji
-                        let seriesEmoji = '📺';
-                        const animeKeywords = ['attack on titan', 'demon slayer', 'naruto', 'one piece'];
-                        const animationKeywords = ['rick and morty', 'south park', 'family guy', 'simpsons'];
-                        const docKeywords = ['planet earth', 'cosmos', 'blue planet', 'documentary'];
-                        
-                        const lowerTitle = title.toLowerCase();
-                        if (animeKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '🐉';
-                        else if (animationKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '🎨';
-                        else if (docKeywords.some(keyword => lowerTitle.includes(keyword))) seriesEmoji = '📽️';
-                        
-                        // Get episode type indicator
-                        let episodeIndicator = '';
-                        if (episode === 1) episodeIndicator = ' 🚀';
-                        if (episode >= 10) episodeIndicator = ' 🔚';
-                        
-                        return `${seriesEmoji} ${title} S${season}E${episode}${episodeIndicator}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
-                    } else {
-                        return `📺 ${title} (Series)\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
-                    }
-                }
-            }
-            
-            // Fallback
-            return `${ratingVisual}\n"${title}" ${rating}/10`;
-        }
-
-        // Update addon name preview
-        function updateAddonNamePreview() {
-            const showUsername = showUsernameCheckbox.checked;
-            if (showUsername && currentUsername) {
-                addonNamePreview.textContent = `Trakt Sync & Rate (${currentUsername})`;
-            } else {
-                addonNamePreview.textContent = `Trakt Sync & Rate`;
-            }
-        }
-
-        // Generate rating preset buttons (1-10)
-        function generateRatingPresets() {
-            ratingPresetsDiv.innerHTML = '';
-
-            for (let rating = 1; rating <= 10; rating++) {
-                const isSelected = selectedRatings.includes(rating);
-
-                // Create stars visualization
-                let stars = '';
-                for (let i = 1; i <= 10; i++) {
-                    stars += i <= rating ? '★' : '☆';
-                }
-
-                const preset = document.createElement('div');
-                preset.className = `rating-preset ${isSelected ? 'selected' : ''}`;
-                preset.innerHTML = `
-                    <div class="stars">${stars}</div>
-                    <div class="value">${rating}/10</div>
-                `;
-                preset.onclick = () => toggleRatingPreset(rating);
-                ratingPresetsDiv.appendChild(preset);
-            }
-        }
-
-        // Toggle rating preset (now allows up to 10)
-        function toggleRatingPreset(rating) {
-            const index = selectedRatings.indexOf(rating);
-
-            if (index > -1) {
-                // Remove if already selected
-                selectedRatings.splice(index, 1);
-            } else {
-                // Add if not already selected
-                selectedRatings.push(rating);
-                selectedRatings.sort((a, b) => a - b);
-            }
-
-            generateRatingPresets();
-            updateSelectedCount();
-            updatePreview();
-            saveData();
-        }
-
-        // Select all ratings (1-10)
-        function selectAllRatings() {
-            selectedRatings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-            generateRatingPresets();
-            updateSelectedCount();
-            updatePreview();
-            saveData();
-        }
-
-        // Clear all ratings
-        function clearAllRatings() {
-            selectedRatings = [];
-            generateRatingPresets();
-            updateSelectedCount();
-            updatePreview();
-            saveData();
-        }
-
-        // Select default ratings (5, 7, 10)
-        function selectDefaultRatings() {
-            selectedRatings = [5, 7, 10];
-            generateRatingPresets();
-            updateSelectedCount();
-            updatePreview();
-            saveData();
-        }
-
-        // Update selected count display
-        function updateSelectedCount() {
-            selectedCountSpan.textContent = `${selectedRatings.length}/10`;
-        }
-
-        // Update preview based on current settings
-        function updatePreview() {
-            const enableWatched = enableWatchedCheckbox.checked;
-            const enableUnwatched = enableUnwatchedCheckbox.checked;
-            const enableSeasonWatched = enableSeasonWatchedCheckbox.checked;
-            const enableRatings = enableRatingsCheckbox.checked;
-
-            // Movie preview
-            let movieWatchedHTML = '';
-            let movieUnwatchedHTML = '';
-            let movieRatingsHTML = '';
-            let movieStreams = 0;
-
-            if (enableWatched) {
-                movieWatchedHTML = '<div class="preview-item watched">✅ Mark "The Matrix" as Watched</div>';
-                movieStreams += 1;
-            }
-
-            if (enableUnwatched) {
-                movieUnwatchedHTML = '<div class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>';
-                movieStreams += 1;
-            }
-
-            if (enableRatings && selectedRatings.length > 0) {
-                selectedRatings.forEach(rating => {
-                    const ratingText = formatRatingTitlePreview(selectedRatingPattern, selectedRatingStyle, rating, 'The Matrix', 'movie');
-                    movieRatingsHTML += `<div class="preview-item rating">${ratingText}</div>`;
-                    movieStreams += 1;
-                });
-            }
-
-            movieWatchedContent.innerHTML = movieWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
-            movieUnwatchedContent.innerHTML = movieUnwatchedHTML || '<div class="preview-item" style="color:#888;">No unwatched options enabled</div>';
-            movieRatingsContent.innerHTML = movieRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
-            movieStreamCount.textContent = movieStreams;
-
-            // Series preview (episode view)
-            let seriesWatchedHTML = '';
-            let seriesRatingsHTML = '';
-            let seriesStreams = 0;
-
-            if (enableWatched) {
-                seriesWatchedHTML = `<div class="preview-item watched">✅ Mark S1E1 of "Breaking Bad" as Watched</div>`;
-                seriesStreams += 1;
-
-                if (enableSeasonWatched) {
-                    seriesWatchedHTML += `<div class="preview-item season">📅 Mark Season 1 of "Breaking Bad" as Watched</div>`;
-                    seriesStreams += 1;
-                }
-
-                seriesWatchedHTML += `<div class="preview-item watched">📺 Mark Entire "Breaking Bad" Series as Watched</div>`;
-                seriesStreams += 1;
-            }
-
-            if (enableUnwatched) {
-                seriesWatchedHTML += `<div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>`;
-                seriesStreams += 1;
-            }
-
-            if (enableRatings && selectedRatings.length > 0) {
-                selectedRatings.forEach(rating => {
-                    const ratingText = formatRatingTitlePreview(selectedRatingPattern, selectedRatingStyle, rating, 'Breaking Bad', 'series', 1, 1);
-                    seriesRatingsHTML += `<div class="preview-item rating">${ratingText}</div>`;
-                    seriesStreams += 1;
-                });
-            }
-
-            seriesWatchedContent.innerHTML = seriesWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
-            seriesRatingsContent.innerHTML = seriesRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
-            seriesStreamCount.textContent = seriesStreams;
-            
-            // Anime preview (Pattern 6 example)
-            let animeRatingsHTML = '';
-            if (enableRatings && selectedRatingPattern === 6) {
-                const animeRating = previewRatingValue;
-                const ratingText = formatRatingTitlePreview(6, selectedRatingStyle, animeRating, 'Attack on Titan', 'series', 4, 5);
-                animeRatingsHTML = `<div class="preview-item rating">${ratingText}</div>`;
-            } else if (enableRatings && selectedRatingPattern === 6) {
-                const statsLine = getStatsLinePreview(8);
-                animeRatingsHTML = `<div class="preview-item rating">🐉 Attack on Titan S4E5<br>⭐ ★★★★★★★★☆☆<br>🎯 Rating 8/10<br>${statsLine}<br>📊 8 out of 10 stars</div>`;
-            }
-            
-            animeRatingsContent.innerHTML = animeRatingsHTML || '<div class="preview-item" style="color:#888;">Enable Pattern 6 and ratings to see anime example</div>';
-        }
-
-        // Start authentication
-        function startAuth() {
-            const clientId = clientIdInput.value.trim();
-            if (!clientId) {
-                alert('Please enter your Trakt Client ID');
-                return;
-            }
-
-            // Save data
-            saveData();
-
-            // Show auth popup
-            authPopup.style.display = 'flex';
-        }
-
-        // Open Trakt auth page
-        function openTraktAuth() {
-            const clientId = clientIdInput.value.trim();
-            if (!clientId) return;
-
-            const authUrl = `${window.location.origin}/oauth/initiate?clientId=${encodeURIComponent(clientId)}`;
-            window.open(authUrl, '_blank', 'width=600,height=700');
-        }
-
-        // Close auth popup
-        function closeAuthPopup() {
-            authPopup.style.display = 'none';
-            authCodeInput.value = '';
-        }
-
-        // Submit auth code
-        async function submitAuthCode() {
-            const clientId = clientIdInput.value.trim();
-            const authCode = authCodeInput.value.trim();
-
-            if (!clientId || !authCode) {
-                alert('Please enter both Client ID and Authorization Code');
-                return;
-            }
-
+    function loadSavedData() {
+        const saved = localStorage.getItem('trakt_config');
+        if (saved) {
             try {
-                authStatus.className = 'status';
-                authStatus.textContent = 'Authenticating...';
+                const data = JSON.parse(saved);
 
-                const response = await fetch('/oauth/exchange', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: authCode, clientId: clientId })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    traktTokens = data.tokens;
-                    currentUsername = data.username;
-                    authStatus.className = 'status status-success';
-                    authStatus.innerHTML = `Connected as: <strong>${data.username}</strong>`;
-
-                    closeAuthPopup();
-                    updateAddonNamePreview();
-                    generateAddonUrl();
-                } else {
-                    authStatus.className = 'status status-error';
-                    authStatus.textContent = `Error: ${data.error}`;
-                    throw new Error(data.error);
+                // Load basic fields
+                if (data.clientId) clientIdInput.value = data.clientId;
+                if (data.tmdbKey) tmdbKeyInput.value = data.tmdbKey;
+                if (data.upstashUrl) {
+                    upstashUrlInput.value = data.upstashUrl;
+                    upstashUrl = data.upstashUrl;
                 }
-            } catch (error) {
-                authStatus.className = 'status status-error';
-                authStatus.textContent = `Authorization failed: ${error.message}`;
-                console.error('Auth error:', error);
-            }
-        }
-
-        // Generate addon URL
-        function generateAddonUrl() {
-            if (!traktTokens) {
-                alert('Please connect to Trakt first');
-                return;
-            }
-
-            const config = {
-                clientId: clientIdInput.value.trim(),
-                access_token: traktTokens.access_token,
-                refresh_token: traktTokens.refresh_token,
-                expires_in: traktTokens.expires_in,
-                expires_at: traktTokens.expires_at,
-                created_at: traktTokens.created_at,
-                username: traktTokens.username,
-                tmdbKey: tmdbKeyInput.value.trim() || undefined,
-                ratings: enableRatingsCheckbox.checked ? selectedRatings : [],
-                markAsWatched: enableWatchedCheckbox.checked,
-                markAsUnwatched: enableUnwatchedCheckbox.checked,
-                enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
-                showUsernameInName: showUsernameCheckbox.checked,
-                ratingStyle: selectedRatingStyle,
-                ratingPattern: selectedRatingPattern,
-                statsFormat: selectedStatsFormat,
-                selectedStats: selectedStats,
-                markAsPlayedOnRate: markAsPlayedOnRate
-            };
-
-            // Clean undefined values
-            Object.keys(config).forEach(key => config[key] === undefined && delete config[key]);
-
-            // Encode to base64url
-            const configJson = JSON.stringify(config);
-            const configBase64 = btoa(configJson)
-                .replace(/\+/g, '-')
-                .replace(/\//g, '_')
-                .replace(/=+$/g, '');
-
-            const addonUrl = `${window.location.origin}/configured/${configBase64}/manifest.json`;
-            addonUrlDiv.textContent = addonUrl;
-            resultSection.style.display = 'block';
-
-            // Scroll to result
-            resultSection.scrollIntoView({ behavior: 'smooth' });
-
-            // Save data
-            saveData();
-        }
-
-        // Install in Stremio Desktop (via stremio:// protocol)
-        function installInStremioDesktop() {
-            const addonUrl = addonUrlDiv.textContent;
-            if (addonUrl) {
-                const stremioUrl = 'stremio://' + addonUrl.replace(/^https?:\/\//, '');
-                window.location.href = stremioUrl;
-            }
-        }
-
-        // Install in Stremio Web - FIXED URL
-        function installInStremioWeb() {
-            const addonUrl = addonUrlDiv.textContent;
-            if (addonUrl) {
-                const installUrl = `https://web.stremio.com/#/addons?addon=${encodeURIComponent(addonUrl)}`;
-                window.open(installUrl, '_blank');
-            }
-        }
-
-        // Copy to clipboard
-        function copyToClipboard() {
-            const addonUrl = addonUrlDiv.textContent;
-            if (addonUrl) {
-                navigator.clipboard.writeText(addonUrl).then(() => {
-                    alert('Addon URL copied to clipboard!');
-                }).catch(() => {
-                    // Fallback
-                    const textarea = document.createElement('textarea');
-                    textarea.value = addonUrl;
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textarea);
-                    alert('Addon URL copied to clipboard!');
-                });
-            }
-        }
-
-        // Test addon
-        async function testAddon() {
-            const addonUrl = addonUrlDiv.textContent;
-            if (!addonUrl) return;
-
-            try {
-                const response = await fetch(addonUrl);
-                if (response.ok) {
-                    const manifest = await response.json();
-                    alert(`✅ Addon works!\n\nName: ${manifest.name}\nDescription: ${manifest.description}\nID: ${manifest.id}`);
-                } else {
-                    alert(`❌ Failed to fetch manifest: ${response.status}\n\nMake sure the addon server is running and accessible.`);
+                if (data.upstashToken) {
+                    upstashTokenInput.value = data.upstashToken;
+                    upstashToken = data.upstashToken;
                 }
-            } catch (error) {
-                alert('❌ Error: ' + error.message);
-            }
-        }
+                if (data.ratings) selectedRatings = data.ratings;
+                if (data.showUsernameInName !== undefined) showUsernameCheckbox.checked = data.showUsernameInName;
+                if (data.enableWatched !== undefined) enableWatchedCheckbox.checked = data.enableWatched;
+                if (data.enableUnwatched !== undefined) enableUnwatchedCheckbox.checked = data.enableUnwatched;
+                if (data.enableSeasonWatched !== undefined) enableSeasonWatchedCheckbox.checked = data.enableSeasonWatched;
+                if (data.enableWatchlist !== undefined) enableWatchlistCheckbox.checked = data.enableWatchlist;
+                if (data.enableRemoveFromWatchlist !== undefined) enableRemoveFromWatchlistCheckbox.checked = data.enableRemoveFromWatchlist;
+                if (data.keepSingleWatchedState !== undefined) {
+                    keepSingleWatchedStateCheckbox.checked = data.keepSingleWatchedState;
+                    keepSingleWatchedState = data.keepSingleWatchedState;
+                    if (data.keepSingleWatchedState) {
+                        keepSingleStateDisplayGroup.style.display = 'block';
+                    }
+                }
+                if (data.keepSingleStateDisplay) {
+                    keepSingleStateDisplay = data.keepSingleStateDisplay;
+                    if (keepSingleStateDisplay === 'inline') {
+                        keepSingleInlineRadio.checked = true;
+                    } else if (keepSingleStateDisplay === 'newline') {
+                        keepSingleNewlineRadio.checked = true;
+                    } else if (keepSingleStateDisplay === 'none') {
+                        keepSingleNoneRadio.checked = true;
+                    }
+                }
+                if (data.keepSingleStateEmoji) {
+                    keepSingleStateEmoji = data.keepSingleStateEmoji;
+                    if (keepSingleStateEmoji === '🔄') {
+                        emojiRefreshRadio.checked = true;
+                    } else if (keepSingleStateEmoji === '🧹') {
+                        emojiBroomRadio.checked = true;
+                    } else if (keepSingleStateEmoji === '⚡') {
+                        emojiZapRadio.checked = true;
+                    }
+                }
+                if (data.enableRatings !== undefined) enableRatingsCheckbox.checked = data.enableRatings;
+                if (data.markAsPlayedOnRate !== undefined) markAsPlayedOnRateCheckbox.checked = data.markAsPlayedOnRate;
+                if (data.ratingStyle) selectedRatingStyle = data.ratingStyle;
+                if (data.ratingPattern !== undefined) selectedRatingPattern = data.ratingPattern;
+                if (data.statsFormat !== undefined) selectedStatsFormat = data.statsFormat;
+                if (data.selectedStats) selectedStats = data.selectedStats;
+                if (data.previewRatingValue) {
+                    previewRatingValue = data.previewRatingValue;
+                    ratingSlider.value = previewRatingValue;
+                    sliderValue.textContent = previewRatingValue;
+                }
+                if (data.storageMethod) storageMethod = data.storageMethod;
+                if (data.configId) configId = data.configId;
+                if (data.currentUsername) currentUsername = data.currentUsername;
 
-        // Reset configuration
-        function resetConfig() {
-            if (confirm('Are you sure you want to reset all configuration? This will clear your settings and disconnect from Trakt.')) {
-                localStorage.removeItem('trakt_config');
-                clientIdInput.value = '';
-                tmdbKeyInput.value = '';
-                showUsernameCheckbox.checked = true;
-                enableWatchedCheckbox.checked = true;
-                enableUnwatchedCheckbox.checked = true;
-                enableSeasonWatchedCheckbox.checked = true;
-                enableRatingsCheckbox.checked = true;
-                selectedRatings = [5, 7, 10];
-                selectedRatingStyle = 'stars';
-                selectedRatingPattern = 0;
-                selectedStatsFormat = 1;
-                selectedStats = ['plays', 'comments', 'watchers'];
-                previewRatingValue = 5;
-                markAsPlayedOnRate = false;
-                ratingSlider.value = '5';
-                sliderValue.textContent = '5';
-                markAsPlayedOnRateCheckbox.checked = false;
-                traktTokens = null;
-                currentUsername = 'TraktUser';
-                authStatus.className = 'status status-warning';
-                authStatus.textContent = 'Not connected to Trakt';
-                resultSection.style.display = 'none';
+                // Update style selection
+                document.querySelectorAll('.rating-style-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                document.getElementById(`style-${selectedRatingStyle}`).classList.add('selected');
 
-                // Reset stat selectors
-                stat1Select.value = 'plays';
-                stat2Select.value = 'comments';
-                stat3Select.value = 'watchers';
-
-                // Reset style selection UI
-                styleStars.classList.add('selected');
-                styleHearts.classList.remove('selected');
-                styleProgress.classList.remove('selected');
-                
-                // Reset pattern selection UI
+                // Update pattern selection
                 document.querySelectorAll('.pattern-option').forEach(opt => {
                     opt.classList.remove('selected');
                     opt.querySelector('input[type="radio"]').checked = false;
                 });
-                document.getElementById('pattern-option-0').classList.add('selected');
-                document.getElementById('pattern0').checked = true;
-                
-                // Reset stats format UI
+                const patternOption = document.getElementById(`pattern-option-${selectedRatingPattern}`);
+                if (patternOption) {
+                    patternOption.classList.add('selected');
+                    patternOption.querySelector('input[type="radio"]').checked = true;
+                }
+
+                // Update stats format
                 document.querySelectorAll('.stats-format-option').forEach(opt => {
                     opt.classList.remove('selected');
                     opt.querySelector('input[type="radio"]').checked = false;
                 });
-                document.getElementById('stats-option-1').classList.add('selected');
-                document.getElementById('stats1').checked = true;
+                const statsOption = document.getElementById(`stats-option-${selectedStatsFormat}`);
+                if (statsOption) {
+                    statsOption.classList.add('selected');
+                    statsOption.querySelector('input[type="radio"]').checked = true;
+                }
+
+                // Update stats selection
+                if (selectedStats.length >= 3) {
+                    stat1Select.value = selectedStats[0];
+                    stat2Select.value = selectedStats[1];
+                    stat3Select.value = selectedStats[2];
+                }
 
                 generateRatingPresets();
                 updateSelectedCount();
                 updateRatingStyleVisuals();
-                updatePatternExamples();
-                updateStatsExamples();
+                updatePatternPreview();
                 updateSelectedStatsDisplay();
-                updateSelectedFormatDisplay();
                 updateAddonNamePreview();
+                ratingSection.style.display = enableRatingsCheckbox.checked ? 'block' : 'none';
+
+                // Update auth status if we have configId (Upstash storage)
+                if (configId && storageMethod === 'upstash') {
+                    const indicator = mainAuthStatus.querySelector('.upstash-indicator');
+                    if (indicator) {
+                        indicator.className = 'upstash-indicator upstash-connected';
+                    }
+                    mainAuthStatus.className = 'status status-success';
+                    mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-connected"></span> Connected via Upstash as: <strong>${currentUsername || 'TraktUser'}</strong>`;
+                    upstashConnected = true;
+                }
+
                 updatePreview();
 
-                alert('Configuration reset successfully!');
+            } catch (e) {
+                console.warn('Failed to load saved data:', e);
             }
         }
+    }
 
-        // Load saved data from localStorage
-        function loadSavedData() {
-            const saved = localStorage.getItem('trakt_config');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    if (data.clientId) clientIdInput.value = data.clientId;
-                    if (data.tmdbKey) tmdbKeyInput.value = data.tmdbKey;
-                    if (data.ratings) selectedRatings = data.ratings;
-                    if (data.showUsernameInName !== undefined) showUsernameCheckbox.checked = data.showUsernameInName;
-                    if (data.enableWatched !== undefined) enableWatchedCheckbox.checked = data.enableWatched;
-                    if (data.enableUnwatched !== undefined) enableUnwatchedCheckbox.checked = data.enableUnwatched;
-                    if (data.enableSeasonWatched !== undefined) enableSeasonWatchedCheckbox.checked = data.enableSeasonWatched;
-                    if (data.enableRatings !== undefined) enableRatingsCheckbox.checked = data.enableRatings;
-                    if (data.ratingStyle) selectedRatingStyle = data.ratingStyle;
-                    if (data.ratingPattern !== undefined) selectedRatingPattern = data.ratingPattern;
-                    if (data.statsFormat !== undefined) selectedStatsFormat = data.statsFormat;
-                    if (data.selectedStats) selectedStats = data.selectedStats;
-                    if (data.markAsPlayedOnRate !== undefined) {
-                        markAsPlayedOnRate = data.markAsPlayedOnRate;
-                        markAsPlayedOnRateCheckbox.checked = markAsPlayedOnRate;
-                    }
-                    if (data.previewRatingValue) {
-                        previewRatingValue = data.previewRatingValue;
-                        ratingSlider.value = previewRatingValue;
-                        sliderValue.textContent = previewRatingValue;
-                    }
+    function saveData() {
+        const data = {
+            clientId: clientIdInput.value.trim(),
+            tmdbKey: tmdbKeyInput.value.trim(),
+            upstashUrl: upstashUrlInput.value.trim(),
+            upstashToken: upstashTokenInput.value.trim(),
+            ratings: selectedRatings,
+            showUsernameInName: showUsernameCheckbox.checked,
+            enableWatched: enableWatchedCheckbox.checked,
+            enableUnwatched: enableUnwatchedCheckbox.checked,
+            enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
+            enableWatchlist: enableWatchlistCheckbox.checked,
+            enableRemoveFromWatchlist: enableRemoveFromWatchlistCheckbox.checked,
+            keepSingleWatchedState: keepSingleWatchedStateCheckbox.checked,
+            keepSingleStateDisplay: keepSingleStateDisplay,
+            keepSingleStateEmoji: keepSingleStateEmoji,
+            enableRatings: enableRatingsCheckbox.checked,
+            markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked,
+            ratingStyle: selectedRatingStyle,
+            ratingPattern: selectedRatingPattern,
+            statsFormat: selectedStatsFormat,
+            selectedStats: selectedStats,
+            previewRatingValue: previewRatingValue,
+            storageMethod: storageMethod,
+            configId: configId,
+            currentUsername: currentUsername
+        };
+        localStorage.setItem('trakt_config', JSON.stringify(data));
+    }
 
-                    // Set style UI
-                    styleStars.classList.remove('selected');
-                    styleHearts.classList.remove('selected');
-                    styleProgress.classList.remove('selected');
-                    document.getElementById(`style-${selectedRatingStyle}`).classList.add('selected');
-                    
-                    // Set pattern UI
-                    document.querySelectorAll('.pattern-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                        opt.querySelector('input[type="radio"]').checked = false;
-                    });
-                    const patternOption = document.getElementById(`pattern-option-${selectedRatingPattern}`);
-                    if (patternOption) {
-                        patternOption.classList.add('selected');
-                        patternOption.querySelector('input[type="radio"]').checked = true;
-                    }
-                    
-                    // Set stats format UI
-                    document.querySelectorAll('.stats-format-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                        opt.querySelector('input[type="radio"]').checked = false;
-                    });
-                    const statsOption = document.getElementById(`stats-option-${selectedStatsFormat}`);
-                    if (statsOption) {
-                        statsOption.classList.add('selected');
-                        statsOption.querySelector('input[type="radio"]').checked = true;
-                    }
-                    
-                    // Set stat selectors
-                    if (selectedStats.length >= 3) {
-                        stat1Select.value = selectedStats[0];
-                        stat2Select.value = selectedStats[1];
-                        stat3Select.value = selectedStats[2];
-                    }
-
-                    generateRatingPresets();
-                    updateSelectedCount();
-                    updateRatingStyleVisuals();
-                    updatePatternExamples();
-                    updateStatsExamples();
-                    updateSelectedStatsDisplay();
-                    updateSelectedFormatDisplay();
-                    updateAddonNamePreview();
-                    ratingSection.style.display = enableRatingsCheckbox.checked ? 'block' : 'none';
-                } catch (e) {
-                    console.warn('Failed to load saved data:', e);
-                }
-            }
+    // Helper function to convert UTF-8 string to Base64 URL-safe
+    function utf8ToBase64UrlSafe(str) {
+        // First encode the string as UTF-8
+        const utf8Bytes = new TextEncoder().encode(str);
+        
+        // Convert to binary string
+        let binary = '';
+        for (let i = 0; i < utf8Bytes.length; i++) {
+            binary += String.fromCharCode(utf8Bytes[i]);
         }
+        
+        // Convert to base64 and make it URL-safe
+        return btoa(binary)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/g, '');
+    }
 
-        // Save data to localStorage
-        function saveData() {
-            const data = {
-                clientId: clientIdInput.value.trim(),
-                tmdbKey: tmdbKeyInput.value.trim(),
-                ratings: selectedRatings,
-                showUsernameInName: showUsernameCheckbox.checked,
-                enableWatched: enableWatchedCheckbox.checked,
-                enableUnwatched: enableUnwatchedCheckbox.checked,
-                enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
-                enableRatings: enableRatingsCheckbox.checked,
-                ratingStyle: selectedRatingStyle,
-                ratingPattern: selectedRatingPattern,
-                statsFormat: selectedStatsFormat,
-                selectedStats: selectedStats,
-                markAsPlayedOnRate: markAsPlayedOnRate,
-                previewRatingValue: previewRatingValue
-            };
-            localStorage.setItem('trakt_config', JSON.stringify(data));
+    // Helper function to decode Base64 URL-safe to UTF-8 string
+    function base64UrlSafeToUtf8(base64) {
+        // Convert from URL-safe to standard base64
+        let standardBase64 = base64
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        
+        // Add padding if needed
+        while (standardBase64.length % 4) {
+            standardBase64 += '=';
         }
-
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+        
+        // Decode base64 to binary string
+        const binary = atob(standardBase64);
+        
+        // Convert binary string to UTF-8 bytes
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        
+        // Decode UTF-8 bytes to string
+        return new TextDecoder().decode(bytes);
+    }
+</script>
 </body>
 </html>
