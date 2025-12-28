@@ -51,7 +51,7 @@ app.use((req, res, next) => {
 app.options('*', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-AllowHeaders', 'Content-Type, Range');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
   res.sendStatus(200);
 });
 
@@ -186,11 +186,7 @@ function parseStremioId(id, type) {
   return null;
 }
 
-<<<<<<< HEAD
 // Get media emoji
-=======
-// Get media emoji based on type and title
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 function getMediaEmoji(type, title = '') {
   if (type === 'movie') {
     return '🎬';
@@ -814,7 +810,6 @@ app.post('/upstash/test', async (req, res) => {
 });
 
 // ============================================
-<<<<<<< HEAD
 // Token Refresh Helper
 // ============================================
 
@@ -1137,9 +1132,6 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
 
 // ============================================
 // Trakt API Function (UPDATED with Watchlist, Cleanup, and Rating Cleanup)
-=======
-// Trakt API Function (UPDATED with Watchlist)
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 // ============================================
 
 async function makeTraktRequest(action, type, imdbId, title, userConfig, rating = null, season = null, episode = null) {
@@ -1526,11 +1518,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
         }
         break;
 
-<<<<<<< HEAD
       // Watchlist actions (remain the same)
-=======
-      // NEW: Add to Watchlist action
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
       case 'add_to_watchlist':
         if (type === 'movie') {
           response = await fetch('https://api.trakt.tv/sync/watchlist', {
@@ -1553,10 +1541,6 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           message = `Added "${title}" to watchlist`;
         } else if (type === 'series') {
-<<<<<<< HEAD
-=======
-          // Add entire series to watchlist (no episodes)
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
           response = await fetch('https://api.trakt.tv/sync/watchlist', {
             method: 'POST',
             headers: {
@@ -1579,10 +1563,6 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
         }
         break;
 
-<<<<<<< HEAD
-=======
-      // NEW: Remove from Watchlist action
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
       case 'remove_from_watchlist':
         if (type === 'movie') {
           response = await fetch('https://api.trakt.tv/sync/watchlist/remove', {
@@ -1605,10 +1585,6 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           message = `Removed "${title}" from watchlist`;
         } else if (type === 'series') {
-<<<<<<< HEAD
-=======
-          // Remove entire series from watchlist
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
           response = await fetch('https://api.trakt.tv/sync/watchlist/remove', {
             method: 'POST',
             headers: {
@@ -1659,11 +1635,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 }
 
 // ============================================
-<<<<<<< HEAD
 // Stream Object Creator (UPDATED with Keep Single State Display Option)
-=======
-// Stream Object Creator (UPDATED with Watchlist)
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 // ============================================
 
 async function createStreamObject(title, action, type, imdbId, rating = null, season = null, episode = null, config = '', year = null, userConfig = null) {
@@ -1676,11 +1648,8 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
   let ratingStyle = 'stars';
   let statsFormat = 1;
   let selectedStats = ['watchers', 'plays', 'comments'];
-<<<<<<< HEAD
   let keepSingleStateDisplay = 'inline'; // Control display of keep single state text
   let keepSingleStateEmoji = '🔄'; // Default emoji for keep single state
-=======
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 
   if (!decodedConfig) {
     try {
@@ -1702,10 +1671,7 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
   const mediaEmoji = getMediaEmoji(type, title);
   const yearText = year ? `(${year})` : type === 'movie' ? '(Movie)' : '(Series)';
   const mediaType = type === 'movie' ? 'movie' : 'series';
-<<<<<<< HEAD
   const keepSingleState = decodedConfig?.keepSingleWatchedState || false;
-=======
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 
   if (action === 'mark_watched') {
     if (type === 'movie') {
@@ -1771,17 +1737,9 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId);
     streamName = "Trakt Rating";
   } else if (action === 'add_to_watchlist') {
-<<<<<<< HEAD
     streamTitle = `📥 Add to Watchlist\n${mediaEmoji} "${title}" ${yearText}\n✅ Add ${mediaType} to your Trakt watchlist`;
     streamName = "Trakt Watchlist";
   } else if (action === 'remove_from_watchlist') {
-=======
-    // Using your preferred format
-    streamTitle = `📥 Add to Watchlist\n${mediaEmoji} "${title}" ${yearText}\n✅ Add ${mediaType} to your Trakt watchlist`;
-    streamName = "Trakt Watchlist";
-  } else if (action === 'remove_from_watchlist') {
-    // Using your preferred format
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
     streamTitle = `📤 Remove from Watchlist\n${mediaEmoji} "${title}" ${yearText}\n🗑️ Remove ${mediaType} from your Trakt watchlist`;
     streamName = "Trakt Watchlist";
   }
@@ -1811,11 +1769,7 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
 }
 
 // ============================================
-<<<<<<< HEAD
 // MANIFEST ROUTES
-=======
-// FIXED: DEFAULT MANIFEST
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 // ============================================
 
 app.get("/manifest.json", (req, res) => {
@@ -1825,11 +1779,7 @@ app.get("/manifest.json", (req, res) => {
     id: "org.stremio.trakt",
     version: "2.2.1",
     name: "Trakt Sync & Rate",
-<<<<<<< HEAD
     description: "Sync watched states, rate content, and manage watchlist on Trakt.tv - configure your instance with Upstash Redis for persistent connection",
-=======
-    description: "Sync watched states, rate content, and manage watchlist on Trakt.tv - configure your instance",
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
     resources: ["stream"],
     types: ["movie", "series"],
     catalogs: [],
@@ -1838,10 +1788,6 @@ app.get("/manifest.json", (req, res) => {
       configurable: true,
       configurationRequired: true
     },
-<<<<<<< HEAD
-=======
-    // UPDATED: Using jsDelivr CDN
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
     background: BACKGROUND_URL,
     logo: LOGO_URL,
     icon: ICON_URL,
@@ -1852,13 +1798,6 @@ app.get("/manifest.json", (req, res) => {
   res.json(manifest);
 });
 
-<<<<<<< HEAD
-=======
-// ============================================
-// FIXED: CONFIGURED MANIFEST
-// ============================================
-
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 app.get("/configured/:config/manifest.json", (req, res) => {
   const { config } = req.params;
 
@@ -1888,11 +1827,7 @@ app.get("/configured/:config/manifest.json", (req, res) => {
       id: `org.stremio.trakt.${config}`,
       version: "2.2.1",
       name: addonName,
-<<<<<<< HEAD
       description: `Sync watched states, rate content, and manage watchlist on Trakt.tv${username ? ` - ${username}'s instance` : ''} with Upstash Redis persistent storage`,
-=======
-      description: `Sync watched states, rate content, and manage watchlist on Trakt.tv${username ? ` - ${username}'s instance` : ''}`,
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
       resources: ["stream"],
       types: ["movie", "series"],
       catalogs: [],
@@ -1901,10 +1836,6 @@ app.get("/configured/:config/manifest.json", (req, res) => {
         configurable: true,
         configurationRequired: false
       },
-<<<<<<< HEAD
-=======
-      // UPDATED: Using jsDelivr CDN
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
       background: BACKGROUND_URL,
       logo: LOGO_URL,
       icon: ICON_URL,
@@ -1930,10 +1861,6 @@ app.get("/configured/:config/manifest.json", (req, res) => {
         configurable: true,
         configurationRequired: true
       },
-<<<<<<< HEAD
-=======
-      // UPDATED: Using jsDelivr CDN
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
       background: BACKGROUND_URL,
       logo: LOGO_URL,
       icon: ICON_URL
@@ -1943,24 +1870,13 @@ app.get("/configured/:config/manifest.json", (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-=======
-// ============================================
-// COMPATIBILITY ROUTE
-// ============================================
-
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 app.get("/:config/manifest.json", (req, res) => {
   const { config } = req.params;
   res.redirect(`/configured/${config}/manifest.json`);
 });
 
 // ============================================
-<<<<<<< HEAD
 // Stream Endpoint (UPDATED with Upstash support)
-=======
-// Stream Endpoint (UPDATED with Watchlist)
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 // ============================================
 
 app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
@@ -2024,7 +1940,6 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
       markAsUnwatched = true,
       enableSeasonWatched = true,
       enableWatchlist = true,
-<<<<<<< HEAD
       enableRemoveFromWatchlist = true,
       keepSingleWatchedState = false,
       keepSingleStateDisplay = 'inline',
@@ -2032,12 +1947,6 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
     } = userConfig;
 
     console.log(`[STREAM] Config - Watched: ${markAsWatched}, Unwatched: ${markAsUnwatched}, Ratings: ${ratings.length}, Season: ${enableSeasonWatched}, Watchlist: ${enableWatchlist}, KeepSingleState: ${keepSingleWatchedState}, Display: ${keepSingleStateDisplay}, Emoji: ${keepSingleStateEmoji}`);
-=======
-      enableRemoveFromWatchlist = true
-    } = userConfig;
-
-    console.log(`[STREAM] Config - Watched: ${markAsWatched}, Unwatched: ${markAsUnwatched}, Ratings: ${ratings.length}, Season: ${enableSeasonWatched}, Watchlist: ${enableWatchlist}`);
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 
     if (type === 'movie') {
       // Watched/Unwatched options
@@ -2157,7 +2066,6 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
           streams.push(await createStreamObject(title, 'mark_unwatched', 'series', parsedId.imdbId, null, parsedId.season, parsedId.episode, config, year, userConfig));
         }
 
-<<<<<<< HEAD
         // Watchlist options for series (available in episode view)
         if (enableWatchlist) {
           streams.push(await createStreamObject(title, 'add_to_watchlist', 'series', parsedId.imdbId, null, null, null, config, year, userConfig));
@@ -2167,8 +2075,6 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
           streams.push(await createStreamObject(title, 'remove_from_watchlist', 'series', parsedId.imdbId, null, null, null, config, year, userConfig));
         }
 
-=======
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
         // Rating options for episodes
         if (ratings && ratings.length > 0) {
           for (const rating of ratings) {
@@ -2248,10 +2154,7 @@ app.get("/configured/:config/trakt-action", async (req, res) => {
   console.log(`  Action: ${action}, Type: ${type}, IMDb: ${imdbId}`);
   console.log(`  Title: ${decodeURIComponent(title)}`);
 
-<<<<<<< HEAD
   // Using the proven working video URL from Overseerr
-=======
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
   const waitUrl = "https://cdn.jsdelivr.net/gh/ericvlog/material@main/stream1.mp4";
 
   setTimeout(async () => {
@@ -2264,28 +2167,6 @@ app.get("/configured/:config/trakt-action", async (req, res) => {
         // we need to handle cleanup in the rate_only action itself
         // This is now handled inside makeTraktRequest for rate_only action
 
-<<<<<<< HEAD
-=======
-        if (action === 'rate_only' && userConfig.markAsPlayedOnRate) {
-          console.log(`[TRAKT-ACTION] Also marking as played (markAsPlayedOnRate enabled)`);
-
-          const markResult = await makeTraktRequest(
-            'mark_watched',
-            type,
-            imdbId,
-            decodeURIComponent(title),
-            userConfig,
-            null,
-            season,
-            episode
-          );
-
-          if (markResult.success) {
-            console.log(`[TRAKT] ✅ ${markResult.message}`);
-          }
-        }
-
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
         const result = await makeTraktRequest(
           action,
           type,
@@ -2380,11 +2261,7 @@ if (process.env.NODE_ENV !== 'production' || process.env.RUN_SERVER) {
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`⚡ Server URL: ${SERVER_URL}`);
     console.log(`🖼️  Images: Logo: ${LOGO_URL}, Background: ${BACKGROUND_URL}`);
-<<<<<<< HEAD
     console.log(`🔧 Features: Watched/Unwatched, Season Watched, Ratings, Watchlist, Keep Single State`);
-=======
-    console.log(`🔧 Features: Watched/Unwatched, Season Watched, Ratings, Watchlist`);
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
     console.log(`🎨 Rating Patterns: Original, Pattern 1, Pattern 6`);
     console.log(`📊 Stats Display: Customizable Trakt stats (choose any 3)`);
     console.log(`🔐 Persistent Storage: Upstash Redis for 90-day token storage`);

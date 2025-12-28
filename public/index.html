@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
     <title>Trakt Sync & Rate - Stremio Addon</title>
-=======
-    <title>Trakt Sync & Rate - Stremio Addon Configurator</title>
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
     <style>
         * {
             margin: 0;
@@ -19,23 +15,14 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #e2e8f0;
-<<<<<<< HEAD
             min-height: 100vh;
             line-height: 1.6;
-=======
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-<<<<<<< HEAD
             padding: 20px;
-=======
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
         }
 
         header {
@@ -598,28 +585,16 @@
             .stats-selection {
                 flex-direction: column;
             }
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             .rating-style-option,
             .stat-select {
                 min-width: 100%;
             }
-<<<<<<< HEAD
 
             .btn-group {
                 flex-direction: column;
             }
 
-=======
-            
-            .btn-group {
-                flex-direction: column;
-            }
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             .btn {
                 width: 100%;
                 justify-content: center;
@@ -688,7 +663,6 @@
             color: #94a3b8;
             margin-top: 4px;
         }
-<<<<<<< HEAD
 
         /* Upstash status indicator */
         .upstash-indicator {
@@ -749,14 +723,11 @@
             margin-top: -5px;
             margin-bottom: 10px;
         }
-=======
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-<<<<<<< HEAD
             <h1>🎬 Trakt Sync & Rate v2.2.1</h1>
             <p class="tagline">Create your personalized Stremio addon to sync watched states, rate content, and manage watchlist on Trakt.tv with persistent Upstash Redis storage</p>
             <div class="info-box">
@@ -798,42 +769,9 @@
                         ↗ Get free Upstash Redis database (required for persistent connection)
                     </a>
                 </div>
-=======
-            <h1>🎬 Trakt Sync & Rate</h1>
-            <p class="tagline">Create your personalized Stremio addon to sync watched states, rate content, and manage watchlist on Trakt.tv</p>
-        </header>
-
-        <!-- Authentication Section -->
-        <section class="section">
-            <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-                Authentication
-            </h2>
-            
-            <div class="form-group">
-                <label for="clientId">Trakt Client ID
-                    <span class="tooltip">
-                        ⓘ
-                        <span class="tooltiptext">
-                            Get your Trakt Client ID from:<br>
-                            1. Go to https://trakt.tv/oauth/applications<br>
-                            2. Click "New Application"<br>
-                            3. Name it "Stremio Trakt Addon"<br>
-                            4. Set Redirect URI to: urn:ietf:wg:oauth:2.0:oob<br>
-                            5. Copy the Client ID
-                        </span>
-                    </span>
-                </label>
-                <input type="text" id="clientId" placeholder="Enter your Trakt Client ID">
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             </div>
-            
+
             <div class="form-group">
-<<<<<<< HEAD
                 <label for="upstashToken">Upstash Token
                     <span class="tooltip">
                         ⓘ
@@ -859,36 +797,8 @@
                     Test Upstash Connection
                 </button>
                 <span id="upstashStatus" style="margin-left: 10px; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem;"></span>
-=======
-                <label for="tmdbKey">TMDB API Key (Optional)
-                    <span class="tooltip">
-                        ⓘ
-                        <span class="tooltiptext">
-                            Get from https://www.themoviedb.org/settings/api<br>
-                            Used to fetch movie/show titles for better display<br>
-                            Not required for basic functionality
-                        </span>
-                    </span>
-                </label>
-                <input type="password" id="tmdbKey" placeholder="Enter TMDB API Key (optional)">
             </div>
-            
-            <div class="btn-group">
-                <button class="btn" onclick="startAuth()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                        <polyline points="10 17 15 12 10 7"/>
-                        <line x1="15" y1="12" x2="3" y2="12"/>
-                    </svg>
-                    Connect to Trakt
-                </button>
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
-            </div>
-            
-            <div id="mainAuthStatus" class="status status-warning">Not connected to Trakt</div>
-        </section>
 
-<<<<<<< HEAD
             <div class="form-group">
 <label for="clientId">
     Trakt Client ID 
@@ -946,8 +856,6 @@
             </div>
         </section>
 
-=======
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
         <!-- Addon Settings Section -->
         <section class="section">
             <h2 class="section-title">
@@ -957,16 +865,11 @@
                 </svg>
                 Addon Settings
             </h2>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div class="form-group">
                 <label for="addonName">Addon Display Name</label>
                 <div id="addonNamePreview" style="background: rgba(15, 23, 42, 0.8); border-radius: 10px; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
                     Trakt Sync & Rate
-<<<<<<< HEAD
                 </div>
             </div>
 
@@ -1178,225 +1081,41 @@
                         ★★★★★☆☆☆☆☆
                         "The Matrix" 5/10
                     </div>
-=======
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                 </div>
             </div>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="showUsername" checked>
-                <label for="showUsername">Show username in addon name</label>
-            </div>
-        </section>
 
-<<<<<<< HEAD
             <!-- Stats Format Selection -->
             <div class="form-group">
                 <label>Stats Display Format</label>
 
-=======
-        <!-- Features Section -->
-        <section class="section">
-            <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 12 20 22 4 22 4 12"/>
-                    <rect x="2" y="7" width="20" height="5"/>
-                    <line x1="12" y1="22" x2="12" y2="7"/>
-                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-                </svg>
-                Features to Enable
-            </h2>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="enableWatched" checked>
-                <label for="enableWatched">Mark as Watched</label>
-            </div>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="enableUnwatched" checked>
-                <label for="enableUnwatched">Mark as Unwatched</label>
-            </div>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="enableSeasonWatched" checked>
-                <label for="enableSeasonWatched">Mark Entire Season as Watched (Series)</label>
-            </div>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="enableWatchlist" checked>
-                <label for="enableWatchlist">Add to Watchlist</label>
-            </div>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="enableRemoveFromWatchlist" checked>
-                <label for="enableRemoveFromWatchlist">Remove from Watchlist</label>
-            </div>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="enableRatings" checked>
-                <label for="enableRatings">Enable Ratings</label>
-            </div>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="markAsPlayedOnRate">
-                <label for="markAsPlayedOnRate">Automatically mark as played when rating</label>
-            </div>
-        </section>
-
-        <!-- Ratings Section -->
-        <section id="ratingSection" class="section" style="display: block;">
-            <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                </svg>
-                Ratings Configuration
-            </h2>
-            
-            <div class="form-group">
-                <label>Select Rating Values to Show
-                    <span id="selectedCount" class="slider-value" style="margin-left: 10px;">3/10</span>
-                </label>
-                
-                <div class="rating-presets" id="ratingPresets">
-                    <!-- Rating presets will be generated here -->
-                </div>
-                
-                <div class="btn-group">
-                    <button class="btn btn-small btn-secondary" onclick="selectAllRatings()">Select All</button>
-                    <button class="btn btn-small btn-secondary" onclick="clearAllRatings()">Clear All</button>
-                    <button class="btn btn-small btn-secondary" onclick="selectDefaultRatings()">Default (5, 7, 10)</button>
-                </div>
-            </div>
-            
-            <!-- Rating Style Selection -->
-            <div class="form-group">
-                <label>Rating Visual Style
-                    <span class="tooltip">
-                        ⓘ
-                        <span class="tooltiptext">
-                            Choose how ratings will be displayed in Stremio:<br>
-                            • Stars: ★★★★★☆☆☆☆☆<br>
-                            • Hearts: ❤️❤️❤️🤍🤍🤍🤍🤍🤍🤍<br>
-                            • Progress: ▰▰▰▱▱▱▱▱▱▱
-                        </span>
-                    </span>
-                </label>
-                
-                <div class="rating-style-options">
-                    <div class="rating-style-option selected" id="style-stars" onclick="selectRatingStyle('stars')">
-                        <div class="style-preview" id="starsVisual">★★★★★☆☆☆☆☆</div>
-                        <div class="style-label">Stars</div>
-                    </div>
-                    <div class="rating-style-option" id="style-hearts" onclick="selectRatingStyle('hearts')">
-                        <div class="style-preview" id="heartsVisual">❤️❤️❤️❤️❤️🤍🤍🤍🤍🤍</div>
-                        <div class="style-label">Hearts</div>
-                    </div>
-                    <div class="rating-style-option" id="style-progress" onclick="selectRatingStyle('progress')">
-                        <div class="style-preview" id="progressVisual">▰▰▰▰▰▱▱▱▱▱</div>
-                        <div class="style-label">Progress</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Rating Pattern Selection - COMPACT VERSION -->
-            <div class="form-group">
-                <label>Rating Display Pattern</label>
-                
-                <div class="pattern-options">
-                    <div class="pattern-option selected" id="pattern-option-0" onclick="selectRatingPattern(0)">
-                        <div style="display: flex; align-items: center;">
-                            <input type="radio" name="ratingPattern" id="pattern0" checked>
-                            <div>
-                                <div class="pattern-label">Simple Rating</div>
-                                <div class="pattern-description">Basic rating with visual stars</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="pattern-option" id="pattern-option-1" onclick="selectRatingPattern(1)">
-                        <div style="display: flex; align-items: center;">
-                            <input type="radio" name="ratingPattern" id="pattern1">
-                            <div>
-                                <div class="pattern-label">Emoji-First Vertical</div>
-                                <div class="pattern-description">Detailed rating with stats in vertical format</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="pattern-option" id="pattern-option-6" onclick="selectRatingPattern(6)">
-                        <div style="display: flex; align-items: center;">
-                            <input type="radio" name="ratingPattern" id="pattern6">
-                            <div>
-                                <div class="pattern-label">Cinematic Rating Card</div>
-                                <div class="pattern-description">Professional rating card with media type</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="pattern-preview-container">
-                    <div class="pattern-preview-title">Preview:</div>
-                    <div class="pattern-preview" id="currentPatternPreview">
-                        ★★★★★☆☆☆☆☆
-                        "The Matrix" 5/10
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Stats Format Selection -->
-            <div class="form-group">
-                <label>Stats Display Format</label>
-                
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                 <div class="stats-format-options">
                     <div class="stats-format-option selected" id="stats-option-1" onclick="selectStatsFormat(1)">
                         <input type="radio" name="statsFormat" id="stats1" checked>
                         <label for="stats1" style="display: inline;">Format 1: Compact Stats (👁️ 3.1k watchers - ▶️ 5.8k plays)</label>
                     </div>
-<<<<<<< HEAD
 
-=======
-                    
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                     <div class="stats-format-option" id="stats-option-2" onclick="selectStatsFormat(2)">
                         <input type="radio" name="statsFormat" id="stats2">
                         <label for="stats2" style="display: inline;">Format 2: Detailed Stats (👁️ watchers: 3.1k | ▶️ plays: 5.8k)</label>
                     </div>
-<<<<<<< HEAD
 
-=======
-                    
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                     <div class="stats-format-option" id="stats-option-3" onclick="selectStatsFormat(3)">
                         <input type="radio" name="statsFormat" id="stats3">
                         <label for="stats3" style="display: inline;">Format 3: Minimal Stats (👁️ 3.1k | ▶️ 5.8k)</label>
                     </div>
-<<<<<<< HEAD
 
-=======
-                    
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                     <div class="stats-format-option" id="stats-option-4" onclick="selectStatsFormat(4)">
                         <input type="radio" name="statsFormat" id="stats4">
                         <label for="stats4" style="display: inline;">Format 4: Vertical Stats (multi-line)</label>
                     </div>
-<<<<<<< HEAD
 
-=======
-                    
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                     <div class="stats-format-option" id="stats-option-5" onclick="selectStatsFormat(5)">
                         <input type="radio" name="statsFormat" id="stats5">
                         <label for="stats5" style="display: inline;">Format 5: Balanced Stats (👁️ 3.1k watching | ▶️ 5.8k played)</label>
                     </div>
                 </div>
             </div>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <!-- Stats Selection -->
             <div class="form-group">
                 <label>Select Trakt Stats to Display
@@ -1408,11 +1127,7 @@
                         </span>
                     </span>
                 </label>
-<<<<<<< HEAD
 
-=======
-                
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                 <div class="stats-selection">
                     <div class="stat-select">
                         <label for="stat1">Stat 1</label>
@@ -1425,11 +1140,7 @@
                             <option value="votes">👍 Votes</option>
                         </select>
                     </div>
-<<<<<<< HEAD
 
-=======
-                    
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                     <div class="stat-select">
                         <label for="stat2">Stat 2</label>
                         <select id="stat2Select">
@@ -1441,11 +1152,7 @@
                             <option value="votes">👍 Votes</option>
                         </select>
                     </div>
-<<<<<<< HEAD
 
-=======
-                    
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                     <div class="stat-select">
                         <label for="stat3">Stat 3</label>
                         <select id="stat3Select">
@@ -1458,20 +1165,12 @@
                         </select>
                     </div>
                 </div>
-<<<<<<< HEAD
 
-=======
-                
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                 <div class="selected-stats-display">
                     Selected Stats: <span id="selectedStatsDisplay">👁️ Watchers, ▶️ Plays, 💬 Comments</span>
                 </div>
             </div>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <!-- Preview Slider -->
             <div class="form-group">
                 <label>Preview with different rating values</label>
@@ -1500,11 +1199,7 @@
                 </svg>
                 Addon Preview
             </h2>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div class="preview-grid">
                 <!-- Movie Preview -->
                 <div class="preview-category">
@@ -1525,11 +1220,7 @@
                         <!-- Rating options will appear here -->
                     </div>
                 </div>
-<<<<<<< HEAD
 
-=======
-                
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                 <!-- Series Preview -->
                 <div class="preview-category">
                     <div class="preview-category-title">
@@ -1559,19 +1250,11 @@
                 </svg>
                 Generate Your Addon
             </h2>
-<<<<<<< HEAD
 
             <p style="margin-bottom: 20px; color: #94a3b8;">
                 Make sure you're connected to Trakt and all settings are configured before generating your addon.
             </p>
 
-=======
-            
-            <p style="margin-bottom: 20px; color: #94a3b8;">
-                Make sure you're connected to Trakt and all settings are configured before generating your addon.
-            </p>
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div class="btn-group">
                 <button class="btn" onclick="generateAddonUrl()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1594,7 +1277,6 @@
                 </svg>
                 Your Addon is Ready!
             </h2>
-<<<<<<< HEAD
 
             <p style="margin-bottom: 15px; color: #94a3b8;">
                 Copy the URL below and add it to Stremio as a Community Addon:
@@ -1604,17 +1286,6 @@
                 <!-- Addon URL will appear here -->
             </div>
 
-=======
-            
-            <p style="margin-bottom: 15px; color: #94a3b8;">
-                Copy the URL below and add it to Stremio as a Community Addon:
-            </p>
-            
-            <div class="addon-url" id="addonUrlDiv">
-                <!-- Addon URL will appear here -->
-            </div>
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div class="btn-group">
                 <button class="btn" onclick="installInStremioDesktop()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1658,7 +1329,6 @@
 
         <!-- Footer -->
         <footer style="text-align: center; margin-top: 40px; padding: 20px; color: #64748b; font-size: 0.9rem;">
-<<<<<<< HEAD
             <p>Trakt Sync & Rate v2.2.1 - A Stremio Community Addon with Upstash Redis Support</p>
             <p style="margin-top: 10px;">
                 Need help? Check the
@@ -1669,14 +1339,6 @@
                 <a href="https://upstash.com/docs/redis/overall/getstarted" style="color: #60a5fa; text-decoration: none;" target="_blank">
                     Upstash Redis Guide
                 </a>
-=======
-            <p>Trakt Sync & Rate - A Stremio Community Addon</p>
-            <p style="margin-top: 10px;">
-                Need help? Check the 
-                <a href="https://github.com/ericvlog/trakt-sync-rating-addon" style="color: #60a5fa; text-decoration: none;" target="_blank">
-                    GitHub Repository
-                </a>
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             </p>
         </footer>
     </div>
@@ -1685,11 +1347,7 @@
     <div id="authPopup" class="auth-popup">
         <div class="auth-content">
             <h2 class="auth-title">Connect to Trakt.tv</h2>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div class="auth-steps">
                 <div class="auth-step">Click "Open Trakt.tv" button below</div>
                 <div class="auth-step">Log in to your Trakt account (if not already)</div>
@@ -1697,11 +1355,7 @@
                 <div class="auth-step">Copy the authorization code from the page</div>
                 <div class="auth-step">Paste the code below and submit</div>
             </div>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div class="btn-group">
                 <button class="btn" onclick="openTraktAuth()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1713,20 +1367,12 @@
                 </button>
                 <button class="btn btn-secondary" onclick="closeAuthPopup()">Cancel</button>
             </div>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div class="form-group" style="margin-top: 20px;">
                 <label for="authCode">Authorization Code</label>
                 <input type="text" id="authCode" placeholder="Paste the authorization code here">
             </div>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div class="btn-group">
                 <button class="btn" onclick="submitAuthCode()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1736,18 +1382,13 @@
                     Submit Code
                 </button>
             </div>
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             <div id="popupAuthStatus" class="auth-status status">
                 Waiting for authorization...
             </div>
         </div>
     </div>
 
-<<<<<<< HEAD
 <script>
     // State variables
     let traktTokens = null;
@@ -2652,183 +2293,6 @@
             addonUrlDiv.textContent = addonUrl;
             resultSection.style.display = 'block';
             resultSection.scrollIntoView({ behavior: 'smooth' });
-=======
-    <script>
-        // State variables
-        let traktTokens = null;
-        let currentUsername = 'TraktUser';
-        let selectedRatings = [5, 7, 10];
-        let selectedRatingStyle = 'stars';
-        let selectedRatingPattern = 0;
-        let selectedStatsFormat = 1;
-        let selectedStats = ['plays', 'comments', 'watchers'];
-        let previewRatingValue = 5;
-        let markAsPlayedOnRate = false;
-        let enableWatchlist = true;
-        let enableRemoveFromWatchlist = true;
-
-        // DOM Elements
-        const clientIdInput = document.getElementById('clientId');
-        const tmdbKeyInput = document.getElementById('tmdbKey');
-        const showUsernameCheckbox = document.getElementById('showUsername');
-        const enableWatchedCheckbox = document.getElementById('enableWatched');
-        const enableUnwatchedCheckbox = document.getElementById('enableUnwatched');
-        const enableSeasonWatchedCheckbox = document.getElementById('enableSeasonWatched');
-        const enableWatchlistCheckbox = document.getElementById('enableWatchlist');
-        const enableRemoveFromWatchlistCheckbox = document.getElementById('enableRemoveFromWatchlist');
-        const enableRatingsCheckbox = document.getElementById('enableRatings');
-        const markAsPlayedOnRateCheckbox = document.getElementById('markAsPlayedOnRate');
-        const ratingSection = document.getElementById('ratingSection');
-        const ratingPresetsDiv = document.getElementById('ratingPresets');
-        const selectedCountSpan = document.getElementById('selectedCount');
-        const starsVisual = document.getElementById('starsVisual');
-        const heartsVisual = document.getElementById('heartsVisual');
-        const progressVisual = document.getElementById('progressVisual');
-        const currentPatternPreview = document.getElementById('currentPatternPreview');
-        const selectedStatsDisplay = document.getElementById('selectedStatsDisplay');
-        const addonNamePreview = document.getElementById('addonNamePreview');
-        const ratingSlider = document.getElementById('ratingSlider');
-        const sliderValue = document.getElementById('sliderValue');
-        const stat1Select = document.getElementById('stat1Select');
-        const stat2Select = document.getElementById('stat2Select');
-        const stat3Select = document.getElementById('stat3Select');
-
-        // Preview elements
-        const movieWatchedContent = document.getElementById('movieWatchedContent');
-        const movieUnwatchedContent = document.getElementById('movieUnwatchedContent');
-        const movieWatchlistContent = document.getElementById('movieWatchlistContent');
-        const movieRatingsContent = document.getElementById('movieRatingsContent');
-        const movieStreamCount = document.getElementById('movieStreamCount');
-        const seriesWatchedContent = document.getElementById('seriesWatchedContent');
-        const seriesWatchlistContent = document.getElementById('seriesWatchlistContent');
-        const seriesRatingsContent = document.getElementById('seriesRatingsContent');
-        const seriesStreamCount = document.getElementById('seriesStreamCount');
-
-        // Auth elements
-        const authPopup = document.getElementById('authPopup');
-        const authCodeInput = document.getElementById('authCode');
-        const mainAuthStatus = document.getElementById('mainAuthStatus');
-        const popupAuthStatus = document.getElementById('popupAuthStatus');
-
-        // Result elements
-        const resultSection = document.getElementById('resultSection');
-        const addonUrlDiv = document.getElementById('addonUrlDiv');
-
-        // Trakt stats info
-        const traktStatsInfo = {
-            'watchers': { emoji: '👁️', name: 'watchers' },
-            'plays': { emoji: '▶️', name: 'plays' },
-            'comments': { emoji: '💬', name: 'comments' },
-            'lists': { emoji: '📋', name: 'lists' },
-            'collectors': { emoji: '⭐', name: 'collectors' },
-            'votes': { emoji: '👍', name: 'votes' }
-        };
-
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', init);
-
-        function init() {
-            // Set up event listeners
-            showUsernameCheckbox.addEventListener('change', updateAddonNamePreview);
-            enableRatingsCheckbox.addEventListener('change', function() {
-                ratingSection.style.display = this.checked ? 'block' : 'none';
-                updatePreview();
-                saveData();
-            });
-            
-            enableWatchedCheckbox.addEventListener('change', updatePreviewAndSave);
-            enableUnwatchedCheckbox.addEventListener('change', updatePreviewAndSave);
-            enableSeasonWatchedCheckbox.addEventListener('change', updatePreviewAndSave);
-            enableWatchlistCheckbox.addEventListener('change', function() {
-                enableWatchlist = this.checked;
-                updatePreview();
-                saveData();
-            });
-            enableRemoveFromWatchlistCheckbox.addEventListener('change', function() {
-                enableRemoveFromWatchlist = this.checked;
-                updatePreview();
-                saveData();
-            });
-            markAsPlayedOnRateCheckbox.addEventListener('change', function() {
-                markAsPlayedOnRate = this.checked;
-                saveData();
-            });
-            
-            // Rating slider
-            ratingSlider.addEventListener('input', function() {
-                previewRatingValue = parseInt(this.value);
-                sliderValue.textContent = previewRatingValue;
-                updateRatingStyleVisuals();
-                updatePatternPreview();
-                updatePreview();
-                saveData();
-            });
-
-            // Stats selection
-            stat1Select.addEventListener('change', updateStats);
-            stat2Select.addEventListener('change', updateStats);
-            stat3Select.addEventListener('change', updateStats);
-
-            // Initialize components
-            generateRatingPresets();
-            updateSelectedCount();
-            updateRatingStyleVisuals();
-            updatePatternPreview();
-            updateSelectedStatsDisplay();
-            updateAddonNamePreview();
-            updatePreview();
-
-            // Load saved data
-            loadSavedData();
-        }
-
-        function updatePreviewAndSave() {
-            updatePreview();
-            saveData();
-        }
-
-        function formatNumber(num) {
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-            }
-            if (num >= 1000) {
-                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-            }
-            return num.toString();
-        }
-
-        function updateStats() {
-            selectedStats = [
-                stat1Select.value,
-                stat2Select.value,
-                stat3Select.value
-            ];
-            updateSelectedStatsDisplay();
-            updatePatternPreview();
-            updatePreview();
-            saveData();
-        }
-
-        function updateSelectedStatsDisplay() {
-            const statNames = selectedStats.map(stat => {
-                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
-                return `${info.emoji} ${info.name.charAt(0).toUpperCase() + info.name.slice(1)}`;
-            });
-            selectedStatsDisplay.textContent = statNames.join(', ');
-        }
-
-        function selectStatsFormat(format) {
-            selectedStatsFormat = format;
-            document.querySelectorAll('.stats-format-option').forEach(opt => {
-                opt.classList.remove('selected');
-                opt.querySelector('input[type="radio"]').checked = false;
-            });
-            const selectedOption = document.getElementById(`stats-option-${format}`);
-            selectedOption.classList.add('selected');
-            selectedOption.querySelector('input[type="radio"]').checked = true;
-            updatePatternPreview();
-            updatePreview();
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             saveData();
         } catch (error) {
             console.error('Error encoding config:', error);
@@ -2950,16 +2414,10 @@
             });
             document.getElementById('style-stars').classList.add('selected');
 
-<<<<<<< HEAD
-=======
-        function selectRatingPattern(pattern) {
-            selectedRatingPattern = pattern;
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
             document.querySelectorAll('.pattern-option').forEach(opt => {
                 opt.classList.remove('selected');
                 opt.querySelector('input[type="radio"]').checked = false;
             });
-<<<<<<< HEAD
             document.getElementById('pattern-option-0').classList.add('selected');
             document.getElementById('pattern0').checked = true;
 
@@ -2979,112 +2437,9 @@
             updatePreview();
 
             alert('Configuration reset successfully!');
-=======
-            const selectedOption = document.getElementById(`pattern-option-${pattern}`);
-            selectedOption.classList.add('selected');
-            selectedOption.querySelector('input[type="radio"]').checked = true;
-            updatePatternPreview();
-            updatePreview();
-            saveData();
-        }
-
-        function updatePatternPreview() {
-            const visual = generateRatingVisual(selectedRatingStyle, previewRatingValue);
-            const statsLine = getStatsLinePreview(previewRatingValue);
-            
-            let previewText = '';
-            
-            switch(selectedRatingPattern) {
-                case 0:
-                    previewText = `${visual}\n"The Matrix" ${previewRatingValue}/10`;
-                    break;
-                case 1:
-                    previewText = `⭐ Rating: ${previewRatingValue}/10\n🎬 The Matrix (Movie)\n${visual}\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
-                    break;
-                case 6:
-                    previewText = `🎬 The Matrix (1999)\n⭐ ${visual}\n🎯 Rating ${previewRatingValue}/10\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
-                    break;
-                default:
-                    previewText = `${visual}\n"The Matrix" ${previewRatingValue}/10`;
-            }
-            
-            currentPatternPreview.textContent = previewText;
-        }
-
-        function getStatsLinePreview(rating) {
-            const exampleValues = {
-                'watchers': Math.round((rating * 125) + 50),
-                'plays': Math.round((rating * 510) + 1000),
-                'comments': Math.round(rating * 2.4),
-                'lists': Math.round(rating * 5),
-                'collectors': Math.round(rating * 9),
-                'votes': Math.round(rating * 36)
-            };
-
-            const statValues = selectedStats.map(stat => exampleValues[stat] || 0);
-            const formattedStats = selectedStats.map((stat, index) => {
-                const value = statValues[index];
-                const formattedValue = formatNumber(value);
-                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
-                const displayName = getStatDisplayName(stat, value);
-                return {
-                    emoji: info.emoji,
-                    value: formattedValue,
-                    name: displayName
-                };
-            });
-
-            switch(selectedStatsFormat) {
-                case 1: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-                case 2: return formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
-                case 3: return formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
-                case 4: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
-                case 5:
-                    const customNames = {
-                        'watchers': 'watching',
-                        'plays': 'played',
-                        'comments': 'commented',
-                        'lists': 'listed',
-                        'collectors': 'collected',
-                        'votes': 'voted'
-                    };
-                    return formattedStats.map(s => {
-                        const customName = customNames[s.name] || s.name;
-                        return `${s.emoji} ${s.value} ${customName}`;
-                    }).join(' | ');
-                default: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-            }
-        }
-
-        function getStatDisplayName(stat, value) {
-            const displayMap = {
-                'watchers': value === 1 ? 'watcher' : 'watchers',
-                'plays': value === 1 ? 'play' : 'plays',
-                'comments': value === 1 ? 'comment' : 'comments',
-                'lists': value === 1 ? 'list' : 'lists',
-                'collectors': value === 1 ? 'collector' : 'collectors',
-                'votes': value === 1 ? 'vote' : 'votes'
-            };
-            return displayMap[stat] || stat;
-        }
-
-        function selectRatingStyle(style) {
-            selectedRatingStyle = style;
-            // Remove 'selected' class from all style options
-            document.querySelectorAll('.rating-style-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            // Add 'selected' class to the clicked one
-            document.getElementById(`style-${style}`).classList.add('selected');
-            updateRatingStyleVisuals();
-            updatePatternPreview();
-            updatePreview();
-            saveData();
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
         }
     }
 
-<<<<<<< HEAD
     function loadSavedData() {
         const saved = localStorage.getItem('trakt_config');
         if (saved) {
@@ -3101,406 +2456,6 @@
                 if (data.upstashToken) {
                     upstashTokenInput.value = data.upstashToken;
                     upstashToken = data.upstashToken;
-=======
-        function updateRatingStyleVisuals() {
-            let stars = '';
-            for (let i = 1; i <= 10; i++) {
-                stars += i <= previewRatingValue ? '★' : '☆';
-            }
-            starsVisual.textContent = stars;
-
-            let hearts = '';
-            for (let i = 1; i <= 10; i++) {
-                hearts += i <= previewRatingValue ? '❤️' : '🤍';
-            }
-            heartsVisual.textContent = hearts;
-
-            let progress = '';
-            for (let i = 1; i <= 10; i++) {
-                progress += i <= previewRatingValue ? '▰' : '▱';
-            }
-            progressVisual.textContent = progress;
-        }
-
-        function generateRatingVisual(style, rating) {
-            let visual = '';
-            switch(style) {
-                case 'hearts':
-                    for (let i = 1; i <= 10; i++) {
-                        visual += i <= rating ? '❤️' : '🤍';
-                    }
-                    break;
-                case 'progress':
-                    for (let i = 1; i <= 10; i++) {
-                        visual += i <= rating ? '▰' : '▱';
-                    }
-                    break;
-                default:
-                    for (let i = 1; i <= 10; i++) {
-                        visual += i <= rating ? '★' : '☆';
-                    }
-                    break;
-            }
-            return visual;
-        }
-
-        function updateAddonNamePreview() {
-            const showUsername = showUsernameCheckbox.checked;
-            if (showUsername && currentUsername) {
-                addonNamePreview.textContent = `Trakt Sync & Rate (${currentUsername})`;
-            } else {
-                addonNamePreview.textContent = `Trakt Sync & Rate`;
-            }
-        }
-
-        function generateRatingPresets() {
-            ratingPresetsDiv.innerHTML = '';
-            for (let rating = 1; rating <= 10; rating++) {
-                const isSelected = selectedRatings.includes(rating);
-                let stars = '';
-                for (let i = 1; i <= 10; i++) {
-                    stars += i <= rating ? '★' : '☆';
-                }
-                const preset = document.createElement('div');
-                preset.className = `rating-preset ${isSelected ? 'selected' : ''}`;
-                preset.innerHTML = `
-                    <div class="stars">${stars}</div>
-                    <div class="value">${rating}/10</div>
-                `;
-                preset.onclick = () => toggleRatingPreset(rating);
-                ratingPresetsDiv.appendChild(preset);
-            }
-        }
-
-        function toggleRatingPreset(rating) {
-            const index = selectedRatings.indexOf(rating);
-            if (index > -1) {
-                selectedRatings.splice(index, 1);
-            } else {
-                selectedRatings.push(rating);
-                selectedRatings.sort((a, b) => a - b);
-            }
-            generateRatingPresets();
-            updateSelectedCount();
-            updatePreview();
-            saveData();
-        }
-
-        function selectAllRatings() {
-            selectedRatings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-            generateRatingPresets();
-            updateSelectedCount();
-            updatePreview();
-            saveData();
-        }
-
-        function clearAllRatings() {
-            selectedRatings = [];
-            generateRatingPresets();
-            updateSelectedCount();
-            updatePreview();
-            saveData();
-        }
-
-        function selectDefaultRatings() {
-            selectedRatings = [5, 7, 10];
-            generateRatingPresets();
-            updateSelectedCount();
-            updatePreview();
-            saveData();
-        }
-
-        function updateSelectedCount() {
-            selectedCountSpan.textContent = `${selectedRatings.length}/10`;
-        }
-
-        function updatePreview() {
-            const enableWatched = enableWatchedCheckbox.checked;
-            const enableUnwatched = enableUnwatchedCheckbox.checked;
-            const enableSeasonWatched = enableSeasonWatchedCheckbox.checked;
-            const enableRatings = enableRatingsCheckbox.checked;
-            const enableWatchlist = enableWatchlistCheckbox.checked;
-            const enableRemoveFromWatchlist = enableRemoveFromWatchlistCheckbox.checked;
-
-            // Movie preview
-            let movieWatchedHTML = '';
-            let movieUnwatchedHTML = '';
-            let movieWatchlistHTML = '';
-            let movieRatingsHTML = '';
-            let movieStreams = 0;
-
-            if (enableWatched) {
-                movieWatchedHTML = '<div class="preview-item watched">✅ Mark "The Matrix" as Watched</div>';
-                movieStreams += 1;
-            }
-
-            if (enableUnwatched) {
-                movieUnwatchedHTML = '<div class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>';
-                movieStreams += 1;
-            }
-
-            if (enableWatchlist) {
-                movieWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>🎬 "The Matrix" (1999)<br>✅ Add movie to your Trakt watchlist</div>';
-                movieStreams += 1;
-            }
-
-            if (enableRemoveFromWatchlist) {
-                movieWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>🎬 "The Matrix" (1999)<br>🗑️ Remove movie from your Trakt watchlist</div>';
-                movieStreams += 1;
-            }
-
-            if (enableRatings && selectedRatings.length > 0) {
-                selectedRatings.forEach(rating => {
-                    movieRatingsHTML += `<div class="preview-item rating">${formatRatingPreview(rating, 'movie', 'The Matrix', '1999')}</div>`;
-                    movieStreams += 1;
-                });
-            }
-
-            movieWatchedContent.innerHTML = movieWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
-            movieUnwatchedContent.innerHTML = movieUnwatchedHTML || '<div class="preview-item" style="color:#888;">No unwatched options enabled</div>';
-            movieWatchlistContent.innerHTML = movieWatchlistHTML || '<div class="preview-item" style="color:#888;">No watchlist options enabled</div>';
-            movieRatingsContent.innerHTML = movieRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
-            movieStreamCount.textContent = movieStreams;
-
-            // Series preview (episode view)
-            let seriesWatchedHTML = '';
-            let seriesWatchlistHTML = '';
-            let seriesRatingsHTML = '';
-            let seriesStreams = 0;
-
-            if (enableWatched) {
-                seriesWatchedHTML = `<div class="preview-item watched">✅ Mark S1E1 of "Breaking Bad" as Watched</div>`;
-                seriesStreams += 1;
-
-                if (enableSeasonWatched) {
-                    seriesWatchedHTML += `<div class="preview-item season">📅 Mark Season 1 of "Breaking Bad" as Watched</div>`;
-                    seriesStreams += 1;
-                }
-
-                seriesWatchedHTML += `<div class="preview-item watched">📺 Mark Entire "Breaking Bad" Series as Watched</div>`;
-                seriesStreams += 1;
-            }
-
-            if (enableUnwatched) {
-                seriesWatchedHTML += `<div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>`;
-                seriesStreams += 1;
-            }
-
-            if (enableWatchlist) {
-                seriesWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>📺 "Breaking Bad" (Series)<br>✅ Add series to your Trakt watchlist</div>';
-                seriesStreams += 1;
-            }
-
-            if (enableRemoveFromWatchlist) {
-                seriesWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>📺 "Breaking Bad" (Series)<br>🗑️ Remove series from your Trakt watchlist</div>';
-                seriesStreams += 1;
-            }
-
-            if (enableRatings && selectedRatings.length > 0) {
-                selectedRatings.forEach(rating => {
-                    seriesRatingsHTML += `<div class="preview-item rating">${formatRatingPreview(rating, 'series', 'Breaking Bad', null, 1, 1)}</div>`;
-                    seriesStreams += 1;
-                });
-            }
-
-            seriesWatchedContent.innerHTML = seriesWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
-            seriesWatchlistContent.innerHTML = seriesWatchlistHTML || '<div class="preview-item" style="color:#888;">No watchlist options enabled</div>';
-            seriesRatingsContent.innerHTML = seriesRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
-            seriesStreamCount.textContent = seriesStreams;
-        }
-
-        function formatRatingPreview(rating, type, title, year, season = null, episode = null) {
-            const visual = generateRatingVisual(selectedRatingStyle, rating);
-            const statsLine = getStatsLinePreview(rating);
-            
-            switch(selectedRatingPattern) {
-                case 0:
-                    if (type === 'movie') {
-                        return `${visual}<br>"${title}" ${rating}/10`;
-                    } else if (season && episode) {
-                        return `${visual}<br>S${season}E${episode} "${title}" ${rating}/10`;
-                    } else {
-                        return `${visual}<br>"${title}" Series ${rating}/10`;
-                    }
-                case 1:
-                    if (type === 'movie') {
-                        return `⭐ Rating: ${rating}/10<br>🎬 ${title}${year ? ` (${year})` : ' (Movie)'}<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars`;
-                    } else if (season && episode) {
-                        return `⭐ Rating: ${rating}/10<br>📺 ${title} S${season}E${episode}<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars`;
-                    } else {
-                        return `⭐ Rating: ${rating}/10<br>📺 ${title} (Series)<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars`;
-                    }
-                case 6:
-                    if (type === 'movie') {
-                        return `🎬 ${title}${year ? ` (${year})` : ''}<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars`;
-                    } else if (season && episode) {
-                        return `📺 ${title} S${season}E${episode}<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars`;
-                    } else {
-                        return `📺 ${title} (Series)<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars`;
-                    }
-                default:
-                    return `${visual}<br>"${title}" ${rating}/10`;
-            }
-        }
-
-        function startAuth() {
-            const clientId = clientIdInput.value.trim();
-            if (!clientId) {
-                alert('Please enter your Trakt Client ID');
-                return;
-            }
-            saveData();
-            authPopup.style.display = 'flex';
-        }
-
-        function openTraktAuth() {
-            const clientId = clientIdInput.value.trim();
-            if (!clientId) return;
-            const authUrl = `${window.location.origin}/oauth/initiate?clientId=${encodeURIComponent(clientId)}`;
-            window.open(authUrl, '_blank', 'width=600,height=700');
-        }
-
-        function closeAuthPopup() {
-            authPopup.style.display = 'none';
-            authCodeInput.value = '';
-        }
-
-        async function submitAuthCode() {
-            const clientId = clientIdInput.value.trim();
-            const authCode = authCodeInput.value.trim();
-
-            if (!clientId || !authCode) {
-                alert('Please enter both Client ID and Authorization Code');
-                return;
-            }
-
-            try {
-                popupAuthStatus.className = 'status';
-                popupAuthStatus.textContent = 'Authenticating...';
-
-                const response = await fetch('/oauth/exchange', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: authCode, clientId: clientId })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    traktTokens = data.tokens;
-                    currentUsername = data.username;
-                    
-                    // Update both status displays
-                    mainAuthStatus.className = 'status status-success';
-                    mainAuthStatus.innerHTML = `Connected as: <strong>${data.username}</strong>`;
-                    
-                    popupAuthStatus.className = 'status status-success';
-                    popupAuthStatus.innerHTML = `Connected as: <strong>${data.username}</strong>`;
-
-                    closeAuthPopup();
-                    updateAddonNamePreview();
-                    generateAddonUrl();
-                } else {
-                    popupAuthStatus.className = 'status status-error';
-                    popupAuthStatus.textContent = `Error: ${data.error}`;
-                    throw new Error(data.error);
-                }
-            } catch (error) {
-                popupAuthStatus.className = 'status status-error';
-                popupAuthStatus.textContent = `Authorization failed: ${error.message}`;
-                console.error('Auth error:', error);
-            }
-        }
-
-        function generateAddonUrl() {
-            if (!traktTokens) {
-                alert('Please connect to Trakt first');
-                return;
-            }
-
-            const config = {
-                clientId: clientIdInput.value.trim(),
-                access_token: traktTokens.access_token,
-                refresh_token: traktTokens.refresh_token,
-                expires_in: traktTokens.expires_in,
-                expires_at: traktTokens.expires_at,
-                created_at: traktTokens.created_at,
-                username: traktTokens.username,
-                tmdbKey: tmdbKeyInput.value.trim() || undefined,
-                ratings: enableRatingsCheckbox.checked ? selectedRatings : [],
-                markAsWatched: enableWatchedCheckbox.checked,
-                markAsUnwatched: enableUnwatchedCheckbox.checked,
-                enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
-                enableWatchlist: enableWatchlistCheckbox.checked,
-                enableRemoveFromWatchlist: enableRemoveFromWatchlistCheckbox.checked,
-                showUsernameInName: showUsernameCheckbox.checked,
-                ratingStyle: selectedRatingStyle,
-                ratingPattern: selectedRatingPattern,
-                statsFormat: selectedStatsFormat,
-                selectedStats: selectedStats,
-                markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked
-            };
-
-            Object.keys(config).forEach(key => config[key] === undefined && delete config[key]);
-
-            const configJson = JSON.stringify(config);
-            const configBase64 = btoa(configJson)
-                .replace(/\+/g, '-')
-                .replace(/\//g, '_')
-                .replace(/=+$/g, '');
-
-            const addonUrl = `${window.location.origin}/configured/${configBase64}/manifest.json`;
-            addonUrlDiv.textContent = addonUrl;
-            resultSection.style.display = 'block';
-            resultSection.scrollIntoView({ behavior: 'smooth' });
-            saveData();
-        }
-
-        function installInStremioDesktop() {
-            const addonUrl = addonUrlDiv.textContent;
-            if (addonUrl) {
-                const stremioUrl = 'stremio://' + addonUrl.replace(/^https?:\/\//, '');
-                window.location.href = stremioUrl;
-            }
-        }
-
-        function installInStremioWeb() {
-            const addonUrl = addonUrlDiv.textContent;
-            if (addonUrl) {
-                const installUrl = `https://web.stremio.com/#/addons?addon=${encodeURIComponent(addonUrl)}`;
-                window.open(installUrl, '_blank');
-            }
-        }
-
-        function copyToClipboard() {
-            const addonUrl = addonUrlDiv.textContent;
-            if (addonUrl) {
-                navigator.clipboard.writeText(addonUrl).then(() => {
-                    alert('Addon URL copied to clipboard!');
-                }).catch(() => {
-                    const textarea = document.createElement('textarea');
-                    textarea.value = addonUrl;
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textarea);
-                    alert('Addon URL copied to clipboard!');
-                });
-            }
-        }
-
-        async function testAddon() {
-            const addonUrl = addonUrlDiv.textContent;
-            if (!addonUrl) return;
-
-            try {
-                const response = await fetch(addonUrl);
-                if (response.ok) {
-                    const manifest = await response.json();
-                    alert(`✅ Addon works!\n\nName: ${manifest.name}\nDescription: ${manifest.description}\nID: ${manifest.id}`);
-                } else {
-                    alert(`❌ Failed to fetch manifest: ${response.status}\n\nMake sure the addon server is running and accessible.`);
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                 }
                 if (data.ratings) selectedRatings = data.ratings;
                 if (data.showUsernameInName !== undefined) showUsernameCheckbox.checked = data.showUsernameInName;
@@ -3551,7 +2506,6 @@
                 if (data.configId) configId = data.configId;
                 if (data.currentUsername) currentUsername = data.currentUsername;
 
-<<<<<<< HEAD
                 // Update style selection
                 document.querySelectorAll('.rating-style-option').forEach(opt => {
                     opt.classList.remove('selected');
@@ -3559,50 +2513,10 @@
                 document.getElementById(`style-${selectedRatingStyle}`).classList.add('selected');
 
                 // Update pattern selection
-=======
-        function resetConfig() {
-            if (confirm('Are you sure you want to reset all configuration? This will clear your settings and disconnect from Trakt.')) {
-                localStorage.removeItem('trakt_config');
-                clientIdInput.value = '';
-                tmdbKeyInput.value = '';
-                showUsernameCheckbox.checked = true;
-                enableWatchedCheckbox.checked = true;
-                enableUnwatchedCheckbox.checked = true;
-                enableSeasonWatchedCheckbox.checked = true;
-                enableWatchlistCheckbox.checked = true;
-                enableRemoveFromWatchlistCheckbox.checked = true;
-                enableRatingsCheckbox.checked = true;
-                markAsPlayedOnRateCheckbox.checked = false;
-                selectedRatings = [5, 7, 10];
-                selectedRatingStyle = 'stars';
-                selectedRatingPattern = 0;
-                selectedStatsFormat = 1;
-                selectedStats = ['plays', 'comments', 'watchers'];
-                previewRatingValue = 5;
-                ratingSlider.value = '5';
-                sliderValue.textContent = '5';
-                traktTokens = null;
-                currentUsername = 'TraktUser';
-                mainAuthStatus.className = 'status status-warning';
-                mainAuthStatus.textContent = 'Not connected to Trakt';
-                resultSection.style.display = 'none';
-
-                stat1Select.value = 'plays';
-                stat2Select.value = 'comments';
-                stat3Select.value = 'watchers';
-
-                // Update style selection visually
-                document.querySelectorAll('.rating-style-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                document.getElementById('style-stars').classList.add('selected');
-
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                 document.querySelectorAll('.pattern-option').forEach(opt => {
                     opt.classList.remove('selected');
                     opt.querySelector('input[type="radio"]').checked = false;
                 });
-<<<<<<< HEAD
                 const patternOption = document.getElementById(`pattern-option-${selectedRatingPattern}`);
                 if (patternOption) {
                     patternOption.classList.add('selected');
@@ -3610,11 +2524,6 @@
                 }
 
                 // Update stats format
-=======
-                document.getElementById('pattern-option-0').classList.add('selected');
-                document.getElementById('pattern0').checked = true;
-
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
                 document.querySelectorAll('.stats-format-option').forEach(opt => {
                     opt.classList.remove('selected');
                     opt.querySelector('input[type="radio"]').checked = false;
@@ -3659,7 +2568,6 @@
         }
     }
 
-<<<<<<< HEAD
     function saveData() {
         const data = {
             clientId: clientIdInput.value.trim(),
@@ -3699,83 +2607,6 @@
         let binary = '';
         for (let i = 0; i < utf8Bytes.length; i++) {
             binary += String.fromCharCode(utf8Bytes[i]);
-=======
-        function loadSavedData() {
-            const saved = localStorage.getItem('trakt_config');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    if (data.clientId) clientIdInput.value = data.clientId;
-                    if (data.tmdbKey) tmdbKeyInput.value = data.tmdbKey;
-                    if (data.ratings) selectedRatings = data.ratings;
-                    if (data.showUsernameInName !== undefined) showUsernameCheckbox.checked = data.showUsernameInName;
-                    if (data.enableWatched !== undefined) enableWatchedCheckbox.checked = data.enableWatched;
-                    if (data.enableUnwatched !== undefined) enableUnwatchedCheckbox.checked = data.enableUnwatched;
-                    if (data.enableSeasonWatched !== undefined) enableSeasonWatchedCheckbox.checked = data.enableSeasonWatched;
-                    if (data.enableWatchlist !== undefined) {
-                        enableWatchlist = data.enableWatchlist;
-                        enableWatchlistCheckbox.checked = enableWatchlist;
-                    }
-                    if (data.enableRemoveFromWatchlist !== undefined) {
-                        enableRemoveFromWatchlist = data.enableRemoveFromWatchlist;
-                        enableRemoveFromWatchlistCheckbox.checked = enableRemoveFromWatchlist;
-                    }
-                    if (data.enableRatings !== undefined) enableRatingsCheckbox.checked = data.enableRatings;
-                    if (data.markAsPlayedOnRate !== undefined) markAsPlayedOnRateCheckbox.checked = data.markAsPlayedOnRate;
-                    if (data.ratingStyle) selectedRatingStyle = data.ratingStyle;
-                    if (data.ratingPattern !== undefined) selectedRatingPattern = data.ratingPattern;
-                    if (data.statsFormat !== undefined) selectedStatsFormat = data.statsFormat;
-                    if (data.selectedStats) selectedStats = data.selectedStats;
-                    if (data.previewRatingValue) {
-                        previewRatingValue = data.previewRatingValue;
-                        ratingSlider.value = previewRatingValue;
-                        sliderValue.textContent = previewRatingValue;
-                    }
-
-                    // Update style selection visually
-                    document.querySelectorAll('.rating-style-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                    });
-                    document.getElementById(`style-${selectedRatingStyle}`).classList.add('selected');
-
-                    document.querySelectorAll('.pattern-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                        opt.querySelector('input[type="radio"]').checked = false;
-                    });
-                    const patternOption = document.getElementById(`pattern-option-${selectedRatingPattern}`);
-                    if (patternOption) {
-                        patternOption.classList.add('selected');
-                        patternOption.querySelector('input[type="radio"]').checked = true;
-                    }
-
-                    document.querySelectorAll('.stats-format-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                        opt.querySelector('input[type="radio"]').checked = false;
-                    });
-                    const statsOption = document.getElementById(`stats-option-${selectedStatsFormat}`);
-                    if (statsOption) {
-                        statsOption.classList.add('selected');
-                        statsOption.querySelector('input[type="radio"]').checked = true;
-                    }
-
-                    if (selectedStats.length >= 3) {
-                        stat1Select.value = selectedStats[0];
-                        stat2Select.value = selectedStats[1];
-                        stat3Select.value = selectedStats[2];
-                    }
-
-                    generateRatingPresets();
-                    updateSelectedCount();
-                    updateRatingStyleVisuals();
-                    updatePatternPreview();
-                    updateSelectedStatsDisplay();
-                    updateAddonNamePreview();
-                    ratingSection.style.display = enableRatingsCheckbox.checked ? 'block' : 'none';
-                } catch (e) {
-                    console.warn('Failed to load saved data:', e);
-                }
-            }
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
         }
         
         // Convert to base64 and make it URL-safe
@@ -3785,7 +2616,6 @@
             .replace(/=+$/g, '');
     }
 
-<<<<<<< HEAD
     // Helper function to decode Base64 URL-safe to UTF-8 string
     function base64UrlSafeToUtf8(base64) {
         // Convert from URL-safe to standard base64
@@ -3811,29 +2641,5 @@
         return new TextDecoder().decode(bytes);
     }
 </script>
-=======
-        function saveData() {
-            const data = {
-                clientId: clientIdInput.value.trim(),
-                tmdbKey: tmdbKeyInput.value.trim(),
-                ratings: selectedRatings,
-                showUsernameInName: showUsernameCheckbox.checked,
-                enableWatched: enableWatchedCheckbox.checked,
-                enableUnwatched: enableUnwatchedCheckbox.checked,
-                enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
-                enableWatchlist: enableWatchlistCheckbox.checked,
-                enableRemoveFromWatchlist: enableRemoveFromWatchlistCheckbox.checked,
-                enableRatings: enableRatingsCheckbox.checked,
-                markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked,
-                ratingStyle: selectedRatingStyle,
-                ratingPattern: selectedRatingPattern,
-                statsFormat: selectedStatsFormat,
-                selectedStats: selectedStats,
-                previewRatingValue: previewRatingValue
-            };
-            localStorage.setItem('trakt_config', JSON.stringify(data));
-        }
-    </script>
->>>>>>> b38dd9c54057ce56cc143098bc2a8a947e2d25b8
 </body>
 </html>
