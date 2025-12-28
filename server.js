@@ -4,26 +4,6 @@ import { dirname, join } from 'path';
 import axios from 'axios';
 import crypto from 'crypto';
 
-// ============================================
-// Vercel-specific fixes
-// ============================================
-
-const isVercel = process.env.VERCEL || process.env.VERCEL_URL;
-
-// Disable token refresh on Vercel
-if (isVercel) {
-  console.log('🚀 Running on Vercel - token refresh disabled');
-  
-  // Store the original function
-  const originalRefreshTraktTokens = refreshTraktTokens;
-  
-  // Override the refresh function
-  refreshTraktTokens = async function(userConfig) {
-    console.log('[TOKEN REFRESH] Skipping refresh on Vercel due to network restrictions');
-    return null; // Don't attempt refresh
-  };
-}
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -844,65 +824,63 @@ async function refreshTraktTokens(userConfig) {
 
     console.log(`[TOKEN REFRESH] Refreshing tokens for configId: ${configId}`);
 
-    // Add timeout and better error handling for Vercel
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+    const response = await fetch('https://api.trakt.tv/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        refresh_token: refresh_token,
+        client_id: clientId,
+        client_secret: '',
+        redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+        grant_type: 'refresh_token'
+      })
+    });
 
-    try {
-      const response = await fetch('https://api.trakt.tv/oauth/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          refresh_token: refresh_token,
-          client_id: clientId,
-          client_secret: '',
-          redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
-          grant_type: 'refresh_token'
-        }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Token refresh failed: ${response.status} - ${errorText}`);
-      }
-
-      const newTokens = await response.json();
-      newTokens.expires_at = Date.now() + (newTokens.expires_in * 1000);
-
-      // Skip Upstash update on Vercel if network is problematic
-      const isVercel = process.env.VERCEL || process.env.VERCEL_URL;
-      
-      if (!isVercel && upstashUrl && upstashToken && configId) {
-        try {
-          const tokensKey = `trakt_tokens:${configId}`;
-          await upstashSet(upstashUrl, upstashToken, tokensKey, JSON.stringify(newTokens), 90 * 24 * 60 * 60);
-          upstashTokenCache.set(configId, {
-            tokens: newTokens,
-            timestamp: Date.now()
-          });
-          console.log(`[TOKEN REFRESH] Updated tokens in Upstash for ${configId}`);
-        } catch (upstashError) {
-          console.error(`[TOKEN REFRESH] Failed to update Upstash: ${upstashError.message}`);
-        }
-      }
-
-      return newTokens;
-
-    } catch (fetchError) {
-      if (fetchError.name === 'AbortError') {
-        console.error('[TOKEN REFRESH] Request timeout');
-        throw new Error('Token refresh timeout - please try again');
-      }
-      throw fetchError;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Token refresh failed: ${response.status} - ${errorText}`);
     }
+
+    const newTokens = await response.json();
+    newTokens.expires_at = Date.now() + (newTokens.expires_in * 1000);
+
+    // Update user info
+    const userResponse = await fetch('https://api.trakt.tv/users/settings', {
+      headers: {
+        'Authorization': `Bearer ${newTokens.access_token}`,
+        'trakt-api-version': '2',
+        'trakt-api-key': clientId
+      }
+    });
+
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      newTokens.username = userData.user?.username || 'Trakt User';
+    }
+
+    // Update Upstash if using Upstash storage
+    if (upstashUrl && upstashToken && configId) {
+      try {
+        const tokensKey = `trakt_tokens:${configId}`;
+        await upstashSet(upstashUrl, upstashToken, tokensKey, JSON.stringify(newTokens), 90 * 24 * 60 * 60);
+
+        // Update local cache
+        upstashTokenCache.set(configId, {
+          tokens: newTokens,
+          timestamp: Date.now()
+        });
+
+        console.log(`[TOKEN REFRESH] Updated tokens in Upstash for ${configId}`);
+      } catch (upstashError) {
+        console.error(`[TOKEN REFRESH] Failed to update Upstash: ${upstashError.message}`);
+      }
+    }
+
+    return newTokens;
 
   } catch (error) {
     console.error(`[TOKEN REFRESH] Error: ${error.message}`);
-    // Don't throw the error, just return null so we can continue with existing token
-    return null;
+    throw error;
   }
 }
 
@@ -927,7 +905,7 @@ async function getUserConfigWithTokens(config) {
 
         // Check if token needs refresh (expiring in less than 7 days)
         const now = Date.now();
-        if (!isVercel && userConfig.expires_at && (userConfig.expires_at - now) < 0) {
+        if (userConfig.expires_at && (userConfig.expires_at - now) < (7 * 24 * 60 * 60 * 1000)) {
           console.log(`[CONFIG] URL storage token expiring soon, attempting refresh...`);
           try {
             const refreshedTokens = await refreshTraktTokens(userConfig);
@@ -1806,14 +1784,10 @@ app.get("/manifest.json", (req, res) => {
     types: ["movie", "series"],
     catalogs: [],
     idPrefixes: ["tt"],
-behaviorHints: {
-  configurable: true,
-  configurationRequired: true,
-  configuration: {
-    type: "link",
-    link: `${SERVER_URL}/configure`
-  }
-},
+    behaviorHints: {
+      configurable: true,
+      configurationRequired: true
+    },
     background: BACKGROUND_URL,
     logo: LOGO_URL,
     icon: ICON_URL,
@@ -1858,14 +1832,10 @@ app.get("/configured/:config/manifest.json", (req, res) => {
       types: ["movie", "series"],
       catalogs: [],
       idPrefixes: ["tt"],
-behaviorHints: {
-  configurable: true,
-  configurationRequired: false,
-  configuration: {
-    type: "link",
-    link: `${SERVER_URL}/configured/${config}/configure`
-  }
-},
+      behaviorHints: {
+        configurable: true,
+        configurationRequired: false
+      },
       background: BACKGROUND_URL,
       logo: LOGO_URL,
       icon: ICON_URL,
@@ -2167,11 +2137,6 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
 // ============================================
 // Configuration Page Route
 // ============================================
-app.get("/configured/:config/configure", (req, res) => {
-  const { config } = req.params;
-  console.log(`[CONFIG REDIRECT] Redirecting to configuration page with config: ${config}`);
-  res.redirect(`/configure`);
-});
 
 app.get("/configure", (req, res) => {
   res.sendFile(join(__dirname, 'public', 'index.html'));
