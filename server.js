@@ -1784,10 +1784,14 @@ app.get("/manifest.json", (req, res) => {
     types: ["movie", "series"],
     catalogs: [],
     idPrefixes: ["tt"],
-    behaviorHints: {
-      configurable: true,
-      configurationRequired: true
-    },
+behaviorHints: {
+  configurable: true,
+  configurationRequired: true,
+  configuration: {
+    type: "link",
+    link: `${SERVER_URL}/configure`
+  }
+},
     background: BACKGROUND_URL,
     logo: LOGO_URL,
     icon: ICON_URL,
@@ -1832,10 +1836,14 @@ app.get("/configured/:config/manifest.json", (req, res) => {
       types: ["movie", "series"],
       catalogs: [],
       idPrefixes: ["tt"],
-      behaviorHints: {
-        configurable: true,
-        configurationRequired: false
-      },
+behaviorHints: {
+  configurable: true,
+  configurationRequired: false,
+  configuration: {
+    type: "link",
+    link: `${SERVER_URL}/configured/${config}/configure`
+  }
+},
       background: BACKGROUND_URL,
       logo: LOGO_URL,
       icon: ICON_URL,
@@ -2137,6 +2145,16 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
 // ============================================
 // Configuration Page Route
 // ============================================
+
+// ============================================
+// Configure Button Redirect Route
+// ============================================
+
+app.get("/configured/:config/configure", (req, res) => {
+  const { config } = req.params;
+  console.log(`[CONFIG REDIRECT] Redirecting to configuration page with config: ${config}`);
+  res.redirect(`/configure`);
+});
 
 app.get("/configure", (req, res) => {
   res.sendFile(join(__dirname, 'public', 'index.html'));
