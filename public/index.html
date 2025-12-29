@@ -2182,6 +2182,10 @@
                 traktTokens = data.tokens;
                 currentUsername = data.username;
 
+                // IMPORTANT FIX: Always save tokens to localStorage for URL storage
+                // This ensures tokens are available when generating the addon URL
+                saveData();
+
                 if (data.storage === 'upstash') {
                     // Upstash storage
                     configId = data.configId;
@@ -2229,6 +2233,7 @@
         console.log('DEBUG: configId:', configId);
         console.log('DEBUG: storageMethod:', storageMethod);
 
+        // CRITICAL FIX: Check if we have either tokens or configId
         if (!traktTokens && !configId) {
             console.log('DEBUG: Both traktTokens and configId are null');
             alert('Please connect to Trakt first');
@@ -2264,21 +2269,25 @@
             config.configId = configId;
 
             // ALWAYS include tokens in config for fallback
-            if (traktTokens) {
-                config.access_token = traktTokens.access_token;
-                config.refresh_token = traktTokens.refresh_token;
-                config.expires_in = traktTokens.expires_in;
-                config.expires_at = traktTokens.expires_at;
-                config.created_at = traktTokens.created_at;
-            }
-        } else if (traktTokens) {
-            // URL storage or fallback
-            config.storage = 'url';
+        if (traktTokens) {
             config.access_token = traktTokens.access_token;
             config.refresh_token = traktTokens.refresh_token;
-            config.expires_in = traktTokens.expires_in;
-            config.expires_at = traktTokens.expires_at;
-            config.created_at = traktTokens.created_at;
+            config.expires_in = traktTokens.expires_in; // Should be 7776000
+            config.expires_at = traktTokens.expires_at; // Should be in milliseconds
+            config.created_at = traktTokens.created_at; // Should be in seconds
+        }
+    } else if (traktTokens) {
+        // URL storage or fallback - MUST include tokens
+        config.storage = 'url';
+        config.access_token = traktTokens.access_token;
+        config.refresh_token = traktTokens.refresh_token;
+        config.expires_in = traktTokens.expires_in; // Should be 7776000
+        config.expires_at = traktTokens.expires_at; // Should be in milliseconds
+        config.created_at = traktTokens.created_at; // Should be in seconds
+        } else {
+            // This should not happen if we have the check above, but just in case
+            alert('Error: No Trakt tokens available. Please reconnect to Trakt.');
+            return;
         }
 
         Object.keys(config).forEach(key => config[key] === undefined && delete config[key]);
@@ -2288,7 +2297,7 @@
         try {
             // FIXED: Use UTF-8 safe encoding for base64
             const configBase64 = utf8ToBase64UrlSafe(configJson);
-            
+
             const addonUrl = `${window.location.origin}/configured/${configBase64}/manifest.json`;
             addonUrlDiv.textContent = addonUrl;
             resultSection.style.display = 'block';
@@ -2505,6 +2514,11 @@
                 if (data.storageMethod) storageMethod = data.storageMethod;
                 if (data.configId) configId = data.configId;
                 if (data.currentUsername) currentUsername = data.currentUsername;
+                
+                // CRITICAL FIX: Load tokens from localStorage if available
+                if (data.traktTokens) {
+                    traktTokens = data.traktTokens;
+                }
 
                 // Update style selection
                 document.querySelectorAll('.rating-style-option').forEach(opt => {
@@ -2549,7 +2563,7 @@
                 updateAddonNamePreview();
                 ratingSection.style.display = enableRatingsCheckbox.checked ? 'block' : 'none';
 
-                // Update auth status if we have configId (Upstash storage)
+                // Update auth status if we have configId (Upstash storage) or tokens (URL storage)
                 if (configId && storageMethod === 'upstash') {
                     const indicator = mainAuthStatus.querySelector('.upstash-indicator');
                     if (indicator) {
@@ -2558,6 +2572,13 @@
                     mainAuthStatus.className = 'status status-success';
                     mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-connected"></span> Connected via Upstash as: <strong>${currentUsername || 'TraktUser'}</strong>`;
                     upstashConnected = true;
+                } else if (traktTokens && storageMethod === 'url') {
+                    const indicator = mainAuthStatus.querySelector('.upstash-indicator');
+                    if (indicator) {
+                        indicator.className = 'upstash-indicator upstash-warning';
+                    }
+                    mainAuthStatus.className = 'status status-success';
+                    mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-warning"></span> Connected as: <strong>${currentUsername || 'TraktUser'}</strong> (URL storage)`;
                 }
 
                 updatePreview();
@@ -2593,7 +2614,9 @@
             previewRatingValue: previewRatingValue,
             storageMethod: storageMethod,
             configId: configId,
-            currentUsername: currentUsername
+            currentUsername: currentUsername,
+            // CRITICAL FIX: Always save traktTokens to localStorage
+            traktTokens: traktTokens
         };
         localStorage.setItem('trakt_config', JSON.stringify(data));
     }
@@ -2602,13 +2625,13 @@
     function utf8ToBase64UrlSafe(str) {
         // First encode the string as UTF-8
         const utf8Bytes = new TextEncoder().encode(str);
-        
+
         // Convert to binary string
         let binary = '';
         for (let i = 0; i < utf8Bytes.length; i++) {
             binary += String.fromCharCode(utf8Bytes[i]);
         }
-        
+
         // Convert to base64 and make it URL-safe
         return btoa(binary)
             .replace(/\+/g, '-')
@@ -2622,21 +2645,21 @@
         let standardBase64 = base64
             .replace(/-/g, '+')
             .replace(/_/g, '/');
-        
+
         // Add padding if needed
         while (standardBase64.length % 4) {
             standardBase64 += '=';
         }
-        
+
         // Decode base64 to binary string
         const binary = atob(standardBase64);
-        
+
         // Convert binary string to UTF-8 bytes
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) {
             bytes[i] = binary.charCodeAt(i);
         }
-        
+
         // Decode UTF-8 bytes to string
         return new TextDecoder().decode(bytes);
     }

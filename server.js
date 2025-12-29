@@ -304,6 +304,28 @@ async function fetchTraktStats(imdbId, type, clientId) {
   }
 }
 
+
+// ============================================
+// Helper: Should Refresh Token Check - UPDATED for URL storage
+// ============================================
+
+function shouldRefreshToken(userConfig) {
+  if (!userConfig.access_token) return false;
+
+  const now = Date.now();
+  const expiresAt = userConfig.expires_at || userConfig.expires_in * 1000 + (userConfig.created_at || now);
+  const timeUntilExpiry = expiresAt - now;
+
+  // Different logic for different storage methods
+  if (!userConfig.storage || userConfig.storage === 'url') {
+    // URL storage: Never refresh, just use the token until it fails
+    return false;
+  }
+
+  // Upstash storage: Refresh if less than 30 days remaining
+  return timeUntilExpiry < (30 * 24 * 60 * 60 * 1000);
+}
+
 // ============================================
 // Rating Visual Generator
 // ============================================
@@ -810,20 +832,27 @@ app.post('/upstash/test', async (req, res) => {
 });
 
 // ============================================
-// Token Refresh Helper
+// Token Refresh Helper - UPDATED to skip URL storage
 // ============================================
 
 async function refreshTraktTokens(userConfig) {
   try {
-    const { refresh_token, clientId, upstashUrl, upstashToken, configId } = userConfig;
+    const { refresh_token, clientId, upstashUrl, upstashToken, configId, storage } = userConfig;
 
     if (!refresh_token || !clientId) {
       console.log('[TOKEN REFRESH] Missing refresh token or clientId');
       return null;
     }
 
-    console.log(`[TOKEN REFRESH] Refreshing tokens for configId: ${configId}`);
+    console.log(`[TOKEN REFRESH] Refreshing tokens for configId: ${configId || 'URL storage'}`);
 
+    // For URL storage, don't attempt refresh at all
+    if ((!storage || storage === 'url')) {
+      console.log('[TOKEN REFRESH] URL storage: Not attempting refresh');
+      return null;
+    }
+
+    // Rest of the refresh logic for Upstash storage remains the same...
     const response = await fetch('https://api.trakt.tv/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -843,8 +872,9 @@ async function refreshTraktTokens(userConfig) {
 
     const newTokens = await response.json();
     newTokens.expires_at = Date.now() + (newTokens.expires_in * 1000);
+    newTokens.created_at = Math.floor(Date.now() / 1000);
 
-    // Update user info
+    // Get user info
     const userResponse = await fetch('https://api.trakt.tv/users/settings', {
       headers: {
         'Authorization': `Bearer ${newTokens.access_token}`,
@@ -859,7 +889,7 @@ async function refreshTraktTokens(userConfig) {
     }
 
     // Update Upstash if using Upstash storage
-    if (upstashUrl && upstashToken && configId) {
+    if (storage === 'upstash' && upstashUrl && upstashToken && configId) {
       try {
         const tokensKey = `trakt_tokens:${configId}`;
         await upstashSet(upstashUrl, upstashToken, tokensKey, JSON.stringify(newTokens), 90 * 24 * 60 * 60);
@@ -885,7 +915,7 @@ async function refreshTraktTokens(userConfig) {
 }
 
 // ============================================
-// Helper: Get user config with tokens - WITH AUTO-REFRESH
+// Helper: Get user config with tokens - WITH AUTO-REFRESH (UPDATED to remove URL storage expiration logging)
 // ============================================
 
 async function getUserConfigWithTokens(config) {
@@ -903,22 +933,9 @@ async function getUserConfigWithTokens(config) {
       if (userConfig.access_token) {
         console.log(`[CONFIG] Using URL storage token`);
 
-        // Check if token needs refresh (expiring in less than 7 days)
-        const now = Date.now();
-        if (userConfig.expires_at && (userConfig.expires_at - now) < (7 * 24 * 60 * 60 * 1000)) {
-          console.log(`[CONFIG] URL storage token expiring soon, attempting refresh...`);
-          try {
-            const refreshedTokens = await refreshTraktTokens(userConfig);
-            if (refreshedTokens) {
-              Object.assign(userConfig, refreshedTokens);
-              console.log(`[CONFIG] URL token refreshed successfully`);
-            }
-          } catch (refreshError) {
-            console.log(`[CONFIG] URL token refresh failed: ${refreshError.message}`);
-            // Continue with existing token
-          }
-        }
-
+        // REMOVED: Expiration calculation and logging for URL storage
+        // We'll just trust that the token is valid and handle errors at API level
+        
         return userConfig;
       } else {
         console.log(`[CONFIG] URL storage: No access token`);
@@ -945,12 +962,15 @@ async function getUserConfigWithTokens(config) {
           // Merge tokens into userConfig
           Object.assign(userConfig, cached.tokens);
 
-          // Check if token needs refresh (expiring in less than 7 days)
-          if (userConfig.expires_at && (userConfig.expires_at - now) < (7 * 24 * 60 * 60 * 1000)) {
-            console.log(`[CONFIG] Upstash token expiring soon, refreshing...`);
+          // For Upstash storage, refresh if expiring in less than 30 days
+          const expiresAt = userConfig.expires_at || (userConfig.created_at ? userConfig.created_at * 1000 + userConfig.expires_in * 1000 : now + userConfig.expires_in * 1000);
+          const daysRemaining = Math.floor((expiresAt - now) / (24 * 60 * 60 * 1000));
+          
+          if (daysRemaining < 30 && daysRemaining > 0) {
+            console.log(`[CONFIG] Upstash token expiring in ${daysRemaining} days, refreshing...`);
             try {
               const refreshedTokens = await refreshTraktTokens(userConfig);
-              if (refreshedTokens) {
+              if (refreshedTokens && refreshedTokens.access_token) {
                 Object.assign(userConfig, refreshedTokens);
                 console.log(`[CONFIG] Upstash token refreshed successfully`);
               }
@@ -958,6 +978,10 @@ async function getUserConfigWithTokens(config) {
               console.log(`[CONFIG] Upstash token refresh failed: ${refreshError.message}`);
               // Continue with existing token
             }
+          } else if (daysRemaining > 0) {
+            console.log(`[CONFIG] Upstash token still valid for ${daysRemaining} days`);
+          } else if (daysRemaining <= 0) {
+            console.log(`[CONFIG] Upstash token has expired`);
           }
 
           return userConfig;
@@ -985,18 +1009,21 @@ async function getUserConfigWithTokens(config) {
         // Cache the tokens locally
         upstashTokenCache.set(userConfig.configId, {
           tokens: tokens,
-          timestamp: Date.now()
+          timestamp: now
         });
 
         // Merge tokens into userConfig
         Object.assign(userConfig, tokens);
 
-        // Check if token needs refresh (expiring in less than 7 days)
-        if (userConfig.expires_at && (userConfig.expires_at - now) < (7 * 24 * 60 * 60 * 1000)) {
-          console.log(`[CONFIG] Upstash token expiring soon, refreshing...`);
+        // For Upstash storage, refresh if expiring in less than 30 days
+        const expiresAt = userConfig.expires_at || (userConfig.created_at ? userConfig.created_at * 1000 + userConfig.expires_in * 1000 : now + userConfig.expires_in * 1000);
+        const daysRemaining = Math.floor((expiresAt - now) / (24 * 60 * 60 * 1000));
+
+        if (daysRemaining < 30 && daysRemaining > 0) {
+          console.log(`[CONFIG] Upstash token expiring in ${daysRemaining} days, refreshing...`);
           try {
             const refreshedTokens = await refreshTraktTokens(userConfig);
-            if (refreshedTokens) {
+            if (refreshedTokens && refreshedTokens.access_token) {
               Object.assign(userConfig, refreshedTokens);
               console.log(`[CONFIG] Upstash token refreshed successfully`);
             }
@@ -1004,6 +1031,10 @@ async function getUserConfigWithTokens(config) {
             console.log(`[CONFIG] Upstash token refresh failed: ${refreshError.message}`);
             // Continue with existing token
           }
+        } else if (daysRemaining > 0) {
+          console.log(`[CONFIG] Upstash token still valid for ${daysRemaining} days`);
+        } else if (daysRemaining <= 0) {
+          console.log(`[CONFIG] Upstash token has expired`);
         }
 
         return userConfig;
@@ -1016,22 +1047,6 @@ async function getUserConfigWithTokens(config) {
         if (cached) {
           console.log(`[CONFIG] Using expired cache for ${userConfig.configId} as fallback`);
           Object.assign(userConfig, cached.tokens);
-
-          // Still try to refresh if expiring
-          const now = Date.now();
-          if (userConfig.expires_at && (userConfig.expires_at - now) < (7 * 24 * 60 * 60 * 1000)) {
-            console.log(`[CONFIG] Expired Upstash token, attempting refresh...`);
-            try {
-              const refreshedTokens = await refreshTraktTokens(userConfig);
-              if (refreshedTokens) {
-                Object.assign(userConfig, refreshedTokens);
-                console.log(`[CONFIG] Expired Upstash token refreshed successfully`);
-              }
-            } catch (refreshError) {
-              console.log(`[CONFIG] Expired Upstash token refresh failed: ${refreshError.message}`);
-            }
-          }
-
           return userConfig;
         }
 
