@@ -421,6 +421,14 @@
             border-left-color: #f59e0b;
         }
 
+        .preview-item.current-rating {
+            border-left-color: #3b82f6;
+        }
+
+        .preview-item.remove-rating {
+            border-left-color: #ef4444;
+        }
+
         .preview-item.watchlist {
             border-left-color: #3b82f6;
         }
@@ -723,15 +731,210 @@
             margin-top: -5px;
             margin-bottom: 10px;
         }
+
+        .new-feature {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid #f59e0b;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .new-feature-label {
+            display: inline-block;
+            background: #f59e0b;
+            color: #0f172a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        /* Stream Ordering Section */
+        .sortable-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            min-height: 200px;
+        }
+
+        .sortable-item {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: move;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .sortable-item:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .sortable-item.dragging {
+            opacity: 0.6;
+            background: rgba(96, 165, 250, 0.1);
+            border-color: #60a5fa;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            padding: 8px;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+
+        .drag-handle:hover {
+            color: #60a5fa;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .item-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .item-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 2px;
+        }
+
+        .item-description {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .item-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-enabled {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-disabled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .status-conditional {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .sortable-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .empty-list-message {
+            text-align: center;
+            padding: 30px;
+            color: #94a3b8;
+            font-style: italic;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 8px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .order-preview {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .order-preview-title {
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-preview-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .order-preview-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .order-number {
+            background: rgba(96, 165, 250, 0.2);
+            color: #60a5fa;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .order-item-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎬 Trakt Sync & Rate v2.2.1</h1>
+            <h1>🎬 Trakt Sync & Rate v2.4.0</h1>
             <p class="tagline">Create your personalized Stremio addon to sync watched states, rate content, and manage watchlist on Trakt.tv with persistent Upstash Redis storage</p>
             <div class="info-box">
-                <strong>🆕 NEW FEATURE:</strong> "Keep only latest watched state" - Automatically deletes older duplicates when marking as watched! Now with emoji selection: 🔄 🧹 ⚡
+                <strong>🆕 NEW FEATURES:</strong>
+                <br>1. <strong>Custom Stream Order</strong> - Drag and drop to arrange stream tabs
+                <br>2. <strong>Single Click Remove Rating</strong> - Current ratings now include built-in remove functionality
             </div>
         </header>
 
@@ -801,7 +1004,7 @@
 
             <div class="form-group">
 <label for="clientId">
-    Trakt Client ID 
+    Trakt Client ID
     <a href="https://trakt.tv/oauth/applications" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
          (Get it here)
     </a>
@@ -852,7 +1055,7 @@
             </div>
 
             <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
-                <strong>💡 Important:</strong> Without Upstash Redis, Trakt tokens expire every 3 months and you'll need to reconnect. With Upstash, your connection remains persistent. <strong>v2.2.1 now includes "Keep Single Watched State" feature with emoji selection!</strong>
+                <strong>💡 Important:</strong> Without Upstash Redis, Trakt tokens expire every 3 months and you'll need to reconnect. With Upstash, your connection remains persistent. <strong>v2.4.0 now includes custom stream ordering!</strong>
             </div>
         </section>
 
@@ -917,7 +1120,19 @@
                 <label for="enableRemoveFromWatchlist">Remove from Watchlist</label>
             </div>
 
-            <!-- NEW FEATURE: Keep Single Watched State -->
+            <!-- UPDATED FEATURE: Show Current Rating -->
+            <div class="checkbox-group">
+                <input type="checkbox" id="showCurrentRating" checked>
+                <label for="showCurrentRating">
+                    <strong>⭐ Display current rating in Stremio</strong>
+                </label>
+            </div>
+            <div class="feature-description">
+                When enabled, your existing ratings will be shown as stream options in Stremio.
+                Clicking on a current rating will remove it (built-in remove functionality).
+            </div>
+
+            <!-- Keep Single Watched State -->
             <div class="checkbox-group">
                 <input type="checkbox" id="keepSingleWatchedState">
                 <label for="keepSingleWatchedState">
@@ -931,7 +1146,7 @@
                 This helps maintain a clean Trakt history.
             </div>
 
-            <!-- NEW: Keep Single State Display Options -->
+            <!-- Keep Single State Display Options -->
             <div class="checkbox-group" id="keepSingleStateDisplayGroup" style="margin-left: 20px; display: none;">
                 <label for="keepSingleStateDisplay">Display option for "Keep Single State" text:</label>
                 <div style="margin-top: 8px; margin-left: 10px;">
@@ -951,7 +1166,7 @@
                     </div>
                 </div>
 
-                <!-- NEW: Emoji Selection for Keep Single State -->
+                <!-- Emoji Selection for Keep Single State -->
                 <div style="margin-top: 12px;">
                     <label for="keepSingleStateEmoji">Choose emoji style for "Keeps only latest watched state":</label>
                     <div style="margin-top: 8px; margin-left: 10px;">
@@ -981,6 +1196,63 @@
             <div class="checkbox-group">
                 <input type="checkbox" id="markAsPlayedOnRate">
                 <label for="markAsPlayedOnRate">Automatically mark as played when rating</label>
+            </div>
+
+            <div class="new-feature">
+                <span class="new-feature-label">NEW</span>
+                <strong>Custom Stream Ordering:</strong> Drag and drop stream tabs in the section below to arrange them in your preferred order in Stremio.
+            </div>
+        </section>
+
+        <!-- Stream Ordering Section -->
+        <section class="section">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 17a1 1 0 0 1 2 0v3a1 1 0 0 1-2 0v-3z"/>
+                    <path d="M16 6a1 1 0 0 1 2 0v14a1 1 0 0 1-2 0V6z"/>
+                    <path d="M6 12a1 1 0 0 1 2 0v8a1 1 0 0 1-2 0v-8z"/>
+                    <path d="M21 9a1 1 0 0 1 2 0v11a1 1 0 0 1-2 0V9z"/>
+                </svg>
+                Stream Tab Ordering
+            </h2>
+
+            <div class="info-box">
+                <strong>📝 How it works:</strong> Drag and drop the items below to arrange the order of stream tabs in Stremio. 
+                Disabled features will be automatically skipped. Each user can customize their own preferred order.
+            </div>
+
+            <div class="form-group">
+                <label>Drag to Reorder Stream Tabs</label>
+                
+                <ul class="sortable-list" id="streamOrderList">
+                    <!-- Stream items will be generated here -->
+                </ul>
+
+                <div class="sortable-actions">
+                    <button class="btn btn-small btn-secondary" onclick="resetStreamOrder()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/>
+                        </svg>
+                        Reset to Default Order
+                    </button>
+                    <button class="btn btn-small btn-secondary" onclick="reverseStreamOrder()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m3 16 4 4 4-4M7 20V4"/>
+                            <path d="m21 8-4-4-4 4M17 4v16"/>
+                        </svg>
+                        Reverse Order
+                    </button>
+                </div>
+            </div>
+
+            <div class="order-preview">
+                <div class="order-preview-title">
+                    <span>Preview Order</span>
+                    <span class="stream-count" id="activeStreamCount">0 active streams</span>
+                </div>
+                <div class="order-preview-list" id="orderPreview">
+                    <!-- Order preview will be generated here -->
+                </div>
             </div>
         </section>
 
@@ -1216,6 +1488,12 @@
                     <div class="preview-content" id="movieWatchlistContent">
                         <!-- Watchlist options will appear here -->
                     </div>
+                    <div class="preview-content" id="movieCurrentRatingContent">
+                        <!-- Current rating options will appear here -->
+                    </div>
+                    <div class="preview-content" id="movieRemoveRatingContent">
+                        <!-- Remove rating options will appear here -->
+                    </div>
                     <div class="preview-content" id="movieRatingsContent">
                         <!-- Rating options will appear here -->
                     </div>
@@ -1232,6 +1510,12 @@
                     </div>
                     <div class="preview-content" id="seriesWatchlistContent">
                         <!-- Watchlist options will appear here -->
+                    </div>
+                    <div class="preview-content" id="seriesCurrentRatingContent">
+                        <!-- Current rating options will appear here -->
+                    </div>
+                    <div class="preview-content" id="seriesRemoveRatingContent">
+                        <!-- Remove rating options will appear here -->
                     </div>
                     <div class="preview-content" id="seriesRatingsContent">
                         <!-- Rating options will appear here -->
@@ -1329,7 +1613,7 @@
 
         <!-- Footer -->
         <footer style="text-align: center; margin-top: 40px; padding: 20px; color: #64748b; font-size: 0.9rem;">
-            <p>Trakt Sync & Rate v2.2.1 - A Stremio Community Addon with Upstash Redis Support</p>
+            <p>Trakt Sync & Rate v2.4.0 - A Stremio Community Addon with Upstash Redis Support</p>
             <p style="margin-top: 10px;">
                 Need help? Check the
                 <a href="https://github.com/ericvlog/trakt-sync-rating-addon" style="color: #60a5fa; text-decoration: none;" target="_blank">
@@ -1359,7 +1643,7 @@
             <div class="btn-group">
                 <button class="btn" onclick="openTraktAuth()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2 2V8a2 2 0 0 1 2-2h6"/>
                         <polyline points="15 3 21 3 21 9"/>
                         <line x1="10" y1="14" x2="21" y2="3"/>
                     </svg>
@@ -1405,11 +1689,116 @@
     let keepSingleWatchedState = false;
     let keepSingleStateDisplay = 'inline';
     let keepSingleStateEmoji = '🔄';
+    let showCurrentRating = true;
     let upstashUrl = '';
     let upstashToken = '';
     let storageMethod = 'url';
     let configId = null;
     let upstashConnected = false;
+    
+    // NEW: Stream ordering
+    let streamOrder = [
+        'current_rating',
+        'rating',
+        'watched',
+        'season_watched',
+        'series_watched',
+        'add_to_watchlist',
+        'remove_from_watchlist',
+        'unwatched'
+    ];
+
+    // Stream type definitions
+    const streamTypes = {
+        'current_rating': {
+            id: 'current_rating',
+            name: 'Current Rating',
+            icon: '⭐',
+            description: 'Shows your existing rating with remove option',
+            dependsOn: 'showCurrentRating',
+            movie: true,
+            series: true,
+            episode: true,
+            color: '#3b82f6'
+        },
+        'rating': {
+            id: 'rating',
+            name: 'Rating Options',
+            icon: '🌟',
+            description: 'Allows you to rate content (1-10 stars)',
+            dependsOn: 'enableRatings',
+            movie: true,
+            series: true,
+            episode: true,
+            color: '#f59e0b'
+        },
+        'watched': {
+            id: 'watched',
+            name: 'Mark as Watched',
+            icon: '✅',
+            description: 'Marks movie/episode as watched',
+            dependsOn: 'enableWatched',
+            movie: true,
+            series: true,
+            episode: true,
+            color: '#10b981'
+        },
+        'season_watched': {
+            id: 'season_watched',
+            name: 'Mark Season as Watched',
+            icon: '📅',
+            description: 'Marks entire season as watched',
+            dependsOn: 'enableSeasonWatched',
+            movie: false,
+            series: true,
+            episode: false,
+            color: '#8b5cf6'
+        },
+        'series_watched': {
+            id: 'series_watched',
+            name: 'Mark Series as Watched',
+            icon: '📺',
+            description: 'Marks entire series as watched',
+            dependsOn: 'enableWatched',
+            movie: false,
+            series: true,
+            episode: false,
+            color: '#10b981'
+        },
+        'add_to_watchlist': {
+            id: 'add_to_watchlist',
+            name: 'Add to Watchlist',
+            icon: '📥',
+            description: 'Adds to your Trakt watchlist',
+            dependsOn: 'enableWatchlist',
+            movie: true,
+            series: true,
+            episode: false,
+            color: '#3b82f6'
+        },
+        'remove_from_watchlist': {
+            id: 'remove_from_watchlist',
+            name: 'Remove from Watchlist',
+            icon: '📤',
+            description: 'Removes from your Trakt watchlist',
+            dependsOn: 'enableRemoveFromWatchlist',
+            movie: true,
+            series: true,
+            episode: false,
+            color: '#ef4444'
+        },
+        'unwatched': {
+            id: 'unwatched',
+            name: 'Mark as Unwatched',
+            icon: '❌',
+            description: 'Marks movie/episode as unwatched',
+            dependsOn: 'enableUnwatched',
+            movie: true,
+            series: true,
+            episode: true,
+            color: '#ef4444'
+        }
+    };
 
     // DOM Elements
     const upstashUrlInput = document.getElementById('upstashUrl');
@@ -1423,6 +1812,7 @@
     const enableSeasonWatchedCheckbox = document.getElementById('enableSeasonWatched');
     const enableWatchlistCheckbox = document.getElementById('enableWatchlist');
     const enableRemoveFromWatchlistCheckbox = document.getElementById('enableRemoveFromWatchlist');
+    const showCurrentRatingCheckbox = document.getElementById('showCurrentRating');
     const keepSingleWatchedStateCheckbox = document.getElementById('keepSingleWatchedState');
     const keepSingleStateDisplayGroup = document.getElementById('keepSingleStateDisplayGroup');
     const keepSingleInlineRadio = document.getElementById('keepSingleInline');
@@ -1447,15 +1837,22 @@
     const stat1Select = document.getElementById('stat1Select');
     const stat2Select = document.getElementById('stat2Select');
     const stat3Select = document.getElementById('stat3Select');
+    const streamOrderList = document.getElementById('streamOrderList');
+    const orderPreview = document.getElementById('orderPreview');
+    const activeStreamCount = document.getElementById('activeStreamCount');
 
     // Preview elements
     const movieWatchedContent = document.getElementById('movieWatchedContent');
     const movieUnwatchedContent = document.getElementById('movieUnwatchedContent');
     const movieWatchlistContent = document.getElementById('movieWatchlistContent');
+    const movieCurrentRatingContent = document.getElementById('movieCurrentRatingContent');
+    const movieRemoveRatingContent = document.getElementById('movieRemoveRatingContent');
     const movieRatingsContent = document.getElementById('movieRatingsContent');
     const movieStreamCount = document.getElementById('movieStreamCount');
     const seriesWatchedContent = document.getElementById('seriesWatchedContent');
     const seriesWatchlistContent = document.getElementById('seriesWatchlistContent');
+    const seriesCurrentRatingContent = document.getElementById('seriesCurrentRatingContent');
+    const seriesRemoveRatingContent = document.getElementById('seriesRemoveRatingContent');
     const seriesRatingsContent = document.getElementById('seriesRatingsContent');
     const seriesStreamCount = document.getElementById('seriesStreamCount');
 
@@ -1487,6 +1884,7 @@
         showUsernameCheckbox.addEventListener('change', updateAddonNamePreview);
         enableRatingsCheckbox.addEventListener('change', function() {
             ratingSection.style.display = this.checked ? 'block' : 'none';
+            updateStreamOrderList();
             updatePreview();
             saveData();
         });
@@ -1496,11 +1894,21 @@
         enableSeasonWatchedCheckbox.addEventListener('change', updatePreviewAndSave);
         enableWatchlistCheckbox.addEventListener('change', function() {
             enableWatchlist = this.checked;
+            updateStreamOrderList();
             updatePreview();
             saveData();
         });
         enableRemoveFromWatchlistCheckbox.addEventListener('change', function() {
             enableRemoveFromWatchlist = this.checked;
+            updateStreamOrderList();
+            updatePreview();
+            saveData();
+        });
+
+        // Current rating checkbox event listener
+        showCurrentRatingCheckbox.addEventListener('change', function() {
+            showCurrentRating = this.checked;
+            updateStreamOrderList();
             updatePreview();
             saveData();
         });
@@ -1589,6 +1997,8 @@
         updatePatternPreview();
         updateSelectedStatsDisplay();
         updateAddonNamePreview();
+        updateStreamOrderList();
+        setupDragAndDrop();
         updatePreview();
 
         // Load saved data
@@ -1596,6 +2006,208 @@
     }
 
     function updatePreviewAndSave() {
+        updateStreamOrderList();
+        updatePreview();
+        saveData();
+    }
+
+    // Stream Ordering Functions
+    function updateStreamOrderList() {
+        streamOrderList.innerHTML = '';
+        
+        streamOrder.forEach(streamId => {
+            const streamType = streamTypes[streamId];
+            if (!streamType) return;
+            
+            const isEnabled = getStreamEnabledStatus(streamId);
+            const status = getStreamStatus(streamId);
+            
+            const li = document.createElement('li');
+            li.className = 'sortable-item';
+            li.dataset.id = streamId;
+            li.draggable = true;
+            
+            li.innerHTML = `
+                <div class="drag-handle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="5" r="1"/>
+                        <circle cx="9" cy="12" r="1"/>
+                        <circle cx="9" cy="19" r="1"/>
+                        <circle cx="15" cy="5" r="1"/>
+                        <circle cx="15" cy="12" r="1"/>
+                        <circle cx="15" cy="19" r="1"/>
+                    </svg>
+                </div>
+                <div class="item-content">
+                    <div class="item-icon">${streamType.icon}</div>
+                    <div class="item-details">
+                        <div class="item-title">
+                            ${streamType.name}
+                            <span class="item-status ${status.class}">${status.text}</span>
+                        </div>
+                        <div class="item-description">${streamType.description}</div>
+                    </div>
+                </div>
+            `;
+            
+            streamOrderList.appendChild(li);
+        });
+        
+        updateOrderPreview();
+    }
+
+    function getStreamEnabledStatus(streamId) {
+        switch(streamId) {
+            case 'current_rating':
+                return showCurrentRatingCheckbox.checked;
+            case 'rating':
+                return enableRatingsCheckbox.checked && selectedRatings.length > 0;
+            case 'watched':
+                return enableWatchedCheckbox.checked;
+            case 'season_watched':
+                return enableSeasonWatchedCheckbox.checked;
+            case 'series_watched':
+                return enableWatchedCheckbox.checked;
+            case 'add_to_watchlist':
+                return enableWatchlistCheckbox.checked;
+            case 'remove_from_watchlist':
+                return enableRemoveFromWatchlistCheckbox.checked;
+            case 'unwatched':
+                return enableUnwatchedCheckbox.checked;
+            default:
+                return false;
+        }
+    }
+
+    function getStreamStatus(streamId) {
+        const isEnabled = getStreamEnabledStatus(streamId);
+        
+        if (!isEnabled) {
+            return { text: 'Disabled', class: 'status-disabled' };
+        }
+        
+        const streamType = streamTypes[streamId];
+        if (streamType.dependsOn) {
+            return { text: 'Enabled', class: 'status-enabled' };
+        }
+        
+        return { text: 'Enabled', class: 'status-enabled' };
+    }
+
+    function setupDragAndDrop() {
+        let draggedItem = null;
+        
+        // Add event listeners for drag and drop
+        streamOrderList.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('sortable-item') || e.target.closest('.sortable-item')) {
+                draggedItem = e.target.classList.contains('sortable-item') ? e.target : e.target.closest('.sortable-item');
+                draggedItem.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', draggedItem.dataset.id);
+            }
+        });
+        
+        streamOrderList.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(streamOrderList, e.clientY);
+            const draggable = document.querySelector('.dragging');
+            
+            if (afterElement == null) {
+                streamOrderList.appendChild(draggable);
+            } else {
+                streamOrderList.insertBefore(draggable, afterElement);
+            }
+        });
+        
+        streamOrderList.addEventListener('dragend', (e) => {
+            const dragged = document.querySelector('.dragging');
+            if (dragged) {
+                dragged.classList.remove('dragging');
+                
+                // Update streamOrder array based on new order
+                const newOrder = [];
+                const items = streamOrderList.querySelectorAll('.sortable-item');
+                items.forEach(item => {
+                    newOrder.push(item.dataset.id);
+                });
+                
+                streamOrder = newOrder;
+                updateOrderPreview();
+                updatePreview();
+                saveData();
+            }
+        });
+        
+        // Prevent default drag behaviors
+        streamOrderList.addEventListener('dragenter', (e) => e.preventDefault());
+        streamOrderList.addEventListener('dragleave', (e) => e.preventDefault());
+        streamOrderList.addEventListener('drop', (e) => e.preventDefault());
+    }
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.sortable-item:not(.dragging)')];
+        
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function updateOrderPreview() {
+        orderPreview.innerHTML = '';
+        let activeCount = 0;
+        
+        streamOrder.forEach((streamId, index) => {
+            const streamType = streamTypes[streamId];
+            if (!streamType) return;
+            
+            const isEnabled = getStreamEnabledStatus(streamId);
+            if (!isEnabled) return;
+            
+            activeCount++;
+            
+            const div = document.createElement('div');
+            div.className = 'order-preview-item';
+            div.style.borderLeftColor = streamType.color;
+            
+            div.innerHTML = `
+                <div class="order-number">${index + 1}</div>
+                <div class="order-item-icon">${streamType.icon}</div>
+                <div style="flex: 1; font-weight: 500;">${streamType.name}</div>
+                <div style="font-size: 0.85rem; color: #94a3b8;">${streamType.description}</div>
+            `;
+            
+            orderPreview.appendChild(div);
+        });
+        
+        activeStreamCount.textContent = `${activeCount} active streams`;
+    }
+
+    function resetStreamOrder() {
+        streamOrder = [
+            'current_rating',
+            'rating',
+            'watched',
+            'season_watched',
+            'series_watched',
+            'add_to_watchlist',
+            'remove_from_watchlist',
+            'unwatched'
+        ];
+        updateStreamOrderList();
+        updatePreview();
+        saveData();
+    }
+
+    function reverseStreamOrder() {
+        streamOrder.reverse();
+        updateStreamOrderList();
         updatePreview();
         saveData();
     }
@@ -1830,6 +2442,7 @@
         }
         generateRatingPresets();
         updateSelectedCount();
+        updateStreamOrderList();
         updatePreview();
         saveData();
     }
@@ -1838,6 +2451,7 @@
         selectedRatings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         generateRatingPresets();
         updateSelectedCount();
+        updateStreamOrderList();
         updatePreview();
         saveData();
     }
@@ -1846,6 +2460,7 @@
         selectedRatings = [];
         generateRatingPresets();
         updateSelectedCount();
+        updateStreamOrderList();
         updatePreview();
         saveData();
     }
@@ -1854,6 +2469,7 @@
         selectedRatings = [5, 7, 10];
         generateRatingPresets();
         updateSelectedCount();
+        updateStreamOrderList();
         updatePreview();
         saveData();
     }
@@ -1863,139 +2479,186 @@
     }
 
     function updatePreview() {
-        const enableWatched = enableWatchedCheckbox.checked;
-        const enableUnwatched = enableUnwatchedCheckbox.checked;
-        const enableSeasonWatched = enableSeasonWatchedCheckbox.checked;
-        const enableRatings = enableRatingsCheckbox.checked;
-        const enableWatchlist = enableWatchlistCheckbox.checked;
-        const enableRemoveFromWatchlist = enableRemoveFromWatchlistCheckbox.checked;
-        const keepSingleWatchedState = keepSingleWatchedStateCheckbox.checked;
-
-        // Movie preview
+        // Movie preview - using the new stream order
         let movieWatchedHTML = '';
         let movieUnwatchedHTML = '';
         let movieWatchlistHTML = '';
+        let movieCurrentRatingHTML = '';
+        let movieRemoveRatingHTML = '';
         let movieRatingsHTML = '';
         let movieStreams = 0;
 
-        if (enableWatched) {
-            let watchedTitle = '✅ Mark "The Matrix" as Watched';
-            if (keepSingleWatchedState) {
-                if (keepSingleStateDisplay === 'none') {
-                    watchedTitle = '✅ Mark "The Matrix" as Watched';
-                } else if (keepSingleStateDisplay === 'newline') {
-                    watchedTitle = `✅ Mark "The Matrix" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
-                } else {
-                    watchedTitle = `✅ Mark "The Matrix" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
-                }
-            }
-            movieWatchedHTML = `<div class="preview-item watched">${watchedTitle}</div>`;
-            movieStreams += 1;
-        }
-
-        if (enableUnwatched) {
-            movieUnwatchedHTML = '<div class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>';
-            movieStreams += 1;
-        }
-
-        if (enableWatchlist) {
-            movieWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>🎬 "The Matrix" (1999)<br>✅ Add movie to your Trakt watchlist</div>';
-            movieStreams += 1;
-        }
-
-        if (enableRemoveFromWatchlist) {
-            movieWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>🎬 "The Matrix" (1999)<br>🗑️ Remove movie from your Trakt watchlist</div>';
-            movieStreams += 1;
-        }
-
-        if (enableRatings && selectedRatings.length > 0) {
-            selectedRatings.forEach(rating => {
-                movieRatingsHTML += `<div class="preview-item rating">${formatRatingPreview(rating, 'movie', 'The Matrix', '1999')}</div>`;
-                movieStreams += 1;
-            });
-        }
-
-        movieWatchedContent.innerHTML = movieWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
-        movieUnwatchedContent.innerHTML = movieUnwatchedHTML || '<div class="preview-item" style="color:#888;">No unwatched options enabled</div>';
-        movieWatchlistContent.innerHTML = movieWatchlistHTML || '<div class="preview-item" style="color:#888;">No watchlist options enabled</div>';
-        movieRatingsContent.innerHTML = movieRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
-        movieStreamCount.textContent = movieStreams;
-
-        // Series preview (episode view)
+        // Series preview
         let seriesWatchedHTML = '';
         let seriesWatchlistHTML = '';
+        let seriesCurrentRatingHTML = '';
+        let seriesRemoveRatingHTML = '';
         let seriesRatingsHTML = '';
         let seriesStreams = 0;
 
-        if (enableWatched) {
-            let watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched`;
-            if (keepSingleWatchedState) {
-                if (keepSingleStateDisplay === 'none') {
-                    watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched`;
-                } else if (keepSingleStateDisplay === 'newline') {
-                    watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
-                } else {
-                    watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
-                }
-            }
-            seriesWatchedHTML = `<div class="preview-item watched">${watchedTitle}</div>`;
-            seriesStreams += 1;
-
-            if (enableSeasonWatched) {
-                let seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched`;
-                if (keepSingleWatchedState) {
-                    if (keepSingleStateDisplay === 'none') {
-                        seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched`;
-                    } else if (keepSingleStateDisplay === 'newline') {
-                        seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
-                    } else {
-                        seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+        // Generate streams in the user's preferred order
+        streamOrder.forEach(streamId => {
+            const streamType = streamTypes[streamId];
+            if (!streamType) return;
+            
+            const isEnabled = getStreamEnabledStatus(streamId);
+            if (!isEnabled) return;
+            
+            // Handle each stream type
+            switch(streamId) {
+                case 'current_rating':
+                    if (previewRatingValue > 0) {
+                        movieCurrentRatingHTML = `<div class="preview-item current-rating">${formatCurrentRatingPreview(previewRatingValue, 'movie', 'The Matrix', '1999')}</div>`;
+                        seriesCurrentRatingHTML = `<div class="preview-item current-rating">${formatCurrentRatingPreview(previewRatingValue, 'series', 'Breaking Bad', null, 1, 1)}</div>`;
+                        movieStreams += 1;
+                        seriesStreams += 1;
                     }
-                }
-                seriesWatchedHTML += `<div class="preview-item season">${seasonTitle}</div>`;
-                seriesStreams += 1;
+                    break;
+                    
+                case 'rating':
+                    if (selectedRatings.length > 0 && (previewRatingValue === 0 || !showCurrentRatingCheckbox.checked)) {
+                        selectedRatings.forEach(rating => {
+                            movieRatingsHTML += `<div class="preview-item rating">${formatRatingPreview(rating, 'movie', 'The Matrix', '1999')}</div>`;
+                            seriesRatingsHTML += `<div class="preview-item rating">${formatRatingPreview(rating, 'series', 'Breaking Bad', null, 1, 1)}</div>`;
+                            movieStreams += 1;
+                            seriesStreams += 1;
+                        });
+                    }
+                    break;
+                    
+                case 'watched':
+                    let watchedTitle = '✅ Mark "The Matrix" as Watched';
+                    if (keepSingleWatchedState) {
+                        if (keepSingleStateDisplay === 'none') {
+                            watchedTitle = '✅ Mark "The Matrix" as Watched';
+                        } else if (keepSingleStateDisplay === 'newline') {
+                            watchedTitle = `✅ Mark "The Matrix" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                        } else {
+                            watchedTitle = `✅ Mark "The Matrix" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                        }
+                    }
+                    movieWatchedHTML = `<div class="preview-item watched">${watchedTitle}</div>`;
+                    movieStreams += 1;
+                    
+                    let seriesWatchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched`;
+                    if (keepSingleWatchedState) {
+                        if (keepSingleStateDisplay === 'none') {
+                            seriesWatchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched`;
+                        } else if (keepSingleStateDisplay === 'newline') {
+                            seriesWatchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                        } else {
+                            seriesWatchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                        }
+                    }
+                    seriesWatchedHTML = `<div class="preview-item watched">${seriesWatchedTitle}</div>`;
+                    seriesStreams += 1;
+                    break;
+                    
+                case 'season_watched':
+                    if (enableSeasonWatchedCheckbox.checked) {
+                        let seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched`;
+                        if (keepSingleWatchedState) {
+                            if (keepSingleStateDisplay === 'none') {
+                                seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched`;
+                            } else if (keepSingleStateDisplay === 'newline') {
+                                seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                            } else {
+                                seasonTitle = `📅 Mark Season 1 of "Breaking Bad" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                            }
+                        }
+                        seriesWatchedHTML += `<div class="preview-item season">${seasonTitle}</div>`;
+                        seriesStreams += 1;
+                    }
+                    break;
+                    
+                case 'series_watched':
+                    let seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched`;
+                    if (keepSingleWatchedState) {
+                        if (keepSingleStateDisplay === 'none') {
+                            seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched`;
+                        } else if (keepSingleStateDisplay === 'newline') {
+                            seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                        } else {
+                            seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                        }
+                    }
+                    seriesWatchedHTML += `<div class="preview-item watched">${seriesTitle}</div>`;
+                    seriesStreams += 1;
+                    break;
+                    
+                case 'add_to_watchlist':
+                    movieWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>🎬 "The Matrix" (1999)<br>✅ Add movie to your Trakt watchlist</div>';
+                    seriesWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>📺 "Breaking Bad" (Series)<br>✅ Add series to your Trakt watchlist</div>';
+                    movieStreams += 1;
+                    seriesStreams += 1;
+                    break;
+                    
+                case 'remove_from_watchlist':
+                    movieWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>🎬 "The Matrix" (1999)<br>🗑️ Remove movie from your Trakt watchlist</div>';
+                    seriesWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>📺 "Breaking Bad" (Series)<br>🗑️ Remove series from your Trakt watchlist</div>';
+                    movieStreams += 1;
+                    seriesStreams += 1;
+                    break;
+                    
+                case 'unwatched':
+                    movieUnwatchedHTML = '<div class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>';
+                    seriesWatchedHTML += `<div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>`;
+                    movieStreams += 1;
+                    seriesStreams += 1;
+                    break;
             }
+        });
 
-            let seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched`;
-            if (keepSingleWatchedState) {
-                if (keepSingleStateDisplay === 'none') {
-                    seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched`;
-                } else if (keepSingleStateDisplay === 'newline') {
-                    seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
-                } else {
-                    seriesTitle = `📺 Mark Entire "Breaking Bad" Series as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
-                }
-            }
-            seriesWatchedHTML += `<div class="preview-item watched">${seriesTitle}</div>`;
-            seriesStreams += 1;
-        }
+        // Update movie preview sections
+        movieWatchedContent.innerHTML = movieWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
+        movieUnwatchedContent.innerHTML = movieUnwatchedHTML || '<div class="preview-item" style="color:#888;">No unwatched options enabled</div>';
+        movieWatchlistContent.innerHTML = movieWatchlistHTML || '<div class="preview-item" style="color:#888;">No watchlist options enabled</div>';
+        movieCurrentRatingContent.innerHTML = movieCurrentRatingHTML || '<div class="preview-item" style="color:#888;">No current rating (simulated rating: 0/10)</div>';
+        movieRemoveRatingContent.innerHTML = movieRemoveRatingHTML || '<div class="preview-item" style="color:#888;">(Remove rating is now built into current rating display)</div>';
+        movieRatingsContent.innerHTML = movieRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
+        movieStreamCount.textContent = movieStreams;
 
-        if (enableUnwatched) {
-            seriesWatchedHTML += `<div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>`;
-            seriesStreams += 1;
-        }
-
-        if (enableWatchlist) {
-            seriesWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>📺 "Breaking Bad" (Series)<br>✅ Add series to your Trakt watchlist</div>';
-            seriesStreams += 1;
-        }
-
-        if (enableRemoveFromWatchlist) {
-            seriesWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>📺 "Breaking Bad" (Series)<br>🗑️ Remove series from your Trakt watchlist</div>';
-            seriesStreams += 1;
-        }
-
-        if (enableRatings && selectedRatings.length > 0) {
-            selectedRatings.forEach(rating => {
-                seriesRatingsHTML += `<div class="preview-item rating">${formatRatingPreview(rating, 'series', 'Breaking Bad', null, 1, 1)}</div>`;
-                seriesStreams += 1;
-            });
-        }
-
+        // Update series preview sections
         seriesWatchedContent.innerHTML = seriesWatchedHTML || '<div class="preview-item" style="color:#888;">No watched options enabled</div>';
         seriesWatchlistContent.innerHTML = seriesWatchlistHTML || '<div class="preview-item" style="color:#888;">No watchlist options enabled</div>';
+        seriesCurrentRatingContent.innerHTML = seriesCurrentRatingHTML || '<div class="preview-item" style="color:#888;">No current rating (simulated rating: 0/10)</div>';
+        seriesRemoveRatingContent.innerHTML = seriesRemoveRatingHTML || '<div class="preview-item" style="color:#888;">(Remove rating is now built into current rating display)</div>';
         seriesRatingsContent.innerHTML = seriesRatingsHTML || '<div class="preview-item" style="color:#888;">No rating options enabled</div>';
         seriesStreamCount.textContent = seriesStreams;
+    }
+
+    function formatCurrentRatingPreview(rating, type, title, year, season = null, episode = null) {
+        const visual = generateRatingVisual(selectedRatingStyle, rating);
+        const statsLine = getStatsLinePreview(rating);
+
+        switch(selectedRatingPattern) {
+            case 0:
+                if (type === 'movie') {
+                    return `${visual}<br>"${title}" ${rating}/10<br>🗑️ Click to remove rating`;
+                } else if (season && episode) {
+                    return `${visual}<br>S${season}E${episode} "${title}" ${rating}/10<br>🗑️ Click to remove rating`;
+                } else {
+                    return `${visual}<br>"${title}" Series ${rating}/10<br>🗑️ Click to remove rating`;
+                }
+            case 1:
+                if (type === 'movie') {
+                    return `⭐ Current Rating: ${rating}/10<br>🎬 ${title}${year ? ` (${year})` : ' (Movie)'}<br>${visual}<br>${statsLine}<br>🗑️ Click to remove rating`;
+                } else if (season && episode) {
+                    return `⭐ Current Rating: ${rating}/10<br>📺 ${title} S${season}E${episode}<br>${visual}<br>${statsLine}<br>🗑️ Click to remove rating`;
+                } else {
+                    return `⭐ Current Rating: ${rating}/10<br>📺 ${title} (Series)<br>${visual}<br>${statsLine}<br>🗑️ Click to remove rating`;
+                }
+            case 6:
+                if (type === 'movie') {
+                    return `🎬 ${title}${year ? ` (${year})` : ''}<br>⭐ ${visual}<br>✅ Current Rating ${rating}/10<br>${statsLine}<br>🗑️ Click to remove rating`;
+                } else if (season && episode) {
+                    return `📺 ${title} S${season}E${episode}<br>⭐ ${visual}<br>✅ Current Rating ${rating}/10<br>${statsLine}<br>🗑️ Click to remove rating`;
+                } else {
+                    return `📺 ${title} (Series)<br>⭐ ${visual}<br>✅ Current Rating ${rating}/10<br>${statsLine}<br>🗑️ Click to remove rating`;
+                }
+            default:
+                return `${visual}<br>"${title}" ${rating}/10<br>🗑️ Click to remove rating`;
+        }
     }
 
     function formatRatingPreview(rating, type, title, year, season = null, episode = null) {
@@ -2250,6 +2913,7 @@
             enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
             enableWatchlist: enableWatchlistCheckbox.checked,
             enableRemoveFromWatchlist: enableRemoveFromWatchlistCheckbox.checked,
+            showCurrentRating: showCurrentRatingCheckbox.checked,
             keepSingleWatchedState: keepSingleWatchedStateCheckbox.checked,
             keepSingleStateDisplay: keepSingleStateDisplay,
             keepSingleStateEmoji: keepSingleStateEmoji,
@@ -2258,7 +2922,9 @@
             ratingPattern: selectedRatingPattern,
             statsFormat: selectedStatsFormat,
             selectedStats: selectedStats,
-            markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked
+            markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked,
+            // NEW: Add stream order to config
+            streamOrder: streamOrder
         };
 
         // Add storage method specific data
@@ -2374,6 +3040,7 @@
             enableSeasonWatchedCheckbox.checked = true;
             enableWatchlistCheckbox.checked = true;
             enableRemoveFromWatchlistCheckbox.checked = true;
+            showCurrentRatingCheckbox.checked = true;
             keepSingleWatchedStateCheckbox.checked = false;
             enableRatingsCheckbox.checked = true;
             markAsPlayedOnRateCheckbox.checked = false;
@@ -2385,6 +3052,7 @@
             selectedStatsFormat = 1;
             selectedStats = ['plays', 'comments', 'watchers'];
             previewRatingValue = 5;
+            showCurrentRating = true;
             keepSingleWatchedState = false;
             keepSingleStateDisplay = 'inline';
             keepSingleStateEmoji = '🔄';
@@ -2393,6 +3061,18 @@
             upstashConnected = false;
             traktTokens = null;
             currentUsername = 'TraktUser';
+            
+            // Reset stream order
+            streamOrder = [
+                'current_rating',
+                'rating',
+                'watched',
+                'season_watched',
+                'series_watched',
+                'add_to_watchlist',
+                'remove_from_watchlist',
+                'unwatched'
+            ];
 
             // Reset UI elements
             ratingSlider.value = '5';
@@ -2443,6 +3123,7 @@
             updatePatternPreview();
             updateSelectedStatsDisplay();
             updateAddonNamePreview();
+            updateStreamOrderList();
             updatePreview();
 
             alert('Configuration reset successfully!');
@@ -2473,6 +3154,7 @@
                 if (data.enableSeasonWatched !== undefined) enableSeasonWatchedCheckbox.checked = data.enableSeasonWatched;
                 if (data.enableWatchlist !== undefined) enableWatchlistCheckbox.checked = data.enableWatchlist;
                 if (data.enableRemoveFromWatchlist !== undefined) enableRemoveFromWatchlistCheckbox.checked = data.enableRemoveFromWatchlist;
+                if (data.showCurrentRating !== undefined) showCurrentRatingCheckbox.checked = data.showCurrentRating;
                 if (data.keepSingleWatchedState !== undefined) {
                     keepSingleWatchedStateCheckbox.checked = data.keepSingleWatchedState;
                     keepSingleWatchedState = data.keepSingleWatchedState;
@@ -2514,7 +3196,9 @@
                 if (data.storageMethod) storageMethod = data.storageMethod;
                 if (data.configId) configId = data.configId;
                 if (data.currentUsername) currentUsername = data.currentUsername;
-                
+                // NEW: Load stream order
+                if (data.streamOrder) streamOrder = data.streamOrder;
+
                 // CRITICAL FIX: Load tokens from localStorage if available
                 if (data.traktTokens) {
                     traktTokens = data.traktTokens;
@@ -2561,6 +3245,7 @@
                 updatePatternPreview();
                 updateSelectedStatsDisplay();
                 updateAddonNamePreview();
+                updateStreamOrderList();
                 ratingSection.style.display = enableRatingsCheckbox.checked ? 'block' : 'none';
 
                 // Update auth status if we have configId (Upstash storage) or tokens (URL storage)
@@ -2602,6 +3287,7 @@
             enableSeasonWatched: enableSeasonWatchedCheckbox.checked,
             enableWatchlist: enableWatchlistCheckbox.checked,
             enableRemoveFromWatchlist: enableRemoveFromWatchlistCheckbox.checked,
+            showCurrentRating: showCurrentRatingCheckbox.checked,
             keepSingleWatchedState: keepSingleWatchedStateCheckbox.checked,
             keepSingleStateDisplay: keepSingleStateDisplay,
             keepSingleStateEmoji: keepSingleStateEmoji,
@@ -2615,6 +3301,8 @@
             storageMethod: storageMethod,
             configId: configId,
             currentUsername: currentUsername,
+            // NEW: Save stream order
+            streamOrder: streamOrder,
             // CRITICAL FIX: Always save traktTokens to localStorage
             traktTokens: traktTokens
         };
