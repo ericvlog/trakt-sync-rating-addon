@@ -14,7 +14,9 @@ const PORT = process.env.PORT || 7000;
 let SERVER_URL = process.env.SERVER_URL;
 
 if (!SERVER_URL) {
-  if (process.env.VERCEL_URL) {
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    SERVER_URL = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  } else if (process.env.VERCEL_URL) {
     SERVER_URL = `https://${process.env.VERCEL_URL}`;
   } else if (process.env.RENDER_EXTERNAL_URL) {
     SERVER_URL = process.env.RENDER_EXTERNAL_URL;
@@ -763,29 +765,58 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
 // OAuth Routes with Upstash Support (UPDATED with clientSecret)
 // ============================================
 
+function readCookie(req, name) {
+  const header = req.headers.cookie || '';
+  const entry = header.split(';').map(part => part.trim()).find(part => part.startsWith(name + '='));
+  return entry ? entry.slice(name.length + 1) : null;
+}
+
+function readPkceCookie(req) {
+  try {
+    const raw = readCookie(req, 'trakt_pkce');
+    return raw ? JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) : null;
+  } catch { return null; }
+}
+
 app.get('/oauth/initiate', (req, res) => {
-  const { clientId } = req.query;
+  const clientId = String(req.query.clientId || '').trim();
+  if (!clientId) return res.status(400).send('Missing clientId');
+  const state = crypto.randomBytes(24).toString('base64url');
+  const verifier = crypto.randomBytes(32).toString('base64url');
+  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+  const cookieValue = Buffer.from(JSON.stringify({ state, verifier, clientId })).toString('base64url');
+  res.setHeader('Set-Cookie', 'trakt_pkce=' + cookieValue + '; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600');
+  const redirectUri = SERVER_URL.replace(/\/$/, '') + '/oauth/callback';
+  const authUrl = new URL('https://auth.trakt.tv/oauth/authorize');
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('client_id', clientId);
+  authUrl.searchParams.set('redirect_uri', redirectUri);
+  authUrl.searchParams.set('state', state);
+  authUrl.searchParams.set('code_challenge', challenge);
+  authUrl.searchParams.set('code_challenge_method', 'S256');
+  res.redirect(authUrl.toString());
+});
 
-  if (!clientId) {
-    return res.status(400).send('Missing clientId');
-  }
-
-  const state = Math.random().toString(36).substring(7);
-  oauthStates.set(state, {
-    clientId,
-    timestamp: Date.now()
-  });
-
-  const traktAuthUrl = `https://trakt.tv/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=urn:ietf:wg:oauth:2.0:oob&state=${state}`;
-  res.redirect(traktAuthUrl);
+app.get('/oauth/callback', (req, res) => {
+  const code = String(req.query.code || '');
+  const state = String(req.query.state || '');
+  const pending = readPkceCookie(req);
+  if (req.query.error) return res.status(400).send('Trakt authorization was cancelled. You can close this window.');
+  if (!code || !state || !pending || state !== pending.state) return res.status(400).send('OAuth state check failed. Close this window and try connecting again.');
+  const targetOrigin = new URL(SERVER_URL).origin;
+  res.setHeader('Cache-Control', 'no-store');
+  const page = '<!doctype html><html><head><meta charset="utf-8"><title>Trakt connected</title></head><body><p>Authorization received. Returning to configuration…</p><script>' +
+    'if(window.opener){window.opener.postMessage({type:"trakt-pkce-callback",code:' + JSON.stringify(code) + ',state:' + JSON.stringify(state) + '},' + JSON.stringify(targetOrigin) + ');window.close();}' +
+    'else{document.body.insertAdjacentHTML("beforeend","<p>Close this window and return to configuration.</p>");}</script></body></html>';
+  res.type('html').send(page);
 });
 
 // Updated OAuth exchange with clientSecret support
 app.post('/oauth/exchange', async (req, res) => {
-  const { code, clientId, clientSecret, upstashUrl, upstashToken } = req.body;
-
-  if (!clientSecret) {
-    return res.status(400).json({ success: false, error: 'Client Secret is required' });
+  const { code, clientId, state, upstashUrl, upstashToken } = req.body;
+  const pending = readPkceCookie(req);
+  if (!code || !clientId || !state || !pending || state !== pending.state || clientId !== pending.clientId) {
+    return res.status(400).json({ success: false, error: 'OAuth state verification failed. Please reconnect to Trakt.' });
   }
 
   try {
@@ -807,8 +838,8 @@ app.post('/oauth/exchange', async (req, res) => {
       body: JSON.stringify({
         code,
         client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+        code_verifier: pending.verifier,
+        redirect_uri: SERVER_URL.replace(/\/$/, '') + '/oauth/callback',
         grant_type: 'authorization_code'
       }),
       signal: controller.signal
@@ -903,8 +934,8 @@ app.post('/oauth/refresh', async (req, res) => {
   try {
     const { refreshToken, clientId, clientSecret, upstashUrl, upstashToken, configId, storage } = req.body;
 
-    if (!refreshToken || !clientId || !clientSecret) {
-      return res.status(400).json({ error: 'Refresh token, Client ID, and Client Secret are required' });
+    if (!refreshToken || !clientId) {
+      return res.status(400).json({ error: 'Refresh token and Client ID are required' });
     }
 
     const controller = new AbortController();
@@ -926,8 +957,7 @@ app.post('/oauth/refresh', async (req, res) => {
       body: JSON.stringify({
         refresh_token: refreshToken,
         client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+        redirect_uri: SERVER_URL.replace(/\/$/, '') + '/oauth/callback',
         grant_type: 'refresh_token'
       }),
       signal: controller.signal
@@ -1112,8 +1142,8 @@ async function refreshTraktTokens(userConfig) {
   try {
     const { refresh_token, clientId, clientSecret, upstashUrl, upstashToken, configId, storage } = userConfig;
 
-    if (!refresh_token || !clientId || !clientSecret) {
-      console.log('[TOKEN REFRESH] Missing refresh token, clientId, or clientSecret');
+    if (!refresh_token || !clientId) {
+      console.log('[TOKEN REFRESH] Missing refresh token or clientId');
       return null;
     }
 
@@ -1143,8 +1173,7 @@ async function refreshTraktTokens(userConfig) {
       body: JSON.stringify({
         refresh_token: refresh_token,
         client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+        redirect_uri: SERVER_URL.replace(/\/$/, '') + '/oauth/callback',
         grant_type: 'refresh_token'
       }),
       signal: controller.signal

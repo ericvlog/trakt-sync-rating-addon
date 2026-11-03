@@ -15,6 +15,5 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "regions": ["sfo1"],
-  "public": false
+  "regions": ["sfo1"]
 }

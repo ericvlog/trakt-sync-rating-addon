@@ -893,7 +893,7 @@
                             Steps:<br>
                             1. Click "NEW APPLICATION"<br>
                             2. Name: "Stremio Trakt Addon"<br>
-                            3. Redirect URI: <code>urn:ietf:wg:oauth:2.0:oob</code><br>
+                            3. Redirect URI: use your deployed HTTPS callback URL ending in <code>/oauth/callback</code><br>
                             4. Copy the Client ID
                         </span>
                     </span>
@@ -901,10 +901,10 @@
                 <input type="text" id="clientId" placeholder="Enter your Trakt Client ID">
             </div>
 
-            <!-- Trakt Client Secret (now below Client ID) -->
+            <!-- Trakt Client Secret (optional for PKCE) (now below Client ID) -->
             <div class="form-group">
                 <label for="clientSecret">
-                    Trakt Client Secret
+                    Trakt Client Secret (optional for PKCE)
                     <a href="https://trakt.tv/oauth/applications" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
                         (Get it here)
                     </a>
@@ -916,7 +916,7 @@
                         </span>
                     </span>
                 </label>
-                <input type="password" id="clientSecret" placeholder="Enter your Trakt Client Secret">
+                <input type="password" id="clientSecret" placeholder="Optional — PKCE does not require a secret (optional for PKCE)">
             </div>
 
             <div class="form-group">
@@ -2449,13 +2449,8 @@
 
         function startAuth() {
             const clientId = clientIdInput.value.trim();
-            const clientSecret = clientSecretInput.value.trim();
             if (!clientId) {
                 alert('Please enter your Trakt Client ID');
-                return;
-            }
-            if (!clientSecret) {
-                alert('Please enter your Trakt Client Secret');
                 return;
             }
 
@@ -2491,13 +2486,13 @@
         }
 
         // FIXED: Read clientSecret directly from input
-        async function submitAuthCode() {
+        async function submitAuthCode(callbackState = null) {
             const clientId = clientIdInput.value.trim();
-            const clientSecret = clientSecretInput.value.trim(); // read directly from input
             const authCode = authCodeInput.value.trim();
+            const state = callbackState || window.pendingTraktOAuthState;
 
-            if (!clientId || !clientSecret || !authCode) {
-                alert('Please enter Client ID, Client Secret, and Authorization Code');
+            if (!clientId || !authCode || !state) {
+                alert('Start Trakt authorization again; the secure callback state is missing.');
                 return;
             }
 
@@ -2508,7 +2503,7 @@
                 const requestData = {
                     code: authCode,
                     clientId: clientId,
-                    clientSecret: clientSecret
+                    state: state
                 };
 
                 // Add Upstash credentials if using Upstash
@@ -2573,6 +2568,13 @@
                 console.error('Auth error:', error);
             }
         }
+
+        window.addEventListener('message', (event) => {
+            if (event.origin !== window.location.origin || !event.data || event.data.type !== 'trakt-pkce-callback') return;
+            window.pendingTraktOAuthState = event.data.state;
+            authCodeInput.value = event.data.code;
+            submitAuthCode(event.data.state);
+        });
 
         function generateAddonUrl() {
             console.log('DEBUG: generateAddonUrl called');
