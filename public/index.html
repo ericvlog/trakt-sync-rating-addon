@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trakt Sync & Rate - Stremio Addon</title>
+    <title>Simkl Sync & Rate - Stremio Addon</title>
     <style>
         * {
             margin: 0;
@@ -806,8 +806,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎬 Trakt Sync & Rate v2.4.0</h1>
-            <p class="tagline">Create your personalized Stremio addon to sync watched states, rate content, and manage watchlist on Trakt.tv with persistent Upstash Redis storage</p>
+            <h1>🎬 Simkl Sync & Rate v2.4.0</h1>
+            <p class="tagline">Create your personalized Stremio addon to sync watched states, rate content, and manage watchlist on Simkl.com with persistent Upstash Redis storage</p>
             <div class="info-box">
                 <strong>🆕 NEW FEATURES:</strong> 
                 <br>1. <strong>Display Current Ratings</strong> - See your existing ratings directly in Stremio
@@ -831,11 +831,11 @@
             <div class="form-group">
                 <label for="upstashUrl">Upstash Redis URL (For Persistent Storage)
                     <span class="tooltip">
-                        ⓘ
+                        �?
                         <span class="tooltiptext">
-                            <strong>Trakt tokens expire every 3 months!</strong><br><br>
+                            <strong>Simkl tokens expire every 7 days!</strong><br><br>
                             For persistent connection, get a free Redis database from:<br>
-                            <a href="https://upstash.com/?ref=stremio-trakt" target="_blank" class="info-link">https://upstash.com/</a><br><br>
+                            <a href="https://upstash.com/?ref=stremio-simkl" target="_blank" class="info-link">https://upstash.com/</a><br><br>
                             Steps:<br>
                             1. Create free account at Upstash<br>
                             2. Create a new Redis database<br>
@@ -846,8 +846,8 @@
                 </label>
                 <input type="text" id="upstashUrl" placeholder="https://us1-cool-sun-12345.upstash.io">
                 <div style="margin-top: 8px; font-size: 0.9rem; color: #94a3b8;">
-                    <a href="https://upstash.com/?ref=stremio-trakt" target="_blank" class="info-link">
-                        ↗ Get free Upstash Redis database (required for persistent connection)
+                    <a href="https://upstash.com/?ref=stremio-simkl" target="_blank" class="info-link">
+                        �?Get free Upstash Redis database (required for persistent connection)
                     </a>
                 </div>
             </div>
@@ -855,7 +855,7 @@
             <div class="form-group">
                 <label for="upstashToken">Upstash Token
                     <span class="tooltip">
-                        ⓘ
+                        �?
                         <span class="tooltiptext">
                             Get your Upstash token from the database dashboard:<br>
                             1. Go to your Upstash dashboard<br>
@@ -880,43 +880,43 @@
                 <span id="upstashStatus" style="margin-left: 10px; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem;"></span>
             </div>
 
-            <!-- Trakt Client ID (now above Client Secret) -->
+            <!-- Simkl Client ID (now above Client Secret) -->
             <div class="form-group">
                 <label for="clientId">
-                    Trakt Client ID
-                    <a href="https://trakt.tv/oauth/applications" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
+                    Simkl Client ID
+                    <a href="https://api.simkl.com" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
                         (Get it here)
                     </a>
                     <span class="tooltip" style="margin-left: 5px;">
-                        ⓘ
+                        �?
                         <span class="tooltiptext">
                             Steps:<br>
                             1. Click "NEW APPLICATION"<br>
-                            2. Name: "Stremio Trakt Addon"<br>
+                            2. Name: "Stremio Simkl Addon"<br>
                             3. Redirect URI: use your deployed HTTPS callback URL ending in <code>/oauth/callback</code><br>
                             4. Copy the Client ID
                         </span>
                     </span>
                 </label>
-                <input type="text" id="clientId" placeholder="Enter your Trakt Client ID">
+                <input type="text" id="clientId" placeholder="Enter your Simkl Client ID">
             </div>
 
-            <!-- Trakt Client Secret (optional for PKCE) (now below Client ID) -->
+            <!-- Simkl Client Secret (optional for PKCE) (now below Client ID) -->
             <div class="form-group">
                 <label for="clientSecret">
-                    Trakt Client Secret (optional for PKCE)
-                    <a href="https://trakt.tv/oauth/applications" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
+                    Simkl Client Secret (optional for PKCE)
+                    <a href="https://api.simkl.com" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
                         (Get it here)
                     </a>
                     <span class="tooltip" style="margin-left: 5px;">
-                        ⓘ
+                        �?
                         <span class="tooltiptext">
                             Required for OAuth token exchange.<br>
-                            Find it in your Trakt app settings.
+                            Find it in your Simkl app settings.
                         </span>
                     </span>
                 </label>
-                <input type="password" id="clientSecret" placeholder="Optional — PKCE does not require a secret (optional for PKCE)">
+                <input type="password" id="clientSecret" placeholder="Optional �?PKCE does not require a secret (optional for PKCE)">
             </div>
 
             <div class="form-group">
@@ -926,7 +926,7 @@
                         (Get it here)
                     </a>
                     <span class="tooltip" style="margin-left: 5px;">
-                        ⓘ
+                        �?
                         <span class="tooltiptext">
                             Used to fetch movie/show titles for better display.<br>
                             Not required for basic functionality.
@@ -943,17 +943,17 @@
                         <polyline points="10 17 15 12 10 7"/>
                         <line x1="15" y1="12" x2="3" y2="12"/>
                     </svg>
-                    Connect to Trakt
+                    Connect to Simkl
                 </button>
             </div>
 
             <div id="mainAuthStatus" class="status status-warning">
                 <span class="upstash-indicator upstash-warning"></span>
-                Not connected to Trakt
+                Not connected to Simkl
             </div>
 
             <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
-                <strong>💡 Important:</strong> Without Upstash Redis, Trakt tokens expire every 3 months and you'll need to reconnect. With Upstash, your connection remains persistent. <strong>v2.4.0 now includes "Current Rating Display", "Remove Rating" and "Drag & Drop Stream Ordering" features!</strong>
+                <strong>💡 Important:</strong> Without Upstash Redis, Simkl tokens expire every 7 days and you'll need to reconnect. With Upstash, your connection remains persistent. <strong>v2.4.0 now includes "Current Rating Display", "Remove Rating" and "Drag & Drop Stream Ordering" features!</strong>
             </div>
         </section>
 
@@ -970,7 +970,7 @@
             <div class="form-group">
                 <label for="addonName">Addon Display Name</label>
                 <div id="addonNamePreview" style="background: rgba(15, 23, 42, 0.8); border-radius: 10px; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                    Trakt Sync & Rate
+                    Simkl Sync & Rate
                 </div>
             </div>
 
@@ -1022,7 +1022,7 @@
             <div class="checkbox-group">
                 <input type="checkbox" id="showCurrentRating" checked>
                 <label for="showCurrentRating">
-                    <strong>⭐ Display current rating in Stremio</strong>
+                    <strong>�?Display current rating in Stremio</strong>
                 </label>
             </div>
             <div class="feature-description">
@@ -1034,7 +1034,7 @@
             <div class="checkbox-group">
                 <input type="checkbox" id="enableRemoveRating" checked>
                 <label for="enableRemoveRating">
-                    <strong>🗑️ Enable "Remove Rating" option</strong>
+                    <strong>🗑�?Enable "Remove Rating" option</strong>
                 </label>
             </div>
             <div class="feature-description">
@@ -1053,7 +1053,7 @@
                 When enabled, older watched entries for the same movie/episode will be automatically deleted when:<br>
                 1. Marking as watched directly<br>
                 2. Rating with "Automatically mark as played when rating" enabled<br>
-                This helps maintain a clean Trakt history.
+                This helps maintain a clean Simkl history.
             </div>
 
             <!-- Keep Single State Display Options -->
@@ -1090,8 +1090,8 @@
                                 <label for="emojiBroom">🧹 Broom</label>
                             </div>
                             <div>
-                                <input type="radio" id="emojiZap" name="keepSingleStateEmoji" value="⚡">
-                                <label for="emojiZap">⚡ Zap</label>
+                                <input type="radio" id="emojiZap" name="keepSingleStateEmoji" value="�?>
+                                <label for="emojiZap">�?Zap</label>
                             </div>
                         </div>
                     </div>
@@ -1164,12 +1164,12 @@
             <div class="form-group">
                 <label>Rating Visual Style
                     <span class="tooltip">
-                        ⓘ
+                        �?
                         <span class="tooltiptext">
                             Choose how ratings will be displayed in Stremio:<br>
-                            • Stars: ★★★★★☆☆☆☆☆<br>
-                            • Hearts: ❤️❤️❤️🤍🤍🤍🤍🤍🤍🤍<br>
-                            • Progress: ▰▰▰▱▱▱▱▱▱▱
+                            �?Stars: ★★★★★☆☆☆☆☆<br>
+                            �?Hearts: ❤️❤️❤️🤍🤍🤍🤍🤍🤍🤍<br>
+                            �?Progress: ▰▰▰▱▱▱▱▱▱▱
                         </span>
                     </span>
                 </label>
@@ -1242,17 +1242,17 @@
                 <div class="stats-format-options">
                     <div class="stats-format-option selected" id="stats-option-1" onclick="selectStatsFormat(1)">
                         <input type="radio" name="statsFormat" id="stats1" checked>
-                        <label for="stats1" style="display: inline;">Format 1: Compact Stats (👁️ 3.1k watchers - ▶️ 5.8k plays)</label>
+                        <label for="stats1" style="display: inline;">Format 1: Compact Stats (👁�?3.1k watchers - ▶️ 5.8k plays)</label>
                     </div>
 
                     <div class="stats-format-option" id="stats-option-2" onclick="selectStatsFormat(2)">
                         <input type="radio" name="statsFormat" id="stats2">
-                        <label for="stats2" style="display: inline;">Format 2: Detailed Stats (👁️ watchers: 3.1k | ▶️ plays: 5.8k)</label>
+                        <label for="stats2" style="display: inline;">Format 2: Detailed Stats (👁�?watchers: 3.1k | ▶️ plays: 5.8k)</label>
                     </div>
 
                     <div class="stats-format-option" id="stats-option-3" onclick="selectStatsFormat(3)">
                         <input type="radio" name="statsFormat" id="stats3">
-                        <label for="stats3" style="display: inline;">Format 3: Minimal Stats (👁️ 3.1k | ▶️ 5.8k)</label>
+                        <label for="stats3" style="display: inline;">Format 3: Minimal Stats (👁�?3.1k | ▶️ 5.8k)</label>
                     </div>
 
                     <div class="stats-format-option" id="stats-option-4" onclick="selectStatsFormat(4)">
@@ -1262,18 +1262,18 @@
 
                     <div class="stats-format-option" id="stats-option-5" onclick="selectStatsFormat(5)">
                         <input type="radio" name="statsFormat" id="stats5">
-                        <label for="stats5" style="display: inline;">Format 5: Balanced Stats (👁️ 3.1k watching | ▶️ 5.8k played)</label>
+                        <label for="stats5" style="display: inline;">Format 5: Balanced Stats (👁�?3.1k watching | ▶️ 5.8k played)</label>
                     </div>
                 </div>
             </div>
 
             <!-- Stats Selection -->
             <div class="form-group">
-                <label>Select Trakt Stats to Display
+                <label>Select Simkl Stats to Display
                     <span class="tooltip">
-                        ⓘ
+                        �?
                         <span class="tooltiptext">
-                            Choose up to 3 stats from Trakt to display with ratings.<br>
+                            Choose up to 3 stats from Simkl to display with ratings.<br>
                             These will be shown in the rating stream titles.
                         </span>
                     </span>
@@ -1283,11 +1283,11 @@
                     <div class="stat-select">
                         <label for="stat1">Stat 1</label>
                         <select id="stat1Select">
-                            <option value="watchers">👁️ Watchers</option>
+                            <option value="watchers">👁�?Watchers</option>
                             <option value="plays" selected>▶️ Plays</option>
                             <option value="comments">💬 Comments</option>
                             <option value="lists">📋 Lists</option>
-                            <option value="collectors">⭐ Collectors</option>
+                            <option value="collectors">�?Collectors</option>
                             <option value="votes">👍 Votes</option>
                         </select>
                     </div>
@@ -1295,11 +1295,11 @@
                     <div class="stat-select">
                         <label for="stat2">Stat 2</label>
                         <select id="stat2Select">
-                            <option value="watchers">👁️ Watchers</option>
+                            <option value="watchers">👁�?Watchers</option>
                             <option value="plays">▶️ Plays</option>
                             <option value="comments" selected>💬 Comments</option>
                             <option value="lists">📋 Lists</option>
-                            <option value="collectors">⭐ Collectors</option>
+                            <option value="collectors">�?Collectors</option>
                             <option value="votes">👍 Votes</option>
                         </select>
                     </div>
@@ -1307,18 +1307,18 @@
                     <div class="stat-select">
                         <label for="stat3">Stat 3</label>
                         <select id="stat3Select">
-                            <option value="watchers" selected>👁️ Watchers</option>
+                            <option value="watchers" selected>👁�?Watchers</option>
                             <option value="plays">▶️ Plays</option>
                             <option value="comments">💬 Comments</option>
                             <option value="lists">📋 Lists</option>
-                            <option value="collectors">⭐ Collectors</option>
+                            <option value="collectors">�?Collectors</option>
                             <option value="votes">👍 Votes</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="selected-stats-display">
-                    Selected Stats: <span id="selectedStatsDisplay">👁️ Watchers, ▶️ Plays, 💬 Comments</span>
+                    Selected Stats: <span id="selectedStatsDisplay">👁�?Watchers, ▶️ Plays, 💬 Comments</span>
                 </div>
             </div>
 
@@ -1415,7 +1415,7 @@
             </h2>
 
             <p style="margin-bottom: 20px; color: #94a3b8;">
-                Make sure you're connected to Trakt and all settings are configured before generating your addon.
+                Make sure you're connected to Simkl and all settings are configured before generating your addon.
             </p>
 
             <div class="btn-group">
@@ -1492,10 +1492,10 @@
 
         <!-- Footer -->
         <footer style="text-align: center; margin-top: 40px; padding: 20px; color: #64748b; font-size: 0.9rem;">
-            <p>Trakt Sync & Rate v2.4.0 - A Stremio Community Addon with Upstash Redis Support</p>
+            <p>Simkl Sync & Rate v2.4.0 - A Stremio Community Addon with Upstash Redis Support</p>
             <p style="margin-top: 10px;">
                 Need help? Check the
-                <a href="https://github.com/ericvlog/trakt-sync-rating-addon" style="color: #60a5fa; text-decoration: none;" target="_blank">
+                <a href="https://github.com/ericvlog/simkl-sync-rating-addon" style="color: #60a5fa; text-decoration: none;" target="_blank">
                     GitHub Repository
                 </a>
                 |
@@ -1509,24 +1509,24 @@
     <!-- Auth Popup -->
     <div id="authPopup" class="auth-popup">
         <div class="auth-content">
-            <h2 class="auth-title">Connect to Trakt.tv</h2>
+            <h2 class="auth-title">Connect to Simkl.tv</h2>
 
             <div class="auth-steps">
-                <div class="auth-step">Click "Open Trakt.tv" button below</div>
-                <div class="auth-step">Log in to your Trakt account (if not already)</div>
+                <div class="auth-step">Click "Open Simkl.tv" button below</div>
+                <div class="auth-step">Log in to your Simkl account (if not already)</div>
                 <div class="auth-step">Authorize the application</div>
                 <div class="auth-step">Copy the authorization code from the page</div>
                 <div class="auth-step">Paste the code below and submit</div>
             </div>
 
             <div class="btn-group">
-                <button class="btn" onclick="openTraktAuth()">
+                <button class="btn" onclick="openSimklAuth()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                         <polyline points="15 3 21 3 21 9"/>
                         <line x1="10" y1="14" x2="21" y2="3"/>
                     </svg>
-                    Open Trakt.tv
+                    Open Simkl.tv
                 </button>
                 <button class="btn btn-secondary" onclick="closeAuthPopup()">Cancel</button>
             </div>
@@ -1554,8 +1554,8 @@
 
     <script>
         // State variables
-        let traktTokens = null;
-        let currentUsername = 'TraktUser';
+        let simklTokens = null;
+        let currentUsername = 'SimklUser';
         // Default to all ratings (1-10)
         let selectedRatings = [1,2,3,4,5,6,7,8,9,10];
         let selectedRatingStyle = 'stars';
@@ -1592,14 +1592,14 @@
 
         // Mapping of stream types to display names
         const streamTypeNames = {
-            'current_rating': '⭐ Current Rating',
+            'current_rating': '�?Current Rating',
             'rating': '📊 Rate Options',
-            'watched': '✅ Mark as Watched',
+            'watched': '�?Mark as Watched',
             'season_watched': '📅 Mark Season Watched',
             'series_watched': '📺 Mark Series Watched',
             'add_to_watchlist': '📥 Add to Watchlist',
             'remove_from_watchlist': '📤 Remove from Watchlist',
-            'unwatched': '❌ Mark as Unwatched'
+            'unwatched': '�?Mark as Unwatched'
         };
 
         // DOM Elements
@@ -1668,13 +1668,13 @@
         const resultSection = document.getElementById('resultSection');
         const addonUrlDiv = document.getElementById('addonUrlDiv');
 
-        // Trakt stats info
-        const traktStatsInfo = {
-            'watchers': { emoji: '👁️', name: 'watchers' },
+        // Simkl stats info
+        const simklStatsInfo = {
+            'watchers': { emoji: '👁�?, name: 'watchers' },
             'plays': { emoji: '▶️', name: 'plays' },
             'comments': { emoji: '💬', name: 'comments' },
             'lists': { emoji: '📋', name: 'lists' },
-            'collectors': { emoji: '⭐', name: 'collectors' },
+            'collectors': { emoji: '�?, name: 'collectors' },
             'votes': { emoji: '👍', name: 'votes' }
         };
 
@@ -1689,7 +1689,7 @@
                 li.className = 'sortable-item';
                 li.setAttribute('data-type', type);
                 li.innerHTML = `
-                    <span class="drag-handle">☰</span>
+                    <span class="drag-handle">�?/span>
                     <span class="item-name">${streamTypeNames[type] || type}</span>
                 `;
                 streamOrderList.appendChild(li);
@@ -1809,7 +1809,7 @@
                 saveData();
             });
             emojiZapRadio.addEventListener('change', function() {
-                if (this.checked) keepSingleStateEmoji = '⚡';
+                if (this.checked) keepSingleStateEmoji = '�?;
                 updatePreview();
                 saveData();
             });
@@ -1894,7 +1894,7 @@
 
         function updateSelectedStatsDisplay() {
             const statNames = selectedStats.map(stat => {
-                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
+                const info = simklStatsInfo[stat] || { emoji: '📊', name: stat };
                 return `${info.emoji} ${info.name.charAt(0).toUpperCase() + info.name.slice(1)}`;
             });
             selectedStatsDisplay.textContent = statNames.join(', ');
@@ -1939,10 +1939,10 @@
                     previewText = `${visual}\n"The Matrix" ${previewRatingValue}/10`;
                     break;
                 case 1:
-                    previewText = `⭐ Rating: ${previewRatingValue}/10\n🎬 The Matrix (Movie)\n${visual}\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
+                    previewText = `�?Rating: ${previewRatingValue}/10\n🎬 The Matrix (Movie)\n${visual}\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
                     break;
                 case 6:
-                    previewText = `🎬 The Matrix (1999)\n⭐ ${visual}\n🎯 Rating ${previewRatingValue}/10\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
+                    previewText = `🎬 The Matrix (1999)\n�?${visual}\n🎯 Rating ${previewRatingValue}/10\n${statsLine}\n📊 ${previewRatingValue} out of 10 stars`;
                     break;
                 default:
                     previewText = `${visual}\n"The Matrix" ${previewRatingValue}/10`;
@@ -1965,7 +1965,7 @@
             const formattedStats = selectedStats.map((stat, index) => {
                 const value = statValues[index];
                 const formattedValue = formatNumber(value);
-                const info = traktStatsInfo[stat] || { emoji: '📊', name: stat };
+                const info = simklStatsInfo[stat] || { emoji: '📊', name: stat };
                 const displayName = getStatDisplayName(stat, value);
                 return {
                     emoji: info.emoji,
@@ -2023,7 +2023,7 @@
         function updateRatingStyleVisuals() {
             let stars = '';
             for (let i = 1; i <= 10; i++) {
-                stars += i <= previewRatingValue ? '★' : '☆';
+                stars += i <= previewRatingValue ? '�? : '�?;
             }
             starsVisual.textContent = stars;
 
@@ -2035,7 +2035,7 @@
 
             let progress = '';
             for (let i = 1; i <= 10; i++) {
-                progress += i <= previewRatingValue ? '▰' : '▱';
+                progress += i <= previewRatingValue ? '�? : '�?;
             }
             progressVisual.textContent = progress;
         }
@@ -2050,12 +2050,12 @@
                     break;
                 case 'progress':
                     for (let i = 1; i <= 10; i++) {
-                        visual += i <= rating ? '▰' : '▱';
+                        visual += i <= rating ? '�? : '�?;
                     }
                     break;
                 default:
                     for (let i = 1; i <= 10; i++) {
-                        visual += i <= rating ? '★' : '☆';
+                        visual += i <= rating ? '�? : '�?;
                     }
                     break;
             }
@@ -2065,9 +2065,9 @@
         function updateAddonNamePreview() {
             const showUsername = showUsernameCheckbox.checked;
             if (showUsername && currentUsername) {
-                addonNamePreview.textContent = `Trakt Sync & Rate (${currentUsername})`;
+                addonNamePreview.textContent = `Simkl Sync & Rate (${currentUsername})`;
             } else {
-                addonNamePreview.textContent = `Trakt Sync & Rate`;
+                addonNamePreview.textContent = `Simkl Sync & Rate`;
             }
         }
 
@@ -2077,7 +2077,7 @@
                 const isSelected = selectedRatings.includes(rating);
                 let stars = '';
                 for (let i = 1; i <= 10; i++) {
-                    stars += i <= rating ? '★' : '☆';
+                    stars += i <= rating ? '�? : '�?;
                 }
                 const preset = document.createElement('div');
                 preset.className = `rating-preset ${isSelected ? 'selected' : ''}`;
@@ -2153,14 +2153,14 @@
             let movieStreams = 0;
 
             if (enableWatched) {
-                let watchedTitle = '✅ Mark "The Matrix" as Watched';
+                let watchedTitle = '�?Mark "The Matrix" as Watched';
                 if (keepSingleWatchedState) {
                     if (keepSingleStateDisplay === 'none') {
-                        watchedTitle = '✅ Mark "The Matrix" as Watched';
+                        watchedTitle = '�?Mark "The Matrix" as Watched';
                     } else if (keepSingleStateDisplay === 'newline') {
-                        watchedTitle = `✅ Mark "The Matrix" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                        watchedTitle = `�?Mark "The Matrix" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
                     } else {
-                        watchedTitle = `✅ Mark "The Matrix" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                        watchedTitle = `�?Mark "The Matrix" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
                     }
                 }
                 movieWatchedHTML = `<div class="preview-item watched">${watchedTitle}</div>`;
@@ -2168,17 +2168,17 @@
             }
 
             if (enableUnwatched) {
-                movieUnwatchedHTML = '<div class="preview-item unwatched">❌ Mark "The Matrix" as Unwatched</div>';
+                movieUnwatchedHTML = '<div class="preview-item unwatched">�?Mark "The Matrix" as Unwatched</div>';
                 movieStreams += 1;
             }
 
             if (enableWatchlist) {
-                movieWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>🎬 "The Matrix" (1999)<br>✅ Add movie to your Trakt watchlist</div>';
+                movieWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>🎬 "The Matrix" (1999)<br>�?Add movie to your Simkl watchlist</div>';
                 movieStreams += 1;
             }
 
             if (enableRemoveFromWatchlist) {
-                movieWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>🎬 "The Matrix" (1999)<br>🗑️ Remove movie from your Trakt watchlist</div>';
+                movieWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>🎬 "The Matrix" (1999)<br>🗑�?Remove movie from your Simkl watchlist</div>';
                 movieStreams += 1;
             }
 
@@ -2189,7 +2189,7 @@
                 
                 // Show remove rating option if enabled
                 if (enableRemoveRating) {
-                    movieRemoveRatingHTML = `<div class="preview-item remove-rating">🗑️ Remove Rating<br>🎬 "The Matrix" (1999)<br>⚠️ Remove your ${previewRatingValue}/10 rating from Trakt</div>`;
+                    movieRemoveRatingHTML = `<div class="preview-item remove-rating">🗑�?Remove Rating<br>🎬 "The Matrix" (1999)<br>⚠️ Remove your ${previewRatingValue}/10 rating from Simkl</div>`;
                     movieStreams += 1;
                 }
             }
@@ -2219,14 +2219,14 @@
             let seriesStreams = 0;
 
             if (enableWatched) {
-                let watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched`;
+                let watchedTitle = `�?Mark S1E1 of "Breaking Bad" as Watched`;
                 if (keepSingleWatchedState) {
                     if (keepSingleStateDisplay === 'none') {
-                        watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched`;
+                        watchedTitle = `�?Mark S1E1 of "Breaking Bad" as Watched`;
                     } else if (keepSingleStateDisplay === 'newline') {
-                        watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+                        watchedTitle = `�?Mark S1E1 of "Breaking Bad" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
                     } else {
-                        watchedTitle = `✅ Mark S1E1 of "Breaking Bad" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+                        watchedTitle = `�?Mark S1E1 of "Breaking Bad" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
                     }
                 }
                 seriesWatchedHTML = `<div class="preview-item watched">${watchedTitle}</div>`;
@@ -2262,17 +2262,17 @@
             }
 
             if (enableUnwatched) {
-                seriesWatchedHTML += `<div class="preview-item unwatched">❌ Mark S1E1 of "Breaking Bad" as Unwatched</div>`;
+                seriesWatchedHTML += `<div class="preview-item unwatched">�?Mark S1E1 of "Breaking Bad" as Unwatched</div>`;
                 seriesStreams += 1;
             }
 
             if (enableWatchlist) {
-                seriesWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>📺 "Breaking Bad" (Series)<br>✅ Add series to your Trakt watchlist</div>';
+                seriesWatchlistHTML = '<div class="preview-item watchlist">📥 Add to Watchlist<br>📺 "Breaking Bad" (Series)<br>�?Add series to your Simkl watchlist</div>';
                 seriesStreams += 1;
             }
 
             if (enableRemoveFromWatchlist) {
-                seriesWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>📺 "Breaking Bad" (Series)<br>🗑️ Remove series from your Trakt watchlist</div>';
+                seriesWatchlistHTML += '<div class="preview-item watchlist-remove">📤 Remove from Watchlist<br>📺 "Breaking Bad" (Series)<br>🗑�?Remove series from your Simkl watchlist</div>';
                 seriesStreams += 1;
             }
 
@@ -2283,7 +2283,7 @@
                 
                 // Show remove rating option if enabled
                 if (enableRemoveRating) {
-                    seriesRemoveRatingHTML = `<div class="preview-item remove-rating">🗑️ Remove Rating<br>📺 S1E1 "Breaking Bad"<br>⚠️ Remove your ${previewRatingValue}/10 rating from Trakt</div>`;
+                    seriesRemoveRatingHTML = `<div class="preview-item remove-rating">🗑�?Remove Rating<br>📺 S1E1 "Breaking Bad"<br>⚠️ Remove your ${previewRatingValue}/10 rating from Simkl</div>`;
                     seriesStreams += 1;
                 }
             }
@@ -2311,30 +2311,30 @@
             switch(selectedRatingPattern) {
                 case 0:
                     if (type === 'movie') {
-                        return `${visual}<br>"${title}" ${rating}/10<br>🗑️ Click to remove rating`;
+                        return `${visual}<br>"${title}" ${rating}/10<br>🗑�?Click to remove rating`;
                     } else if (season && episode) {
-                        return `${visual}<br>S${season}E${episode} "${title}" ${rating}/10<br>🗑️ Click to remove rating`;
+                        return `${visual}<br>S${season}E${episode} "${title}" ${rating}/10<br>🗑�?Click to remove rating`;
                     } else {
-                        return `${visual}<br>"${title}" Series ${rating}/10<br>🗑️ Click to remove rating`;
+                        return `${visual}<br>"${title}" Series ${rating}/10<br>🗑�?Click to remove rating`;
                     }
                 case 1:
                     if (type === 'movie') {
-                        return `⭐ Current Rating: ${rating}/10<br>🎬 ${title}${year ? ` (${year})` : ' (Movie)'}<br>${visual}<br>${statsLine}<br>🗑️ Click to remove rating`;
+                        return `�?Current Rating: ${rating}/10<br>🎬 ${title}${year ? ` (${year})` : ' (Movie)'}<br>${visual}<br>${statsLine}<br>🗑�?Click to remove rating`;
                     } else if (season && episode) {
-                        return `⭐ Current Rating: ${rating}/10<br>📺 ${title} S${season}E${episode}<br>${visual}<br>${statsLine}<br>🗑️ Click to remove rating`;
+                        return `�?Current Rating: ${rating}/10<br>📺 ${title} S${season}E${episode}<br>${visual}<br>${statsLine}<br>🗑�?Click to remove rating`;
                     } else {
-                        return `⭐ Current Rating: ${rating}/10<br>📺 ${title} (Series)<br>${visual}<br>${statsLine}<br>🗑️ Click to remove rating`;
+                        return `�?Current Rating: ${rating}/10<br>📺 ${title} (Series)<br>${visual}<br>${statsLine}<br>🗑�?Click to remove rating`;
                     }
                 case 6:
                     if (type === 'movie') {
-                        return `🎬 ${title}${year ? ` (${year})` : ''}<br>⭐ ${visual}<br>✅ Current Rating ${rating}/10<br>${statsLine}<br>🗑️ Click to remove rating`;
+                        return `🎬 ${title}${year ? ` (${year})` : ''}<br>�?${visual}<br>�?Current Rating ${rating}/10<br>${statsLine}<br>🗑�?Click to remove rating`;
                     } else if (season && episode) {
-                        return `📺 ${title} S${season}E${episode}<br>⭐ ${visual}<br>✅ Current Rating ${rating}/10<br>${statsLine}<br>🗑️ Click to remove rating`;
+                        return `📺 ${title} S${season}E${episode}<br>�?${visual}<br>�?Current Rating ${rating}/10<br>${statsLine}<br>🗑�?Click to remove rating`;
                     } else {
-                        return `📺 ${title} (Series)<br>⭐ ${visual}<br>✅ Current Rating ${rating}/10<br>${statsLine}<br>🗑️ Click to remove rating`;
+                        return `📺 ${title} (Series)<br>�?${visual}<br>�?Current Rating ${rating}/10<br>${statsLine}<br>🗑�?Click to remove rating`;
                     }
                 default:
-                    return `${visual}<br>"${title}" ${rating}/10<br>🗑️ Click to remove rating`;
+                    return `${visual}<br>"${title}" ${rating}/10<br>🗑�?Click to remove rating`;
             }
         }
 
@@ -2372,19 +2372,19 @@
                     }
                 case 1:
                     if (type === 'movie') {
-                        return `⭐ Rating: ${rating}/10<br>🎬 ${title}${year ? ` (${year})` : ' (Movie)'}<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                        return `�?Rating: ${rating}/10<br>🎬 ${title}${year ? ` (${year})` : ' (Movie)'}<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
                     } else if (season && episode) {
-                        return `⭐ Rating: ${rating}/10<br>📺 ${title} S${season}E${episode}<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                        return `�?Rating: ${rating}/10<br>📺 ${title} S${season}E${episode}<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
                     } else {
-                        return `⭐ Rating: ${rating}/10<br>📺 ${title} (Series)<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                        return `�?Rating: ${rating}/10<br>📺 ${title} (Series)<br>${visual}<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
                     }
                 case 6:
                     if (type === 'movie') {
-                        return `🎬 ${title}${year ? ` (${year})` : ''}<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                        return `🎬 ${title}${year ? ` (${year})` : ''}<br>�?${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
                     } else if (season && episode) {
-                        return `📺 ${title} S${season}E${episode}<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                        return `📺 ${title} S${season}E${episode}<br>�?${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
                     } else {
-                        return `📺 ${title} (Series)<br>⭐ ${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
+                        return `📺 ${title} (Series)<br>�?${visual}<br>🎯 Rating ${rating}/10<br>${statsLine}<br>📊 ${rating} out of 10 stars${extraText}`;
                     }
                 default:
                     return `${visual}<br>"${title}" ${rating}/10${extraText}`;
@@ -2420,14 +2420,14 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    upstashStatus.textContent = '✓ Upstash connected successfully';
+                    upstashStatus.textContent = '�?Upstash connected successfully';
                     upstashStatus.style.color = '#10b981';
                     upstashStatus.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
                     upstashStatus.style.border = '1px solid rgba(16, 185, 129, 0.3)';
                     upstashConnected = true;
                     storageMethod = 'upstash';
                 } else {
-                    upstashStatus.textContent = '✗ Upstash connection failed (using fallback mode)';
+                    upstashStatus.textContent = '�?Upstash connection failed (using fallback mode)';
                     upstashStatus.style.color = '#f59e0b';
                     upstashStatus.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
                     upstashStatus.style.border = '1px solid rgba(245, 158, 11, 0.3)';
@@ -2435,7 +2435,7 @@
                     storageMethod = 'upstash';
                 }
             } catch (error) {
-                upstashStatus.textContent = '✗ Connection error (using fallback mode)';
+                upstashStatus.textContent = '�?Connection error (using fallback mode)';
                 upstashStatus.style.color = '#f59e0b';
                 upstashStatus.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
                 upstashStatus.style.border = '1px solid rgba(245, 158, 11, 0.3)';
@@ -2450,7 +2450,7 @@
         function startAuth() {
             const clientId = clientIdInput.value.trim();
             if (!clientId) {
-                alert('Please enter your Trakt Client ID');
+                alert('Please enter your Simkl Client ID');
                 return;
             }
 
@@ -2462,7 +2462,7 @@
                 storageMethod = 'upstash';
             } else {
                 storageMethod = 'url';
-                if (confirm('Upstash not configured. Trakt tokens expire every 3 months. Without Upstash, you will need to reconnect after 3 months. Continue anyway?')) {
+                if (confirm('Upstash not configured. Simkl tokens expire every 7 days. Without Upstash, you will need to reconnect after 3 months. Continue anyway?')) {
                     // Continue without Upstash
                 } else {
                     return;
@@ -2473,7 +2473,7 @@
             authPopup.style.display = 'flex';
         }
 
-        function openTraktAuth() {
+        function openSimklAuth() {
             const clientId = clientIdInput.value.trim();
             if (!clientId) return;
             const authUrl = `${window.location.origin}/oauth/initiate?clientId=${encodeURIComponent(clientId)}`;
@@ -2489,10 +2489,10 @@
         async function submitAuthCode(callbackState = null) {
             const clientId = clientIdInput.value.trim();
             const authCode = authCodeInput.value.trim();
-            const state = callbackState || window.pendingTraktOAuthState;
+            const state = callbackState || window.pendingSimklOAuthState;
 
             if (!clientId || !authCode || !state) {
-                alert('Start Trakt authorization again; the secure callback state is missing.');
+                alert('Start Simkl authorization again; the secure callback state is missing.');
                 return;
             }
 
@@ -2522,7 +2522,7 @@
 
                 if (data.success) {
                     // Store tokens regardless of storage method
-                    traktTokens = data.tokens;
+                    simklTokens = data.tokens;
                     currentUsername = data.username;
 
                     // IMPORTANT: Always save tokens to localStorage for URL storage
@@ -2570,22 +2570,22 @@
         }
 
         window.addEventListener('message', (event) => {
-            if (event.origin !== window.location.origin || !event.data || event.data.type !== 'trakt-pkce-callback') return;
-            window.pendingTraktOAuthState = event.data.state;
+            if (event.origin !== window.location.origin || !event.data || event.data.type !== 'simkl-pkce-callback') return;
+            window.pendingSimklOAuthState = event.data.state;
             authCodeInput.value = event.data.code;
             submitAuthCode(event.data.state);
         });
 
         function generateAddonUrl() {
             console.log('DEBUG: generateAddonUrl called');
-            console.log('DEBUG: traktTokens:', traktTokens ? 'Exists' : 'Null');
+            console.log('DEBUG: simklTokens:', simklTokens ? 'Exists' : 'Null');
             console.log('DEBUG: configId:', configId);
             console.log('DEBUG: storageMethod:', storageMethod);
 
             // CRITICAL: Check if we have either tokens or configId
-            if (!traktTokens && !configId) {
-                console.log('DEBUG: Both traktTokens and configId are null');
-                alert('Please connect to Trakt first');
+            if (!simklTokens && !configId) {
+                console.log('DEBUG: Both simklTokens and configId are null');
+                alert('Please connect to Simkl first');
                 return;
             }
 
@@ -2622,23 +2622,23 @@
                 config.configId = configId;
 
                 // ALWAYS include tokens in config for fallback
-                if (traktTokens) {
-                    config.access_token = traktTokens.access_token;
-                    config.refresh_token = traktTokens.refresh_token;
-                    config.expires_in = traktTokens.expires_in;
-                    config.expires_at = traktTokens.expires_at;
-                    config.created_at = traktTokens.created_at;
+                if (simklTokens) {
+                    config.access_token = simklTokens.access_token;
+                    config.refresh_token = simklTokens.refresh_token;
+                    config.expires_in = simklTokens.expires_in;
+                    config.expires_at = simklTokens.expires_at;
+                    config.created_at = simklTokens.created_at;
                 }
-            } else if (traktTokens) {
+            } else if (simklTokens) {
                 // URL storage or fallback - MUST include tokens
                 config.storage = 'url';
-                config.access_token = traktTokens.access_token;
-                config.refresh_token = traktTokens.refresh_token;
-                config.expires_in = traktTokens.expires_in;
-                config.expires_at = traktTokens.expires_at;
-                config.created_at = traktTokens.created_at;
+                config.access_token = simklTokens.access_token;
+                config.refresh_token = simklTokens.refresh_token;
+                config.expires_in = simklTokens.expires_in;
+                config.expires_at = simklTokens.expires_at;
+                config.created_at = simklTokens.created_at;
             } else {
-                alert('Error: No Trakt tokens available. Please reconnect to Trakt.');
+                alert('Error: No Simkl tokens available. Please reconnect to Simkl.');
                 return;
             }
 
@@ -2702,18 +2702,18 @@
                 const response = await fetch(addonUrl);
                 if (response.ok) {
                     const manifest = await response.json();
-                    alert(`✅ Addon works!\n\nName: ${manifest.name}\nDescription: ${manifest.description}\nID: ${manifest.id}\nVersion: ${manifest.version}`);
+                    alert(`�?Addon works!\n\nName: ${manifest.name}\nDescription: ${manifest.description}\nID: ${manifest.id}\nVersion: ${manifest.version}`);
                 } else {
-                    alert(`❌ Failed to fetch manifest: ${response.status}\n\nMake sure the addon server is running and accessible.`);
+                    alert(`�?Failed to fetch manifest: ${response.status}\n\nMake sure the addon server is running and accessible.`);
                 }
             } catch (error) {
-                alert('❌ Error: ' + error.message);
+                alert('�?Error: ' + error.message);
             }
         }
 
         function resetConfig() {
-            if (confirm('Are you sure you want to reset all configuration? This will clear your settings and disconnect from Trakt.')) {
-                localStorage.removeItem('trakt_config');
+            if (confirm('Are you sure you want to reset all configuration? This will clear your settings and disconnect from Simkl.')) {
+                localStorage.removeItem('simkl_config');
 
                 // Reset all inputs
                 clientIdInput.value = '';
@@ -2748,8 +2748,8 @@
                 storageMethod = 'url';
                 configId = null;
                 upstashConnected = false;
-                traktTokens = null;
-                currentUsername = 'TraktUser';
+                simklTokens = null;
+                currentUsername = 'SimklUser';
                 streamOrder = [
                     'current_rating',
                     'rating',
@@ -2776,7 +2776,7 @@
                     indicator.className = 'upstash-indicator upstash-warning';
                 }
                 mainAuthStatus.className = 'status status-warning';
-                mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-warning"></span> Not connected to Trakt`;
+                mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-warning"></span> Not connected to Simkl`;
 
                 resultSection.style.display = 'none';
 
@@ -2820,7 +2820,7 @@
         }
 
         function loadSavedData() {
-            const saved = localStorage.getItem('trakt_config');
+            const saved = localStorage.getItem('simkl_config');
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
@@ -2869,7 +2869,7 @@
                             emojiRefreshRadio.checked = true;
                         } else if (keepSingleStateEmoji === '🧹') {
                             emojiBroomRadio.checked = true;
-                        } else if (keepSingleStateEmoji === '⚡') {
+                        } else if (keepSingleStateEmoji === '�?) {
                             emojiZapRadio.checked = true;
                         }
                     }
@@ -2890,8 +2890,8 @@
                     if (data.streamOrder) streamOrder = data.streamOrder;
 
                     // Load tokens from localStorage if available
-                    if (data.traktTokens) {
-                        traktTokens = data.traktTokens;
+                    if (data.simklTokens) {
+                        simklTokens = data.simklTokens;
                     }
 
                     // Update style selection
@@ -2947,15 +2947,15 @@
                             indicator.className = 'upstash-indicator upstash-connected';
                         }
                         mainAuthStatus.className = 'status status-success';
-                        mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-connected"></span> Connected via Upstash as: <strong>${currentUsername || 'TraktUser'}</strong>`;
+                        mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-connected"></span> Connected via Upstash as: <strong>${currentUsername || 'SimklUser'}</strong>`;
                         upstashConnected = true;
-                    } else if (traktTokens && storageMethod === 'url') {
+                    } else if (simklTokens && storageMethod === 'url') {
                         const indicator = mainAuthStatus.querySelector('.upstash-indicator');
                         if (indicator) {
                             indicator.className = 'upstash-indicator upstash-warning';
                         }
                         mainAuthStatus.className = 'status status-success';
-                        mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-warning"></span> Connected as: <strong>${currentUsername || 'TraktUser'}</strong> (URL storage)`;
+                        mainAuthStatus.innerHTML = `<span class="upstash-indicator upstash-warning"></span> Connected as: <strong>${currentUsername || 'SimklUser'}</strong> (URL storage)`;
                     }
 
                     updatePreview();
@@ -2995,11 +2995,11 @@
                 storageMethod: storageMethod,
                 configId: configId,
                 currentUsername: currentUsername,
-                // Always save traktTokens to localStorage
-                traktTokens: traktTokens,
+                // Always save simklTokens to localStorage
+                simklTokens: simklTokens,
                 streamOrder: streamOrder
             };
-            localStorage.setItem('trakt_config', JSON.stringify(data));
+            localStorage.setItem('simkl_config', JSON.stringify(data));
         }
 
         // Helper function to convert UTF-8 string to Base64 URL-safe
