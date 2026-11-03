@@ -64,9 +64,9 @@ app.use(express.static('public'));
 const oauthStates = new Map();
 const pendingRequests = new Map();
 
-// Cache for TMDB and Trakt data
+// Cache for TMDB and Simkl data
 const tmdbCache = new Map();
-const traktStatsCache = new Map();
+const simklStatsCache = new Map();
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 // Cache for Upstash tokens
@@ -260,7 +260,7 @@ function getStatDisplayName(stat, value) {
 }
 
 // ============================================
-// Trakt Stats Fetcher (UPDATED with anti-block headers)
+// Simkl Stats Fetcher (UPDATED with anti-block headers)
 // ============================================
 
 async function fetchSimklStats(imdbId, type, clientId) {
@@ -268,14 +268,14 @@ async function fetchSimklStats(imdbId, type, clientId) {
   const now = Date.now();
 
   // Check cache
-  const cached = traktStatsCache.get(cacheKey);
+  const cached = simklStatsCache.get(cacheKey);
   if (cached && (now - cached.timestamp) < CACHE_TTL) {
-    console.log(`[TRAKT STATS] Using cached stats for ${imdbId}`);
+    console.log(`[SIMKL STATS] Using cached stats for ${imdbId}`);
     return cached.stats;
   }
 
   try {
-    console.log(`[TRAKT STATS] Fetching stats for ${imdbId} (${type})`);
+    console.log(`[SIMKL STATS] Fetching stats for ${imdbId} (${type})`);
 
     const mediaType = type === 'movie' ? 'movies' : 'shows';
     const url = `https://api.simkl.com/${mediaType}/${imdbId}/stats`;
@@ -283,7 +283,6 @@ async function fetchSimklStats(imdbId, type, clientId) {
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
-        'simkl-api-version': '2',
         'simkl-api-key': clientId,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
@@ -292,23 +291,23 @@ async function fetchSimklStats(imdbId, type, clientId) {
     });
 
     if (!response.ok) {
-      console.log(`[TRAKT STATS] Failed: ${response.status}`);
+      console.log(`[SIMKL STATS] Failed: ${response.status}`);
       return null;
     }
 
     const stats = await response.json();
 
     // Cache the result
-    traktStatsCache.set(cacheKey, {
+    simklStatsCache.set(cacheKey, {
       stats: stats,
       timestamp: now
     });
 
-    console.log(`[TRAKT STATS] Found:`, stats);
+    console.log(`[SIMKL STATS] Found:`, stats);
     return stats;
 
   } catch (error) {
-    console.error(`[TRAKT STATS] Error: ${error.message}`);
+    console.error(`[SIMKL STATS] Error: ${error.message}`);
     return null;
   }
 }
@@ -768,6 +767,15 @@ function readCookie(req, name) {
   return entry ? entry.slice(name.length + 1) : null;
 }
 
+// Server apps & services must authenticate at the token endpoint.
+// Config-page input takes precedence; SIMKL_CLIENT_SECRET env var is an optional fallback.
+function resolveSimklClientSecret(requested) {
+  const input = typeof requested === 'string' ? requested.trim() : '';
+  if (input) return input;
+  const envSecret = (process.env.SIMKL_CLIENT_SECRET || '').trim();
+  return envSecret || null;
+}
+
 function readPkceCookie(req) {
   try {
     const raw = readCookie(req, 'simkl_pkce');
@@ -810,10 +818,15 @@ app.get('/oauth/callback', (req, res) => {
 
 // Updated OAuth exchange with clientSecret support
 app.post('/oauth/exchange', async (req, res) => {
-  const { code, clientId, state, upstashUrl, upstashToken } = req.body;
+  const { code, clientId, state, upstashUrl, upstashToken, clientSecret: reqClientSecret } = req.body;
   const pending = readPkceCookie(req);
   if (!code || !clientId || !state || !pending || state !== pending.state || clientId !== pending.clientId) {
-    return res.status(400).json({ success: false, error: 'OAuth state verification failed. Please reconnect to Trakt.' });
+    return res.status(400).json({ success: false, error: 'OAuth state verification failed. Please reconnect.' });
+  }
+
+  const clientSecret = resolveSimklClientSecret(reqClientSecret);
+  if (!clientSecret) {
+    return res.status(400).json({ success: false, error: 'Simkl Client Secret is required for server apps. Enter it in the configuration form and try again.' });
   }
 
   try {
@@ -834,6 +847,7 @@ app.post('/oauth/exchange', async (req, res) => {
         grant_type: 'authorization_code',
         code: code,
         client_id: clientId,
+        client_secret: clientSecret,
         code_verifier: pending.verifier,
         redirect_uri: SERVER_URL.replace(/\/$/, '') + '/oauth/callback'
       }),
@@ -844,7 +858,7 @@ app.post('/oauth/exchange', async (req, res) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[TRAKT OAUTH] Error response:', response.status, errorText.substring(0, 500));
+      console.error('[SIMKL OAUTH] Error response:', response.status, errorText.substring(0, 500));
       throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
     }
 
@@ -854,7 +868,6 @@ app.post('/oauth/exchange', async (req, res) => {
     const userResponse = await fetch('https://api.simkl.com/users/settings', {
       headers: {
         'Authorization': `Bearer ${tokens.access_token}`,
-        'simkl-api-version': '2',
         'simkl-api-key': clientId,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
@@ -927,10 +940,15 @@ app.post('/oauth/exchange', async (req, res) => {
 // Token refresh endpoint with clientSecret support (fixed storage variable)
 app.post('/oauth/refresh', async (req, res) => {
   try {
-    const { refreshToken, clientId, clientSecret, upstashUrl, upstashToken, configId, storage } = req.body;
+    const { refreshToken, clientId, clientSecret: reqClientSecret, upstashUrl, upstashToken, configId, storage } = req.body;
 
     if (!refreshToken || !clientId) {
       return res.status(400).json({ error: 'Refresh token and Client ID are required' });
+    }
+
+    const clientSecret = resolveSimklClientSecret(reqClientSecret);
+    if (!clientSecret) {
+      return res.status(400).json({ error: 'Simkl Client Secret is required for server apps.' });
     }
 
     const controller = new AbortController();
@@ -950,7 +968,8 @@ app.post('/oauth/refresh', async (req, res) => {
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
-        client_id: clientId
+        client_id: clientId,
+        client_secret: clientSecret
       }),
       signal: controller.signal
     });
@@ -959,7 +978,7 @@ app.post('/oauth/refresh', async (req, res) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[TRAKT OAUTH] Error response:', response.status, errorText.substring(0, 500));
+      console.error('[SIMKL OAUTH] Error response:', response.status, errorText.substring(0, 500));
       throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
     }
 
@@ -970,7 +989,6 @@ app.post('/oauth/refresh', async (req, res) => {
     const userResponse = await fetch('https://api.simkl.com/users/settings', {
       headers: {
         'Authorization': `Bearer ${tokens.access_token}`,
-        'simkl-api-version': '2',
         'simkl-api-key': clientId,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
@@ -1132,11 +1150,17 @@ app.post('/upstash/test', async (req, res) => {
 
 async function refreshSimklTokens(userConfig) {
   try {
-    const { refresh_token, clientId, clientSecret, upstashUrl, upstashToken, configId, storage } = userConfig;
+    const { refresh_token, clientId, clientSecret: reqClientSecret, upstashUrl, upstashToken, configId, storage } = userConfig;
 
     if (!refresh_token || !clientId) {
       console.log('[TOKEN REFRESH] Missing refresh token or clientId');
       return null;
+    }
+
+    const clientSecret = resolveSimklClientSecret(reqClientSecret);
+    if (!clientSecret) {
+      console.log('[TOKEN REFRESH] Missing Simkl Client Secret');
+      throw new Error('Simkl Client Secret is required for server apps. Re-generate the configuration with the secret filled in.');
     }
 
     console.log(`[TOKEN REFRESH] Refreshing tokens for configId: ${configId || 'URL storage'}`);
@@ -1163,7 +1187,8 @@ async function refreshSimklTokens(userConfig) {
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: refresh_token,
-        client_id: clientId
+        client_id: clientId,
+        client_secret: clientSecret
       }),
       signal: controller.signal
     });
@@ -1178,18 +1203,17 @@ async function refreshSimklTokens(userConfig) {
 
     const newTokens = await response.json();
 
-    // CORRECT CALCULATION: Trakt returns expires_in in seconds
+    // Simkl returns expires_in in seconds
     // Convert to milliseconds for storage
     newTokens.expires_at = Date.now() + (newTokens.expires_in * 1000);
 
-    // Store created_at as current time in seconds (matching Trakt format)
+    // Store created_at as current time in seconds
     newTokens.created_at = Math.floor(Date.now() / 1000);
 
     // Update user info
     const userResponse = await fetch('https://api.simkl.com/users/settings', {
       headers: {
         'Authorization': `Bearer ${newTokens.access_token}`,
-        'simkl-api-version': '2',
         'simkl-api-key': clientId,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
@@ -1490,7 +1514,6 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
     const baseHeaders = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${accessToken}`,
-      'simkl-api-version': '2',
       'simkl-api-key': clientId,
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': 'application/json',
@@ -1976,7 +1999,7 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
 
 async function createStreamObject(title, action, type, imdbId, rating = null, season = null, episode = null, config = '', year = null, userConfig = null, isCurrentRating = false) {
   let streamTitle;
-  let streamName = "Trakt";
+  let streamName = "Simkl";
 
   // Decode config to get user preferences
   let decodedConfig = userConfig;
@@ -2084,10 +2107,10 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, true);
     streamName = "Your Simkl Rating";  // Changed
   } else if (action === 'add_to_watchlist') {
-    streamTitle = `📥 Add to Watchlist\n${mediaEmoji} "${title}" ${yearText}\n✅ Add ${mediaType} to your Trakt watchlist`;
+    streamTitle = `📥 Add to Watchlist\n${mediaEmoji} "${title}" ${yearText}\n✅ Add ${mediaType} to your Simkl watchlist`;
     streamName = "Simkl Watchlist";
   } else if (action === 'remove_from_watchlist') {
-    streamTitle = `📤 Remove from Watchlist\n${mediaEmoji} "${title}" ${yearText}\n🗑️ Remove ${mediaType} from your Trakt watchlist`;
+    streamTitle = `📤 Remove from Watchlist\n${mediaEmoji} "${title}" ${yearText}\n🗑️ Remove ${mediaType} from your Simkl watchlist`;
     streamName = "Simkl Watchlist";
   }
 
@@ -2491,7 +2514,7 @@ app.get("/configure", (req, res) => {
 });
 
 // ============================================
-// Trakt Action Endpoint (UPDATED with Remove Rating)
+// Simkl Action Endpoint (UPDATED with Remove Rating)
 // ============================================
 
 app.get("/configured/:config/simkl-action", async (req, res) => {

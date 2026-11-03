@@ -901,10 +901,10 @@
                 <input type="text" id="clientId" placeholder="Enter your Simkl Client ID">
             </div>
 
-            <!-- Simkl Client Secret (optional for PKCE) (now below Client ID) -->
+            <!-- Simkl Client Secret (required for server apps) -->
             <div class="form-group">
                 <label for="clientSecret">
-                    Simkl Client Secret (optional for PKCE)
+                    Simkl Client Secret (required for server apps)
                     <a href="https://api.simkl.com" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
                         (Get it here)
                     </a>
@@ -916,7 +916,7 @@
                         </span>
                     </span>
                 </label>
-                <input type="password" id="clientSecret" placeholder="Optional — PKCE does not require a secret (optional for PKCE)">
+                <input type="password" id="clientSecret" placeholder="Enter your Simkl Client Secret">
             </div>
 
             <div class="form-group">
@@ -2503,6 +2503,7 @@
                 const requestData = {
                     code: authCode,
                     clientId: clientId,
+                    clientSecret: clientSecretInput.value.trim(),
                     state: state
                 };
 

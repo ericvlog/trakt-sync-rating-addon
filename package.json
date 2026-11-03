@@ -1,7 +1,7 @@
 {
-  "name": "stremio-trakt-sync-rating",
+  "name": "stremio-simkl-sync-rating",
   "version": "2.2.0",
-  "description": "Trakt sync and rating addon for Stremio - Cloud Ready",
+  "description": "Simkl sync and rating addon for Stremio - Cloud Ready",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -25,7 +25,7 @@
   },
   "keywords": [
     "stremio",
-    "trakt",
+    "simkl",
     "addon",
     "sync",
     "rating",
