@@ -820,7 +820,7 @@ app.post('/oauth/exchange', async (req, res) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    const response = await fetch('https://api.simkl.com/oauth/token', {
+    const response = await fetch('https://api.simkl.com/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -939,7 +939,7 @@ app.post('/oauth/refresh', async (req, res) => {
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     // Refresh tokens
-    const response = await fetch('https://api.simkl.com/oauth/token', {
+    const response = await fetch('https://api.simkl.com/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1155,7 +1155,7 @@ async function refreshSimklTokens(userConfig) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    const response = await fetch('https://api.simkl.com/oauth/token', {
+    const response = await fetch('https://api.simkl.com/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
