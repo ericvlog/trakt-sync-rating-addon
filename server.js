@@ -76,6 +76,7 @@ const UPSTASH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 // Cache for user ratings
 const userRatingCache = new Map();
 const USER_RATING_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const USER_RATING_NEGATIVE_CACHE_TTL = 0; // Do not trust cached "not rated" results
 
 // ============================================
 // Upstash Redis Helper Functions
@@ -225,96 +226,341 @@ function formatNumber(num) {
   return num.toString();
 }
 
-// ============================================
-// Stat Emoji Mapping
-// ============================================
-
-function getStatEmoji(stat) {
-  const emojiMap = {
-    'watchers': '👁️',
-    'plays': '▶️',
-    'comments': '💬',
-    'lists': '📋',
-    'collectors': '⭐',
-    'votes': '👍',
-    'rating': '⭐'
-  };
-  return emojiMap[stat] || '📊';
+function formatVotes(num) {
+  const n = Number(num);
+  if (!Number.isFinite(n) || n < 0) return null;
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(Math.round(n));
 }
 
 // ============================================
-// Stat Display Name Mapping
+// Rating Source Metadata (Simkl + MDBList)
 // ============================================
 
-function getStatDisplayName(stat, value) {
-  const displayMap = {
-    'watchers': value === 1 ? 'watcher' : 'watchers',
-    'plays': value === 1 ? 'play' : 'plays',
-    'comments': value === 1 ? 'comment' : 'comments',
-    'lists': value === 1 ? 'list' : 'lists',
-    'collectors': value === 1 ? 'collector' : 'collectors',
-    'votes': value === 1 ? 'vote' : 'votes',
-    'rating': 'rating'
+const RATING_SOURCE_META = {
+  simkl: { emoji: '⭐', name: 'Simkl', percent: false, scale: 10 },
+  imdb: { emoji: '🎬', name: 'IMDb', percent: false, scale: 10 },
+  tomatoes: { emoji: '🍅', name: 'RT Critics', percent: true, scale: 100 },
+  tomatoesaudience: { emoji: '🍿', name: 'RT Audience', percent: true, scale: 100 },
+  metacritic: { emoji: 'Ⓜ️', name: 'Metacritic', percent: true, scale: 100 },
+  letterboxd: { emoji: '🎞️', name: 'Letterboxd', percent: false, scale: 5 },
+  mdblist: { emoji: '📊', name: 'MDBList', percent: true, scale: 100 },
+  tmdb: { emoji: '🎥', name: 'TMDB', percent: false, scale: 10 },
+  trakt: { emoji: '📺', name: 'Trakt', percent: false, scale: 10 }
+};
+
+const RATING_SOURCE_ORDER = ['simkl', 'imdb', 'tomatoes', 'tomatoesaudience', 'metacritic', 'letterboxd', 'mdblist', 'tmdb', 'trakt'];
+
+function getRatingSourceMeta(source) {
+  return RATING_SOURCE_META[source] || { emoji: '📊', name: source, percent: false, scale: 10 };
+}
+
+// Rating source aliases seen across Simkl / MDBList responses.
+function normalizeRatingSource(source) {
+  const s = String(source || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const aliases = {
+    'simklcommunity': 'simkl',
+    'simkl': 'simkl',
+    'imdb': 'imdb',
+    'tomatoes': 'tomatoes',
+    'rottentomatoes': 'tomatoes',
+    'rtomatoes': 'tomatoes',
+    'rtcritics': 'tomatoes',
+    'tomatoesaudience': 'tomatoesaudience',
+    'audience': 'tomatoesaudience',
+    'rtaudience': 'tomatoesaudience',
+    'popcorn': 'tomatoesaudience',
+    'rottentomatoesaudience': 'tomatoesaudience',
+    'metacritic': 'metacritic',
+    'metacriticscore': 'metacritic',
+    'metacriticuser': 'metacriticuser',
+    'letterboxd': 'letterboxd',
+    'mdblist': 'mdblist',
+    'mdblistscore': 'mdblist',
+    'tmdb': 'tmdb',
+    'trakt': 'trakt'
   };
-  return displayMap[stat] || stat;
+  return aliases[s] || s;
+}
+
+// Map old fake-stats selections (watchers/plays/comments) onto real rating sources.
+function normalizeLegacySource(source) {
+  const s = String(source || '').trim().toLowerCase();
+  const legacyMap = {
+    'watchers': 'simkl',
+    'plays': 'simkl',
+    'comments': 'simkl',
+    'lists': 'simkl',
+    'collectors': 'simkl',
+    'votes': 'simkl',
+    'rating': 'simkl'
+  };
+  if (legacyMap[s]) return legacyMap[s];
+  const normalized = normalizeRatingSource(s);
+  return RATING_SOURCE_META[normalized] ? normalized : null;
 }
 
 // ============================================
-// Simkl Stats Fetcher (UPDATED with anti-block headers)
+// Simkl Catalog Fetcher
 // ============================================
 
-async function fetchSimklStats(imdbId, type, clientId) {
-  const cacheKey = `${imdbId}_${type}_stats`;
-  const now = Date.now();
+const simklCatalogCache = new Map();
 
-  // Check cache
-  const cached = simklStatsCache.get(cacheKey);
-  if (cached && (now - cached.timestamp) < CACHE_TTL) {
-    console.log(`[SIMKL STATS] Using cached stats for ${imdbId}`);
-    return cached.stats;
+async function resolveSimklId(imdbId, type, clientId) {
+  const cacheKey = `${imdbId}_${type}_simkl_id`;
+  const cached = simklCatalogCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) return cached.value;
+
+  const simklType = type === 'movie' ? 'movie' : 'tv';
+  const url = `https://api.simkl.com/redirect?to=simkl&imdb=${encodeURIComponent(imdbId)}&type=${simklType}&client_id=${encodeURIComponent(clientId)}&app-name=stremio-simkl&app-version=2.4.0`;
+  try {
+    const response = await fetch(url, {
+      redirect: 'manual',
+      headers: {
+        'User-Agent': 'StremioSimklAddon/2.4.0',
+        'Accept': 'application/json'
+      }
+    });
+    const location = response.headers.get('location') || response.headers.get('Location') || '';
+    const match = location.match(/\/(movies|tv|anime)\/(\d+)/i);
+    const resolved = match ? { id: match[2], catalog: match[1].toLowerCase() } : null;
+    simklCatalogCache.set(cacheKey, { value: resolved, timestamp: Date.now() });
+    return resolved;
+  } catch (error) {
+    console.error(`[SIMKL CATALOG] Resolve error: ${error.message}`);
+    return null;
   }
+}
+
+async function fetchSimklCatalog(imdbId, type, clientId) {
+  const cacheKey = `${imdbId}_${type}_catalog`;
+  const now = Date.now();
+  const cached = simklCatalogCache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_TTL) return cached.value;
 
   try {
-    console.log(`[SIMKL STATS] Fetching stats for ${imdbId} (${type})`);
+    const resolved = await resolveSimklId(imdbId, type, clientId);
+    if (!resolved) return null;
 
-    const mediaType = type === 'movie' ? 'movies' : 'shows';
-    const url = `https://api.simkl.com/${mediaType}/${imdbId}/stats`;
-
+    const path = resolved.catalog === 'movies' ? 'movies' : resolved.catalog === 'anime' ? 'anime' : 'tv';
+    const url = `https://api.simkl.com/${path}/${resolved.id}?client_id=${encodeURIComponent(clientId)}&app-name=stremio-simkl&app-version=2.4.0`;
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
         'simkl-api-key': clientId,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json',
-        'Accept-Language': 'en-US,en;q=0.9'
+        'User-Agent': 'StremioSimklAddon/2.4.0',
+        'Accept': 'application/json'
       }
     });
 
     if (!response.ok) {
-      console.log(`[SIMKL STATS] Failed: ${response.status}`);
+      console.log(`[SIMKL CATALOG] Failed: ${response.status}`);
       return null;
     }
 
-    const stats = await response.json();
-
-    // Cache the result
-    simklStatsCache.set(cacheKey, {
-      stats: stats,
-      timestamp: now
-    });
-
-    console.log(`[SIMKL STATS] Found:`, stats);
-    return stats;
-
+    const data = await response.json();
+    const catalog = {
+      simklId: resolved.id,
+      catalog: resolved.catalog,
+      rank: data?.rank ?? null,
+      droprate: data?.droprate ?? null,
+      certification: data?.certification ?? null,
+      ratings: data?.ratings && typeof data.ratings === 'object' ? data.ratings : {}
+    };
+    simklCatalogCache.set(cacheKey, { value: catalog, timestamp: now });
+    return catalog;
   } catch (error) {
-    console.error(`[SIMKL STATS] Error: ${error.message}`);
+    console.error(`[SIMKL CATALOG] Error: ${error.message}`);
     return null;
   }
 }
 
 // ============================================
+// MDBList Fetcher (optional, per installer key)
+// ============================================
+
+const mdblistCache = new Map();
+
+async function fetchMdbListInfo(imdbId, type, apiKey) {
+  if (!apiKey) return null;
+  const cacheKey = `${imdbId}_${type}_mdblist`;
+  const now = Date.now();
+  const cached = mdblistCache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_TTL) return cached.value;
+
+  try {
+    const mediaType = type === 'movie' ? 'movie' : 'show';
+    const url = `https://api.mdblist.com/imdb/${mediaType}/${encodeURIComponent(imdbId)}?apikey=${encodeURIComponent(apiKey)}`;
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'StremioSimklAddon/2.4.0'
+      }
+    });
+
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After');
+      console.log(`[MDBLIST] Rate limited${retryAfter ? `; retry after ${retryAfter}s` : ''}`);
+      return null;
+    }
+    if (!response.ok) {
+      console.log(`[MDBLIST] Failed: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const info = {
+      score: Number.isFinite(Number(data?.score)) ? Number(data.score) : null,
+      scoreAverage: Number.isFinite(Number(data?.score_average)) ? Number(data.score_average) : null,
+      certification: data?.certification ?? null,
+      ageRating: data?.age_rating ?? null,
+      commonsense: typeof data?.commonsense === 'boolean' ? data.commonsense : null,
+      ratings: Array.isArray(data?.ratings) ? data.ratings : []
+    };
+    mdblistCache.set(cacheKey, { value: info, timestamp: now });
+    return info;
+  } catch (error) {
+    console.error(`[MDBLIST] Error: ${error.message}`);
+    return null;
+  }
+}
+
+function mdblistRatingsToMap(info) {
+  const map = {};
+  if (!info || !Array.isArray(info.ratings)) return map;
+  for (const entry of info.ratings) {
+    const source = normalizeRatingSource(entry?.source);
+    if (!source) continue;
+    const value = Number(entry?.value);
+    const score = Number(entry?.score);
+    const votes = Number(entry?.votes);
+    map[source] = {
+      value: Number.isFinite(value) ? value : null,
+      score: Number.isFinite(score) ? score : null,
+      votes: Number.isFinite(votes) ? votes : null
+    };
+  }
+  return map;
+}
+
+function formatRatingValue(source, entry) {
+  if (!entry) return null;
+  const meta = getRatingSourceMeta(source);
+  const raw = entry.value != null ? entry.value : entry.score;
+  if (raw == null || !Number.isFinite(Number(raw))) return null;
+  const n = Number(raw);
+  const value = meta.percent
+    ? `${Math.round(n)}%`
+    : (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, '');
+  const votes = formatVotes(entry.votes);
+  return votes ? `${value} (${votes})` : value;
+}
+
+function buildRatingSegment(source, entry) {
+  const meta = getRatingSourceMeta(source);
+  const formatted = formatRatingValue(source, entry);
+  if (!formatted) return null;
+  return { emoji: meta.emoji, name: meta.name, value: formatted, source };
+}
+
+function collectRatingSegments(catalog, mdblist, selectedSources) {
+  const mdblistMap = mdblistRatingsToMap(mdblist);
+  const segments = [];
+
+  for (const rawSource of selectedSources) {
+    const source = normalizeRatingSource(rawSource);
+    if (!source || !RATING_SOURCE_META[source]) continue;
+
+    if (source === 'mdblist') {
+      const score = mdblist?.score;
+      if (score == null || !Number.isFinite(Number(score))) continue;
+      segments.push({ emoji: RATING_SOURCE_META.mdblist.emoji, name: RATING_SOURCE_META.mdblist.name, value: `${Math.round(Number(score))}%`, source });
+      continue;
+    }
+
+    if (source === 'simkl' || source === 'imdb' || source === 'tmdb' || source === 'trakt') {
+      const simklEntry = catalog?.ratings?.[source];
+      if (simklEntry && simklEntry.rating != null && Number.isFinite(Number(simklEntry.rating))) {
+        const votes = formatVotes(simklEntry.votes);
+        segments.push({
+          emoji: getRatingSourceMeta(source).emoji,
+          name: getRatingSourceMeta(source).name,
+          value: (Math.round(Number(simklEntry.rating) * 10) / 10).toFixed(1).replace(/\.0$/, '') + (votes ? ` (${votes})` : ''),
+          source
+        });
+        continue;
+      }
+      const mdblistEntry = mdblistMap[source];
+      const segment = buildRatingSegment(source, mdblistEntry);
+      if (segment) segments.push(segment);
+      continue;
+    }
+
+    const segment = buildRatingSegment(source, mdblistMap[source]);
+    if (segment) segments.push(segment);
+  }
+  return segments;
+}
+
+function formatRatingSegments(segments, format) {
+  if (!segments.length) return '';
+  switch (Number(format) || 1) {
+    case 1: // Compact
+      return segments.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+    case 2: // Detailed
+      return segments.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
+    case 3: // Minimal
+      return segments.map(s => `${s.emoji} ${s.value}`).join(' | ');
+    case 4: // Vertical
+      return segments.map(s => `${s.emoji} ${s.name}: ${s.value}`).join('\n');
+    case 5: // Balanced
+      return segments.map(s => `${s.emoji} ${s.name} ${s.value}`).join(' | ');
+    default:
+      return segments.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+  }
+}
+
+function formatCertification(value) {
+  const raw = String(value || '').trim();
+  if (!raw || raw.toUpperCase() === 'NR' || raw.toUpperCase() === 'N/A') return null;
+  return raw;
+}
+
+function buildRatingInfoLine(catalog, mdblist, selectedSources, format) {
+  const segments = collectRatingSegments(catalog, mdblist, selectedSources);
+  return formatRatingSegments(segments, format);
+}
+
+function buildAdvisoryLine(catalog, mdblist, userConfig) {
+  const parts = [];
+  if (userConfig?.showCertification !== false) {
+    const cert = formatCertification(catalog?.certification) || formatCertification(mdblist?.certification);
+    if (cert) parts.push(`🔞 ${cert}`);
+    if (mdblist?.ageRating != null && Number.isFinite(Number(mdblist.ageRating))) parts.push(`👨‍👩‍👧 Common Sense ${mdblist.ageRating}+`);
+  }
+  if (userConfig?.showSimklRank === true && Number.isFinite(Number(catalog?.rank)) && Number(catalog.rank) > 0) {
+    parts.push(`🏆 Simkl #${catalog.rank}`);
+  }
+  return parts.join(' | ');
+}
+
+// ============================================
 // Get User Rating Function (UPDATED with anti-block headers)
 // ============================================
+
+function invalidateUserRatingCache(imdbId, type, accessToken, season = null, episode = null) {
+  const cacheKey = `${imdbId}_${type}_${season || ''}_${episode || ''}_${accessToken.substring(0, 10)}`;
+  userRatingCache.delete(cacheKey);
+
+  // Also remove any stale pending negative cache for the same item regardless of token prefix.
+  const prefix = `${imdbId}_${type}_${season || ''}_${episode || ''}_`;
+  for (const key of userRatingCache.keys()) {
+    if (key.startsWith(prefix)) {
+      userRatingCache.delete(key);
+    }
+  }
+}
 
 async function getUserRating(imdbId, type, accessToken, clientId, season = null, episode = null) {
   const cacheKey = `${imdbId}_${type}_${season || ''}_${episode || ''}_${accessToken.substring(0, 10)}`;
@@ -322,9 +568,12 @@ async function getUserRating(imdbId, type, accessToken, clientId, season = null,
 
   // Check cache
   const cached = userRatingCache.get(cacheKey);
-  if (cached && (now - cached.timestamp) < USER_RATING_CACHE_TTL) {
-    console.log(`[USER RATING] Using cached rating for ${imdbId}`);
-    return cached.rating;
+  if (cached) {
+    const ttl = cached.rating > 0 ? USER_RATING_CACHE_TTL : USER_RATING_NEGATIVE_CACHE_TTL;
+    if (ttl > 0 && now - cached.timestamp < ttl) {
+      console.log(`[USER RATING] Using cached rating for ${imdbId}`);
+      return cached.rating;
+    }
   }
 
   try {
@@ -534,113 +783,28 @@ function generateRatingVisual(style, rating) {
 async function formatRatingTitle(pattern, ratingStyle, rating, title, type, season = null, episode = null, year = null, userConfig = null, imdbId = null, isCurrentRating = false) {
     const ratingVisual = generateRatingVisual(ratingStyle, rating);
 
-    // Default selected stats if not specified
-    const selectedStats = userConfig?.selectedStats || ['watchers', 'plays', 'comments'];
-    const statsFormat = userConfig?.statsFormat || 1;
+    // Show only real, available rating/advisory sources; missing sources are omitted.
+    // Legacy selectedStats values (watchers/plays/comments) map to simkl.
+    const ratingInfoFormat = userConfig?.ratingInfoFormat || userConfig?.statsFormat || 1;
+    const configuredSources = Array.isArray(userConfig?.selectedSources) ? userConfig.selectedSources
+        : Array.isArray(userConfig?.selectedStats) ? userConfig.selectedStats.map(normalizeLegacySource).filter(Boolean)
+        : null;
+    const selectedSources = configuredSources && configuredSources.length ? [...new Set(configuredSources)].slice(0, 4) : ['simkl', 'imdb'];
 
-    // Get stats line based on user's selected stats and format
-    let statsLine = '';
+    let ratingInfoLine = '';
+    let advisoryLine = '';
 
     if (userConfig && userConfig.clientId && imdbId) {
-        const stats = await fetchSimklStats(imdbId, type, userConfig.clientId);
-        if (stats) {
-            // Get values for selected stats
-            const statValues = selectedStats.map(stat => stats[stat] || 0);
-
-            // Format numbers and prepare display
-            const formattedStats = selectedStats.map((stat, index) => {
-                const value = statValues[index];
-                const formattedValue = formatNumber(value);
-                const emoji = getStatEmoji(stat);
-                const displayName = getStatDisplayName(stat, value);
-
-                return {
-                    emoji,
-                    value: formattedValue,
-                    name: displayName,
-                    rawValue: value
-                };
-            });
-
-            // Apply selected stats format
-            switch(statsFormat) {
-                case 1: // Option 1: Compact Stats
-                    statsLine = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-                    break;
-                case 2: // Option 2: Detailed Stats
-                    statsLine = formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
-                    break;
-                case 3: // Option 3: Minimal Stats
-                    statsLine = formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
-                    break;
-                case 4: // Option 4: Vertical Stats (3 lines)
-                    if (pattern === 6) {
-                        statsLine = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
-                    } else {
-                        statsLine = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' | ');
-                    }
-                    break;
-                case 5: // Option 5: Balanced Stats
-                    const customNames = {
-                        'watchers': 'watching',
-                        'plays': 'played',
-                        'comments': 'commented',
-                        'lists': 'listed',
-                        'collectors': 'collected',
-                        'votes': 'voted',
-                        'rating': 'rated'
-                    };
-                    statsLine = formattedStats.map(s => {
-                        const customName = customNames[s.name] || s.name;
-                        return `${s.emoji} ${s.value} ${customName}`;
-                    }).join(' | ');
-                    break;
-                default: // Fallback to Option 1
-                    statsLine = formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-            }
-        }
+        const [catalog, mdblist] = await Promise.all([
+            fetchSimklCatalog(imdbId, type, userConfig.clientId),
+            fetchMdbListInfo(imdbId, type, userConfig.mdblistKey)
+        ]);
+        ratingInfoLine = buildRatingInfoLine(catalog, mdblist, selectedSources, ratingInfoFormat);
+        advisoryLine = buildAdvisoryLine(catalog, mdblist, userConfig);
     }
 
-    // If no stats available, use fallback with selected stats
-    if (!statsLine) {
-        const exampleValues = {
-            'watchers': '3.1k',
-            'plays': '5.8k',
-            'comments': '6',
-            'lists': '25',
-            'collectors': '45',
-            'votes': '180',
-            'rating': '8.5'
-        };
-
-        const fallbackStats = selectedStats.map(stat => {
-            const emoji = getStatEmoji(stat);
-            const value = exampleValues[stat] || '0';
-            const name = getStatDisplayName(stat, 2); // Use plural for fallback
-
-            return { emoji, value, name };
-        });
-
-        switch(statsFormat) {
-            case 1:
-                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-                break;
-            case 2:
-                statsLine = fallbackStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
-                break;
-            case 3:
-                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
-                break;
-            case 4:
-                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
-                break;
-            case 5:
-                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' | ');
-                break;
-            default:
-                statsLine = fallbackStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-        }
-    }
+    const infoParts = [ratingInfoLine, advisoryLine].filter(Boolean);
+    const statsPart = infoParts.length ? `\n${infoParts.join('\n')}\n` : '\n';
 
     // Special case for current rating (remove rating)
     if (isCurrentRating) {
@@ -667,22 +831,22 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
                 displayTitle1 = `${title}${year ? ` (${year})` : ' (Movie)'}`;
             }
 
-            return `⭐ Current Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n🗑️ Click to remove rating`;
+            return `⭐ Current Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}${statsPart}🗑️ Click to remove rating`;
         }
 
         // Pattern 6: Cinematic Rating Card
         if (pattern === 6) {
             if (type === 'movie') {
                 const movieTitle = year ? `🎬 ${title} (${year})` : `🎬 ${title}`;
-                return `${movieTitle}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10\n${statsLine}\n🗑️ Click to remove rating`;
+                return `${movieTitle}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10${statsPart}🗑️ Click to remove rating`;
             } else if (type === 'series') {
                 const mediaEmoji = getMediaEmoji(type, title);
                 if (season && episode) {
-                    return `${mediaEmoji} ${title} S${season}E${episode}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10\n${statsLine}\n🗑️ Click to remove rating`;
+                    return `${mediaEmoji} ${title} S${season}E${episode}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10${statsPart}🗑️ Click to remove rating`;
                 } else if (season) {
-                    return `${mediaEmoji} ${title} Season ${season}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10\n${statsLine}\n🗑️ Click to remove rating`;
+                    return `${mediaEmoji} ${title} Season ${season}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10${statsPart}🗑️ Click to remove rating`;
                 } else {
-                    return `${mediaEmoji} ${title} (Series)\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10\n${statsLine}\n🗑️ Click to remove rating`;
+                    return `${mediaEmoji} ${title} (Series)\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10${statsPart}🗑️ Click to remove rating`;
                 }
             }
         }
@@ -722,14 +886,14 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
             displayTitle1 = `${title}${year ? ` (${year})` : ' (Movie)'}`;
         }
 
-        return `⭐ Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n📊 ${rating} out of 10 stars`;
+        return `⭐ Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}${statsPart}📊 ${rating} out of 10 stars`;
     }
 
     // Pattern 6: Cinematic Rating Card
     if (pattern === 6) {
         if (type === 'movie') {
             const movieTitle = year ? `🎬 ${title} (${year})` : `🎬 ${title}`;
-            return `${movieTitle}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+            return `${movieTitle}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10${statsPart}📊 ${rating} out of 10 stars`;
         } else if (type === 'series') {
             const mediaEmoji = getMediaEmoji(type, title);
             if (season && episode) {
@@ -738,11 +902,11 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
                 if (episode === 1) episodeIndicator = ' 🚀';
                 if (episode >= 10) episodeIndicator = ' 🔚';
 
-                return `${mediaEmoji} ${title} S${season}E${episode}${episodeIndicator}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                return `${mediaEmoji} ${title} S${season}E${episode}${episodeIndicator}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10${statsPart}📊 ${rating} out of 10 stars`;
             } else if (season) {
-                return `${mediaEmoji} ${title} Season ${season}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                return `${mediaEmoji} ${title} Season ${season}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10${statsPart}📊 ${rating} out of 10 stars`;
             } else {
-                return `${mediaEmoji} ${title} (Series)\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                return `${mediaEmoji} ${title} (Series)\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10${statsPart}📊 ${rating} out of 10 stars`;
             }
         }
     }
@@ -2005,8 +2169,6 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
   let decodedConfig = userConfig;
   let ratingPattern = 0;
   let ratingStyle = 'stars';
-  let statsFormat = 1;
-  let selectedStats = ['watchers', 'plays', 'comments'];
   let keepSingleStateDisplay = 'inline';
   let keepSingleStateEmoji = '🔄';
 
@@ -2021,8 +2183,6 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
   if (decodedConfig) {
     ratingPattern = decodedConfig.ratingPattern || 0;
     ratingStyle = decodedConfig.ratingStyle || 'stars';
-    statsFormat = decodedConfig.statsFormat || 1;
-    selectedStats = decodedConfig.selectedStats || ['watchers', 'plays', 'comments'];
     keepSingleStateDisplay = decodedConfig.keepSingleStateDisplay || 'inline';
     keepSingleStateEmoji = decodedConfig.keepSingleStateEmoji || '🔄';
   }
@@ -2315,6 +2475,9 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
   const { config, type, id } = req.params;
 
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
   console.log(`[STREAM] Configured stream requested for ${type} ID: ${id}`);
 
@@ -2551,6 +2714,7 @@ app.get("/configured/:config/simkl-action", async (req, res) => {
           // Clear user rating cache after rating action
           const cacheKey = `${imdbId}_${type}_${season || ''}_${episode || ''}_${userConfig.access_token.substring(0, 10)}`;
           userRatingCache.delete(cacheKey);
+      invalidateUserRatingCache(imdbId, type, userConfig.access_token, season, episode);
         } else {
           console.error(`[SIMKL] ❌ ${result.error}`);
         }

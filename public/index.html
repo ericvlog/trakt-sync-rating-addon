@@ -936,6 +936,23 @@
                 <input type="password" id="tmdbKey" placeholder="Enter TMDB API Key (optional)">
             </div>
 
+            <div class="form-group">
+                <label for="mdbKey">
+                    MDBList API Key (Optional)
+                    <a href="https://mdblist.com/preferences/#api" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
+                        (Get it here)
+                    </a>
+                    <span class="tooltip" style="margin-left: 5px;">
+                        ⓘ
+                        <span class="tooltiptext">
+                            Enables IMDb / RT Critics / RT Audience / Metacritic / Letterboxd / MDBList scores.<br>
+                            Your own key; no shared quota. Leave empty to skip MDBList.
+                        </span>
+                    </span>
+                </label>
+                <input type="password" id="mdbKey" placeholder="Enter your MDBList API Key (optional)">
+            </div>
+
             <div class="btn-group">
                 <button class="btn" onclick="startAuth()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1235,90 +1252,62 @@
                 </div>
             </div>
 
-            <!-- Stats Format Selection -->
+            <!-- Rating sources to show -->
             <div class="form-group">
-                <label>Stats Display Format</label>
-
-                <div class="stats-format-options">
-                    <div class="stats-format-option selected" id="stats-option-1" onclick="selectStatsFormat(1)">
-                        <input type="radio" name="statsFormat" id="stats1" checked>
-                        <label for="stats1" style="display: inline;">Format 1: Compact Stats (👁️ 3.1k watchers - ▶️ 5.8k plays)</label>
-                    </div>
-
-                    <div class="stats-format-option" id="stats-option-2" onclick="selectStatsFormat(2)">
-                        <input type="radio" name="statsFormat" id="stats2">
-                        <label for="stats2" style="display: inline;">Format 2: Detailed Stats (👁️ watchers: 3.1k | ▶️ plays: 5.8k)</label>
-                    </div>
-
-                    <div class="stats-format-option" id="stats-option-3" onclick="selectStatsFormat(3)">
-                        <input type="radio" name="statsFormat" id="stats3">
-                        <label for="stats3" style="display: inline;">Format 3: Minimal Stats (👁️ 3.1k | ▶️ 5.8k)</label>
-                    </div>
-
-                    <div class="stats-format-option" id="stats-option-4" onclick="selectStatsFormat(4)">
-                        <input type="radio" name="statsFormat" id="stats4">
-                        <label for="stats4" style="display: inline;">Format 4: Vertical Stats (multi-line)</label>
-                    </div>
-
-                    <div class="stats-format-option" id="stats-option-5" onclick="selectStatsFormat(5)">
-                        <input type="radio" name="statsFormat" id="stats5">
-                        <label for="stats5" style="display: inline;">Format 5: Balanced Stats (👁️ 3.1k watching | ▶️ 5.8k played)</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Selection -->
-            <div class="form-group">
-                <label>Select Simkl Stats to Display
+                <label>Rating sources to show
                     <span class="tooltip">
                         ⓘ
                         <span class="tooltiptext">
-                            Choose up to 3 stats from Simkl to display with ratings.<br>
-                            These will be shown in the rating stream titles.
+                            Choose up to 4 sources. Simkl and IMDb work with your Simkl connection.<br>
+                            RT / Metacritic / Letterboxd / MDBList require an MDBList API Key above. Missing sources are hidden, never shown as 0.
                         </span>
                     </span>
                 </label>
 
-                <div class="stats-selection">
+                <div class="stats-selection" style="flex-wrap: wrap;">
                     <div class="stat-select">
-                        <label for="stat1">Stat 1</label>
-                        <select id="stat1Select">
-                            <option value="watchers">👁️ Watchers</option>
-                            <option value="plays" selected>▶️ Plays</option>
-                            <option value="comments">💬 Comments</option>
-                            <option value="lists">📋 Lists</option>
-                            <option value="collectors">⭐ Collectors</option>
-                            <option value="votes">👍 Votes</option>
-                        </select>
+                        <label for="ratingSource1Select">Source 1</label>
+                        <select id="ratingSource1Select"></select>
                     </div>
-
                     <div class="stat-select">
-                        <label for="stat2">Stat 2</label>
-                        <select id="stat2Select">
-                            <option value="watchers">👁️ Watchers</option>
-                            <option value="plays">▶️ Plays</option>
-                            <option value="comments" selected>💬 Comments</option>
-                            <option value="lists">📋 Lists</option>
-                            <option value="collectors">⭐ Collectors</option>
-                            <option value="votes">👍 Votes</option>
-                        </select>
+                        <label for="ratingSource2Select">Source 2</label>
+                        <select id="ratingSource2Select"></select>
                     </div>
-
                     <div class="stat-select">
-                        <label for="stat3">Stat 3</label>
-                        <select id="stat3Select">
-                            <option value="watchers" selected>👁️ Watchers</option>
-                            <option value="plays">▶️ Plays</option>
-                            <option value="comments">💬 Comments</option>
-                            <option value="lists">📋 Lists</option>
-                            <option value="collectors">⭐ Collectors</option>
-                            <option value="votes">👍 Votes</option>
-                        </select>
+                        <label for="ratingSource3Select">Source 3</label>
+                        <select id="ratingSource3Select"></select>
+                    </div>
+                    <div class="stat-select">
+                        <label for="ratingSource4Select">Source 4</label>
+                        <select id="ratingSource4Select"></select>
                     </div>
                 </div>
 
                 <div class="selected-stats-display">
-                    Selected Stats: <span id="selectedStatsDisplay">👁️ Watchers, ▶️ Plays, 💬 Comments</span>
+                    Selected Sources: <span id="selectedSourcesDisplay">⭐ Simkl, 🎬 IMDb</span>
+                </div>
+
+                <div class="checkbox-group" style="margin-top: 10px;">
+                    <input type="checkbox" id="showCertification" checked>
+                    <label for="showCertification">Show age certification (Simkl / MDBList)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="showSimklRank">
+                    <label for="showSimklRank">Show Simkl popularity rank</label>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <label for="ratingInfoFormatSelect">Rating line format</label>
+                    <select id="ratingInfoFormatSelect">
+                        <option value="1">Format 1: Compact (⭐ 7.8 Simkl - 🎬 8.2 IMDb)</option>
+                        <option value="2">Format 2: Detailed (⭐ Simkl: 7.8 | 🎬 IMDb: 8.2)</option>
+                        <option value="3">Format 3: Minimal (⭐ 7.8 | 🎬 8.2)</option>
+                        <option value="4">Format 4: Vertical (one source per line)</option>
+                        <option value="5">Format 5: Balanced (⭐ Simkl 7.8 | 🎬 IMDb 8.2)</option>
+                    </select>
+                </div>
+                <div class="info-box">
+                    ℹ️ Preview uses sample scores. Real values come from Simkl (and MDBList if you add a key). Missing sources are hidden, never shown as 0.
                 </div>
             </div>
 
@@ -1560,8 +1549,8 @@
         let selectedRatings = [1,2,3,4,5,6,7,8,9,10];
         let selectedRatingStyle = 'stars';
         let selectedRatingPattern = 0;
-        let selectedStatsFormat = 1;
-        let selectedStats = ['plays', 'comments', 'watchers'];
+        let ratingInfoFormat = 1;
+        let selectedSources = ['simkl', 'imdb'];
         let previewRatingValue = 5;
         let markAsPlayedOnRate = false;
         let enableWatchlist = true;
@@ -1634,13 +1623,17 @@
         const heartsVisual = document.getElementById('heartsVisual');
         const progressVisual = document.getElementById('progressVisual');
         const currentPatternPreview = document.getElementById('currentPatternPreview');
-        const selectedStatsDisplay = document.getElementById('selectedStatsDisplay');
+        const selectedSourcesDisplay = document.getElementById('selectedSourcesDisplay');
         const addonNamePreview = document.getElementById('addonNamePreview');
         const ratingSlider = document.getElementById('ratingSlider');
         const sliderValue = document.getElementById('sliderValue');
-        const stat1Select = document.getElementById('stat1Select');
-        const stat2Select = document.getElementById('stat2Select');
-        const stat3Select = document.getElementById('stat3Select');
+        const ratingSource1Select = document.getElementById('ratingSource1Select');
+        const ratingSource2Select = document.getElementById('ratingSource2Select');
+        const ratingSource3Select = document.getElementById('ratingSource3Select');
+        const ratingSource4Select = document.getElementById('ratingSource4Select');
+        const mdbKeyInput = document.getElementById('mdbKey');
+        const showCertificationCheckbox = document.getElementById('showCertification');
+        const showSimklRankCheckbox = document.getElementById('showSimklRank');
         const streamOrderList = document.getElementById('stream-order-list');
 
         // Preview elements
@@ -1668,15 +1661,30 @@
         const resultSection = document.getElementById('resultSection');
         const addonUrlDiv = document.getElementById('addonUrlDiv');
 
-        // Simkl stats info
-        const simklStatsInfo = {
-            'watchers': { emoji: '👁️', name: 'watchers' },
-            'plays': { emoji: '▶️', name: 'plays' },
-            'comments': { emoji: '💬', name: 'comments' },
-            'lists': { emoji: '📋', name: 'lists' },
-            'collectors': { emoji: '⭐', name: 'collectors' },
-            'votes': { emoji: '👍', name: 'votes' }
+        // Rating source info (Simkl + MDBList)
+        const ratingSourceInfo = {
+            'simkl': { emoji: '⭐', name: 'Simkl', label: '⭐ Simkl' },
+            'imdb': { emoji: '🎬', name: 'IMDb', label: '🎬 IMDb' },
+            'tomatoes': { emoji: '🍅', name: 'RT Critics', label: '🍅 RT Critics' },
+            'tomatoesaudience': { emoji: '🍿', name: 'RT Audience', label: '🍿 RT Audience' },
+            'metacritic': { emoji: 'Ⓜ️', name: 'Metacritic', label: 'Ⓜ️ Metacritic' },
+            'letterboxd': { emoji: '🎞️', name: 'Letterboxd', label: '🎞️ Letterboxd' },
+            'mdblist': { emoji: '📊', name: 'MDBList', label: '📊 MDBList' },
+            'tmdb': { emoji: '🎥', name: 'TMDB', label: '🎥 TMDB' },
+            'trakt': { emoji: '📺', name: 'Trakt', label: '📺 Trakt' }
         };
+
+        const RATING_SOURCE_OPTIONS = [
+            { value: 'simkl', label: '⭐ Simkl (10)' },
+            { value: 'imdb', label: '🎬 IMDb (10)' },
+            { value: 'tomatoes', label: '🍅 RT Critics (100)' },
+            { value: 'tomatoesaudience', label: '🍿 RT Audience (100)' },
+            { value: 'metacritic', label: 'Ⓜ️ Metacritic (100)' },
+            { value: 'letterboxd', label: '🎞️ Letterboxd (5)' },
+            { value: 'mdblist', label: '📊 MDBList (100)' },
+            { value: 'tmdb', label: '🎥 TMDB (10)' },
+            { value: 'trakt', label: '📺 Trakt (10)' }
+        ];
 
         // ============================================
         // Stream Ordering Functions
@@ -1829,10 +1837,31 @@
                 saveData();
             });
 
-            // Stats selection
-            stat1Select.addEventListener('change', updateStats);
-            stat2Select.addEventListener('change', updateStats);
-            stat3Select.addEventListener('change', updateStats);
+            // Rating source selection
+            populateRatingSourceSelects();
+            [ratingSource1Select, ratingSource2Select, ratingSource3Select, ratingSource4Select].forEach(select => {
+                if (select) select.addEventListener('change', updateSourcesFromSelects);
+            });
+            const ratingInfoFormatSelect = document.getElementById('ratingInfoFormatSelect');
+            if (ratingInfoFormatSelect) {
+                ratingInfoFormatSelect.addEventListener('change', function() {
+                    ratingInfoFormat = parseInt(this.value) || 1;
+                    updatePatternPreview();
+                    updatePreview();
+                    saveData();
+                });
+            }
+            mdbKeyInput.addEventListener('change', saveData);
+            showCertificationCheckbox.addEventListener('change', function() {
+                updatePatternPreview();
+                updatePreview();
+                saveData();
+            });
+            showSimklRankCheckbox.addEventListener('change', function() {
+                updatePatternPreview();
+                updatePreview();
+                saveData();
+            });
 
             // Upstash inputs
             upstashUrlInput.addEventListener('change', function() {
@@ -1856,13 +1885,18 @@
             updateSelectedCount();
             updateRatingStyleVisuals();
             updatePatternPreview();
-            updateSelectedStatsDisplay();
+            updateSelectedSourcesDisplay();
             updateAddonNamePreview();
             updatePreview();
             renderStreamOrderList(); // Initialize the sortable list
 
             // Load saved data
             loadSavedData();
+            populateRatingSourceSelectsFromState();
+            if (document.getElementById('ratingInfoFormatSelect')) {
+                document.getElementById('ratingInfoFormatSelect').value = String(ratingInfoFormat);
+            }
+            updateSelectedSourcesDisplay();
         }
 
         function updatePreviewAndSave() {
@@ -1870,48 +1904,50 @@
             saveData();
         }
 
-        function formatNumber(num) {
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-            }
-            if (num >= 1000) {
-                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-            }
-            return num.toString();
-        }
-
-        function updateStats() {
-            selectedStats = [
-                stat1Select.value,
-                stat2Select.value,
-                stat3Select.value
-            ];
-            updateSelectedStatsDisplay();
+        function updateSourcesFromSelects() {
+            const values = [ratingSource1Select, ratingSource2Select, ratingSource3Select, ratingSource4Select]
+                .map(s => s && s.value)
+                .filter(Boolean);
+            selectedSources = [...new Set(values)].slice(0, 4);
+            updateSelectedSourcesDisplay();
             updatePatternPreview();
             updatePreview();
             saveData();
         }
 
-        function updateSelectedStatsDisplay() {
-            const statNames = selectedStats.map(stat => {
-                const info = simklStatsInfo[stat] || { emoji: '📊', name: stat };
-                return `${info.emoji} ${info.name.charAt(0).toUpperCase() + info.name.slice(1)}`;
-            });
-            selectedStatsDisplay.textContent = statNames.join(', ');
+        function updateSelectedSourcesDisplay() {
+            const items = selectedSources.map(s => (ratingSourceInfo[s] || { emoji: '📊', name: s }).label || `📊 ${s}`);
+            selectedSourcesDisplay.textContent = items.length ? items.join(', ') : 'None';
         }
 
-        function selectStatsFormat(format) {
-            selectedStatsFormat = format;
-            document.querySelectorAll('.stats-format-option').forEach(opt => {
-                opt.classList.remove('selected');
-                opt.querySelector('input[type="radio"]').checked = false;
+        function normalizeLegacySource(stat) {
+            const map = {
+                'watchers': 'simkl',
+                'plays': 'simkl',
+                'comments': 'simkl',
+                'lists': 'simkl',
+                'collectors': 'simkl',
+                'votes': 'simkl',
+                'rating': 'simkl'
+            };
+            const s = String(stat || '').toLowerCase();
+            return map[s] || (ratingSourceInfo[s] ? s : null);
+        }
+
+        function populateRatingSourceSelects() {
+            const selects = [ratingSource1Select, ratingSource2Select, ratingSource3Select, ratingSource4Select];
+            selects.forEach(select => {
+                if (!select) return;
+                select.innerHTML = '<option value="">None</option>' +
+                    RATING_SOURCE_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
             });
-            const selectedOption = document.getElementById(`stats-option-${format}`);
-            selectedOption.classList.add('selected');
-            selectedOption.querySelector('input[type="radio"]').checked = true;
-            updatePatternPreview();
-            updatePreview();
-            saveData();
+        }
+
+        function populateRatingSourceSelectsFromState() {
+            const selects = [ratingSource1Select, ratingSource2Select, ratingSource3Select, ratingSource4Select];
+            for (let i = 0; i < selects.length; i++) {
+                if (selects[i]) selects[i].value = selectedSources[i] || '';
+            }
         }
 
         function selectRatingPattern(pattern) {
@@ -1953,59 +1989,41 @@
 
         function getStatsLinePreview(rating) {
             const exampleValues = {
-                'watchers': Math.round((rating * 125) + 50),
-                'plays': Math.round((rating * 510) + 1000),
-                'comments': Math.round(rating * 2.4),
-                'lists': Math.round(rating * 5),
-                'collectors': Math.round(rating * 9),
-                'votes': Math.round(rating * 36)
+                'simkl': { value: '7.8', label: 'Simkl' },
+                'imdb': { value: '8.1', label: 'IMDb' },
+                'tomatoes': { value: '92%', label: 'RT Critics' },
+                'tomatoesaudience': { value: '84%', label: 'RT Audience' },
+                'metacritic': { value: '78%', label: 'Metacritic' },
+                'letterboxd': { value: '3.9', label: 'Letterboxd' },
+                'mdblist': { value: '80%', label: 'MDBList' },
+                'tmdb': { value: '7.5', label: 'TMDB' },
+                'trakt': { value: '7.9', label: 'Trakt' }
             };
+            const exampleCert = 'PG-13';
 
-            const statValues = selectedStats.map(stat => exampleValues[stat] || 0);
-            const formattedStats = selectedStats.map((stat, index) => {
-                const value = statValues[index];
-                const formattedValue = formatNumber(value);
-                const info = simklStatsInfo[stat] || { emoji: '📊', name: stat };
-                const displayName = getStatDisplayName(stat, value);
-                return {
-                    emoji: info.emoji,
-                    value: formattedValue,
-                    name: displayName
-                };
+            const segments = selectedSources.map(source => {
+                const info = ratingSourceInfo[source] || { emoji: '📊', name: source };
+                const example = exampleValues[source] || { value: '?', label: source };
+                return { emoji: info.emoji, name: example.label, value: example.value };
             });
 
-            switch(selectedStatsFormat) {
-                case 1: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
-                case 2: return formattedStats.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | ');
-                case 3: return formattedStats.map(s => `${s.emoji} ${s.value}`).join(' | ');
-                case 4: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join('\n');
-                case 5:
-                    const customNames = {
-                        'watchers': 'watching',
-                        'plays': 'played',
-                        'comments': 'commented',
-                        'lists': 'listed',
-                        'collectors': 'collected',
-                        'votes': 'voted'
-                    };
-                    return formattedStats.map(s => {
-                        const customName = customNames[s.name] || s.name;
-                        return `${s.emoji} ${s.value} ${customName}`;
-                    }).join(' | ');
-                default: return formattedStats.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
+            let line = '';
+            switch(ratingInfoFormat) {
+                case 1: line = segments.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - '); break;
+                case 2: line = segments.map(s => `${s.emoji} ${s.name}: ${s.value}`).join(' | '); break;
+                case 3: line = segments.map(s => `${s.emoji} ${s.value}`).join(' | '); break;
+                case 4: line = segments.map(s => `${s.emoji} ${s.name}: ${s.value}`).join('\n'); break;
+                case 5: line = segments.map(s => `${s.emoji} ${s.name} ${s.value}`).join(' | '); break;
+                default: line = segments.map(s => `${s.emoji} ${s.value} ${s.name}`).join(' - ');
             }
-        }
 
-        function getStatDisplayName(stat, value) {
-            const displayMap = {
-                'watchers': value === 1 ? 'watcher' : 'watchers',
-                'plays': value === 1 ? 'play' : 'plays',
-                'comments': value === 1 ? 'comment' : 'comments',
-                'lists': value === 1 ? 'list' : 'lists',
-                'collectors': value === 1 ? 'collector' : 'collectors',
-                'votes': value === 1 ? 'vote' : 'votes'
-            };
-            return displayMap[stat] || stat;
+            const advisory = [];
+            if (showCertificationCheckbox && showCertificationCheckbox.checked) advisory.push(`🔞 ${exampleCert}`);
+            if (showSimklRankCheckbox && showSimklRankCheckbox.checked) advisory.push('🏆 Simkl #42');
+            const advisoryLine = advisory.join(' | ');
+
+            const parts = [line, advisoryLine].filter(Boolean);
+            return parts.join('\n') || '';
         }
 
         function selectRatingStyle(style) {
@@ -2595,6 +2613,7 @@
                 clientSecret: clientSecretInput.value.trim(),
                 username: currentUsername,
                 tmdbKey: tmdbKeyInput.value.trim() || undefined,
+                mdblistKey: mdbKeyInput.value.trim() || undefined,
                 ratings: enableRatingsCheckbox.checked ? selectedRatings : [],
                 markAsWatched: enableWatchedCheckbox.checked,
                 markAsUnwatched: enableUnwatchedCheckbox.checked,
@@ -2609,8 +2628,10 @@
                 showUsernameInName: showUsernameCheckbox.checked,
                 ratingStyle: selectedRatingStyle,
                 ratingPattern: selectedRatingPattern,
-                statsFormat: selectedStatsFormat,
-                selectedStats: selectedStats,
+                ratingInfoFormat: ratingInfoFormat,
+                selectedSources: selectedSources,
+                showCertification: showCertificationCheckbox.checked,
+                showSimklRank: showSimklRankCheckbox.checked,
                 markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked,
                 streamOrder: streamOrder // Include the stream order
             };
@@ -2720,8 +2741,11 @@
                 clientIdInput.value = '';
                 clientSecretInput.value = '';
                 tmdbKeyInput.value = '';
+                mdbKeyInput.value = '';
                 upstashUrlInput.value = '';
                 upstashTokenInput.value = '';
+                showCertificationCheckbox.checked = true;
+                showSimklRankCheckbox.checked = false;
                 showUsernameCheckbox.checked = true;
                 enableWatchedCheckbox.checked = true;
                 enableUnwatchedCheckbox.checked = true;
@@ -2738,8 +2762,8 @@
                 selectedRatings = [1,2,3,4,5,6,7,8,9,10]; // now all selected
                 selectedRatingStyle = 'stars';
                 selectedRatingPattern = 0;
-                selectedStatsFormat = 1;
-                selectedStats = ['plays', 'comments', 'watchers'];
+                ratingInfoFormat = 1;
+                selectedSources = ['simkl', 'imdb'];
                 previewRatingValue = 5;
                 showCurrentRating = true;
                 enableRemoveRating = true;
@@ -2781,9 +2805,10 @@
 
                 resultSection.style.display = 'none';
 
-                stat1Select.value = 'plays';
-                stat2Select.value = 'comments';
-                stat3Select.value = 'watchers';
+                populateRatingSourceSelectsFromState();
+                if (document.getElementById('ratingInfoFormatSelect')) {
+                    document.getElementById('ratingInfoFormatSelect').value = '1';
+                }
 
                 // Update visual selections
                 document.querySelectorAll('.rating-style-option').forEach(opt => {
@@ -2798,13 +2823,6 @@
                 document.getElementById('pattern-option-0').classList.add('selected');
                 document.getElementById('pattern0').checked = true;
 
-                document.querySelectorAll('.stats-format-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                    opt.querySelector('input[type="radio"]').checked = false;
-                });
-                document.getElementById('stats-option-1').classList.add('selected');
-                document.getElementById('stats1').checked = true;
-
                 // Re-render stream order
                 renderStreamOrderList();
 
@@ -2812,7 +2830,7 @@
                 updateSelectedCount();
                 updateRatingStyleVisuals();
                 updatePatternPreview();
-                updateSelectedStatsDisplay();
+                updateSelectedSourcesDisplay();
                 updateAddonNamePreview();
                 updatePreview();
 
@@ -2830,6 +2848,7 @@
                     if (data.clientId) clientIdInput.value = data.clientId;
                     if (data.clientSecret) clientSecretInput.value = data.clientSecret;
                     if (data.tmdbKey) tmdbKeyInput.value = data.tmdbKey;
+                    if (data.mdblistKey) mdbKeyInput.value = data.mdblistKey;
                     if (data.upstashUrl) {
                         upstashUrlInput.value = data.upstashUrl;
                         upstashUrl = data.upstashUrl;
@@ -2878,8 +2897,15 @@
                     if (data.markAsPlayedOnRate !== undefined) markAsPlayedOnRateCheckbox.checked = data.markAsPlayedOnRate;
                     if (data.ratingStyle) selectedRatingStyle = data.ratingStyle;
                     if (data.ratingPattern !== undefined) selectedRatingPattern = data.ratingPattern;
-                    if (data.statsFormat !== undefined) selectedStatsFormat = data.statsFormat;
-                    if (data.selectedStats) selectedStats = data.selectedStats;
+                    if (data.ratingInfoFormat !== undefined) ratingInfoFormat = data.ratingInfoFormat;
+                    else if (data.statsFormat !== undefined) ratingInfoFormat = data.statsFormat;
+                    if (Array.isArray(data.selectedSources)) selectedSources = data.selectedSources;
+                    else if (Array.isArray(data.selectedStats)) {
+                        const mapped = data.selectedStats.map(normalizeLegacySource).filter(Boolean);
+                        selectedSources = mapped.length ? mapped : ['simkl', 'imdb'];
+                    }
+                    if (data.showCertification !== undefined) showCertificationCheckbox.checked = data.showCertification;
+                    if (data.showSimklRank !== undefined) showSimklRankCheckbox.checked = data.showSimklRank;
                     if (data.previewRatingValue) {
                         previewRatingValue = data.previewRatingValue;
                         ratingSlider.value = previewRatingValue;
@@ -2912,22 +2938,9 @@
                         patternOption.querySelector('input[type="radio"]').checked = true;
                     }
 
-                    // Update stats format
-                    document.querySelectorAll('.stats-format-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                        opt.querySelector('input[type="radio"]').checked = false;
-                    });
-                    const statsOption = document.getElementById(`stats-option-${selectedStatsFormat}`);
-                    if (statsOption) {
-                        statsOption.classList.add('selected');
-                        statsOption.querySelector('input[type="radio"]').checked = true;
-                    }
-
-                    // Update stats selection
-                    if (selectedStats.length >= 3) {
-                        stat1Select.value = selectedStats[0];
-                        stat2Select.value = selectedStats[1];
-                        stat3Select.value = selectedStats[2];
+                    populateRatingSourceSelectsFromState();
+                    if (document.getElementById('ratingInfoFormatSelect')) {
+                        document.getElementById('ratingInfoFormatSelect').value = String(ratingInfoFormat);
                     }
 
                     // Re-render stream order
@@ -2937,7 +2950,7 @@
                     updateSelectedCount();
                     updateRatingStyleVisuals();
                     updatePatternPreview();
-                    updateSelectedStatsDisplay();
+                    updateSelectedSourcesDisplay();
                     updateAddonNamePreview();
                     ratingSection.style.display = enableRatingsCheckbox.checked ? 'block' : 'none';
 
@@ -2972,6 +2985,7 @@
                 clientId: clientIdInput.value.trim(),
                 clientSecret: clientSecretInput.value.trim(),
                 tmdbKey: tmdbKeyInput.value.trim(),
+                mdblistKey: mdbKeyInput.value.trim(),
                 upstashUrl: upstashUrlInput.value.trim(),
                 upstashToken: upstashTokenInput.value.trim(),
                 ratings: selectedRatings,
@@ -2990,8 +3004,10 @@
                 markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked,
                 ratingStyle: selectedRatingStyle,
                 ratingPattern: selectedRatingPattern,
-                statsFormat: selectedStatsFormat,
-                selectedStats: selectedStats,
+                ratingInfoFormat: ratingInfoFormat,
+                selectedSources: selectedSources,
+                showCertification: showCertificationCheckbox.checked,
+                showSimklRank: showSimklRankCheckbox.checked,
                 previewRatingValue: previewRatingValue,
                 storageMethod: storageMethod,
                 configId: configId,
