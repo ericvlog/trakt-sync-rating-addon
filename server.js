@@ -21,7 +21,7 @@ if (!SERVER_URL) {
   } else if (process.env.RENDER_EXTERNAL_URL) {
     SERVER_URL = process.env.RENDER_EXTERNAL_URL;
   } else if (process.env.NODE_ENV === 'production') {
-    SERVER_URL = `https://stremio-trakt.pls3333.duckdns.org`;
+    SERVER_URL = `https://tough-anette-ericvlog-d8d02c3c.koyeb.app`;
   } else {
     SERVER_URL = `http://localhost:${PORT}`;
   }
@@ -30,7 +30,7 @@ if (!SERVER_URL) {
 // ============================================
 // CDN Configuration
 // ============================================
-const CDN_BASE = "https://cdn.jsdelivr.net/gh/ericvlog/trakt-sync-rating-addon@main/public";
+const CDN_BASE = "https://cdn.jsdelivr.net/gh/ericvlog/simkl-sync-rating-addon@main/public";
 const LOGO_URL = `${CDN_BASE}/logo.png`;
 const BACKGROUND_URL = `${CDN_BASE}/background.png`;
 const ICON_URL = `${CDN_BASE}/icon.png`;
@@ -66,7 +66,7 @@ const pendingRequests = new Map();
 
 // Cache for TMDB and Trakt data
 const tmdbCache = new Map();
-const traktStatsCache = new Map();
+const simklStatsCache = new Map();
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 // Cache for Upstash tokens
@@ -205,7 +205,7 @@ function getMediaEmoji(type, title = '') {
 
     if (animeKeywords.some(keyword => lowerTitle.includes(keyword))) return '🐉';
     else if (animationKeywords.some(keyword => lowerTitle.includes(keyword))) return '🎨';
-    else if (docKeywords.some(keyword => lowerTitle.includes(keyword))) return '📽️';
+    else if (docKeywords.some(keyword => lowerTitle.includes(keyword))) return '📽�?;
     else return '📺';
   }
   return '🎬';
@@ -231,13 +231,13 @@ function formatNumber(num) {
 
 function getStatEmoji(stat) {
   const emojiMap = {
-    'watchers': '👁️',
+    'watchers': '👁�?,
     'plays': '▶️',
     'comments': '💬',
     'lists': '📋',
-    'collectors': '⭐',
+    'collectors': '�?,
     'votes': '👍',
-    'rating': '⭐'
+    'rating': '�?
   };
   return emojiMap[stat] || '📊';
 }
@@ -263,28 +263,27 @@ function getStatDisplayName(stat, value) {
 // Trakt Stats Fetcher (UPDATED with anti-block headers)
 // ============================================
 
-async function fetchTraktStats(imdbId, type, clientId) {
+async function fetchSimklStats(imdbId, type, clientId) {
   const cacheKey = `${imdbId}_${type}_stats`;
   const now = Date.now();
 
   // Check cache
-  const cached = traktStatsCache.get(cacheKey);
+  const cached = simklStatsCache.get(cacheKey);
   if (cached && (now - cached.timestamp) < CACHE_TTL) {
-    console.log(`[TRAKT STATS] Using cached stats for ${imdbId}`);
+    console.log(`[SIMKL STATS] Using cached stats for ${imdbId}`);
     return cached.stats;
   }
 
   try {
-    console.log(`[TRAKT STATS] Fetching stats for ${imdbId} (${type})`);
+    console.log(`[SIMKL STATS] Fetching stats for ${imdbId} (${type})`);
 
-    const mediaType = type === 'movie' ? 'movies' : 'shows';
-    const url = `https://api.trakt.tv/${mediaType}/${imdbId}/stats`;
+    const mediaType = type === 'movie' ? 'movies' : 'tv';
+    const url = `https://api.simkl.com/${mediaType}/${imdbId}?client_id=${clientId}`;
 
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
-        'trakt-api-version': '2',
-        'trakt-api-key': clientId,
+        'simkl-api-key': clientId,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
         'Accept-Language': 'en-US,en;q=0.9'
@@ -292,23 +291,35 @@ async function fetchTraktStats(imdbId, type, clientId) {
     });
 
     if (!response.ok) {
-      console.log(`[TRAKT STATS] Failed: ${response.status}`);
+      console.log(`[SIMKL STATS] Failed: ${response.status}`);
       return null;
     }
 
-    const stats = await response.json();
+    const data = await response.json();
+
+    // Map Simkl detail response to Trakt-like stats shape
+    const ratings = data.ratings || {};
+    const stats = {
+      watchers: 0,
+      plays: 0,
+      comments: 0,
+      lists: 0,
+      collectors: 0,
+      votes: ratings.votes || 0,
+      rating: ratings.rating || 0
+    };
 
     // Cache the result
-    traktStatsCache.set(cacheKey, {
+    simklStatsCache.set(cacheKey, {
       stats: stats,
       timestamp: now
     });
 
-    console.log(`[TRAKT STATS] Found:`, stats);
+    console.log(`[SIMKL STATS] Found:`, stats);
     return stats;
 
   } catch (error) {
-    console.error(`[TRAKT STATS] Error: ${error.message}`);
+    console.error(`[SIMKL STATS] Error: ${error.message}`);
     return null;
   }
 }
@@ -332,17 +343,14 @@ async function getUserRating(imdbId, type, accessToken, clientId, season = null,
     console.log(`[USER RATING] Fetching user rating for ${imdbId} (${type})`);
 
     let url;
-    let responseData;
 
     if (type === 'movie') {
-      // Get ALL movie ratings and filter
-      url = 'https://api.trakt.tv/sync/ratings/movies';
+      url = 'https://api.simkl.com/sync/ratings/movies';
       const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
-          'trakt-api-version': '2',
-          'trakt-api-key': clientId,
+          'simkl-api-key': clientId,
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'application/json',
           'Accept-Language': 'en-US,en;q=0.9'
@@ -356,18 +364,19 @@ async function getUserRating(imdbId, type, accessToken, clientId, season = null,
 
       const ratings = await response.json();
 
-      // Find the specific movie by IMDb ID
+      // Simkl returns array of {movie: {ids: {imdb: ...}}, user_rating: ...}
       const movieRating = ratings.find(item =>
         item.movie && item.movie.ids && item.movie.ids.imdb === imdbId
       );
 
       if (movieRating) {
-        console.log(`[USER RATING] Found specific rating: ${movieRating.rating}/10 for ${imdbId}`);
+        const rating = movieRating.user_rating || 0;
+        console.log(`[USER RATING] Found specific rating: ${rating}/10 for ${imdbId}`);
         userRatingCache.set(cacheKey, {
-          rating: movieRating.rating,
+          rating: rating,
           timestamp: now
         });
-        return movieRating.rating;
+        return rating;
       } else {
         console.log(`[USER RATING] No rating found for movie ${imdbId}`);
         userRatingCache.set(cacheKey, {
@@ -379,14 +388,13 @@ async function getUserRating(imdbId, type, accessToken, clientId, season = null,
 
     } else if (type === 'series') {
       if (season !== null && episode !== null) {
-        // For episodes, get ALL episode ratings and filter
-        url = 'https://api.trakt.tv/sync/ratings/episodes';
+        // For episodes, get all shows with extended episode data and filter
+        url = 'https://api.simkl.com/sync/ratings/shows?extended=episodes';
         const response = await fetch(url, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`,
-            'trakt-api-version': '2',
-            'trakt-api-key': clientId,
+            'simkl-api-key': clientId,
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'application/json',
             'Accept-Language': 'en-US,en;q=0.9'
@@ -400,40 +408,41 @@ async function getUserRating(imdbId, type, accessToken, clientId, season = null,
 
         const ratings = await response.json();
 
-        // Find the specific episode by IMDb ID, season, and episode
-        const episodeRating = ratings.find(item =>
-          item.episode &&
-          item.episode.season === parseInt(season) &&
-          item.episode.number === parseInt(episode) &&
-          item.show &&
-          item.show.ids &&
-          item.show.ids.imdb === imdbId
+        // Find the specific show by IMDb ID, then find the episode
+        const showRating = ratings.find(item =>
+          item.show && item.show.ids && item.show.ids.imdb === imdbId
         );
 
-        if (episodeRating) {
-          console.log(`[USER RATING] Found episode rating: ${episodeRating.rating}/10 for ${imdbId} S${season}E${episode}`);
-          userRatingCache.set(cacheKey, {
-            rating: episodeRating.rating,
-            timestamp: now
-          });
-          return episodeRating.rating;
-        } else {
-          console.log(`[USER RATING] No rating found for episode ${imdbId} S${season}E${episode}`);
-          userRatingCache.set(cacheKey, {
-            rating: 0,
-            timestamp: now
-          });
-          return 0;
+        if (showRating && showRating.episodes) {
+          const episodeRating = showRating.episodes.find(ep =>
+            ep.season === parseInt(season) &&
+            ep.number === parseInt(episode)
+          );
+          if (episodeRating) {
+            const rating = episodeRating.user_rating || 0;
+            console.log(`[USER RATING] Found episode rating: ${rating}/10 for ${imdbId} S${season}E${episode}`);
+            userRatingCache.set(cacheKey, {
+              rating: rating,
+              timestamp: now
+            });
+            return rating;
+          }
         }
+
+        console.log(`[USER RATING] No rating found for episode ${imdbId} S${season}E${episode}`);
+        userRatingCache.set(cacheKey, {
+          rating: 0,
+          timestamp: now
+        });
+        return 0;
       } else {
         // For series, get ALL show ratings and filter
-        url = 'https://api.trakt.tv/sync/ratings/shows';
+        url = 'https://api.simkl.com/sync/ratings/shows';
         const response = await fetch(url, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`,
-            'trakt-api-version': '2',
-            'trakt-api-key': clientId,
+            'simkl-api-key': clientId,
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'application/json',
             'Accept-Language': 'en-US,en;q=0.9'
@@ -453,12 +462,13 @@ async function getUserRating(imdbId, type, accessToken, clientId, season = null,
         );
 
         if (showRating) {
-          console.log(`[USER RATING] Found series rating: ${showRating.rating}/10 for ${imdbId}`);
+          const rating = showRating.user_rating || 0;
+          console.log(`[USER RATING] Found series rating: ${rating}/10 for ${imdbId}`);
           userRatingCache.set(cacheKey, {
-            rating: showRating.rating,
+            rating: rating,
             timestamp: now
           });
-          return showRating.rating;
+          return rating;
         } else {
           console.log(`[USER RATING] No rating found for series ${imdbId}`);
           userRatingCache.set(cacheKey, {
@@ -514,7 +524,7 @@ function generateRatingVisual(style, rating) {
     if (!style || style === 'stars') {
         // Classic Stars (default)
         for (let i = 1; i <= 10; i++) {
-            visual += i <= numRating ? '★' : '☆';
+            visual += i <= numRating ? '�? : '�?;
         }
     } else if (style === 'hearts') {
         // Emoji Hearts
@@ -524,7 +534,7 @@ function generateRatingVisual(style, rating) {
     } else if (style === 'progress') {
         // Progress Bar
         for (let i = 1; i <= 10; i++) {
-            visual += i <= numRating ? '▰' : '▱';
+            visual += i <= numRating ? '�? : '�?;
         }
     }
 
@@ -546,7 +556,7 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
     let statsLine = '';
 
     if (userConfig && userConfig.clientId && imdbId) {
-        const stats = await fetchTraktStats(imdbId, type, userConfig.clientId);
+        const stats = await fetchSimklStats(imdbId, type, userConfig.clientId);
         if (stats) {
             // Get values for selected stats
             const statValues = selectedStats.map(stat => stats[stat] || 0);
@@ -650,11 +660,11 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
     if (isCurrentRating) {
         if (pattern === 0) {
             if (type === 'movie') {
-                return `${ratingVisual}\n"${title}" ${rating}/10\n🗑️ Click to remove rating`;
+                return `${ratingVisual}\n"${title}" ${rating}/10\n🗑�?Click to remove rating`;
             } else if (season && episode) {
-                return `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10\n🗑️ Click to remove rating`;
+                return `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10\n🗑�?Click to remove rating`;
             } else {
-                return `${ratingVisual}\n"${title}" Series ${rating}/10\n🗑️ Click to remove rating`;
+                return `${ratingVisual}\n"${title}" Series ${rating}/10\n🗑�?Click to remove rating`;
             }
         }
 
@@ -671,33 +681,33 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
                 displayTitle1 = `${title}${year ? ` (${year})` : ' (Movie)'}`;
             }
 
-            return `⭐ Current Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n🗑️ Click to remove rating`;
+            return `�?Current Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n🗑�?Click to remove rating`;
         }
 
         // Pattern 6: Cinematic Rating Card
         if (pattern === 6) {
             if (type === 'movie') {
                 const movieTitle = year ? `🎬 ${title} (${year})` : `🎬 ${title}`;
-                return `${movieTitle}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10\n${statsLine}\n🗑️ Click to remove rating`;
+                return `${movieTitle}\n�?${ratingVisual}\n�?Current Rating ${rating}/10\n${statsLine}\n🗑�?Click to remove rating`;
             } else if (type === 'series') {
                 const mediaEmoji = getMediaEmoji(type, title);
                 if (season && episode) {
-                    return `${mediaEmoji} ${title} S${season}E${episode}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10\n${statsLine}\n🗑️ Click to remove rating`;
+                    return `${mediaEmoji} ${title} S${season}E${episode}\n�?${ratingVisual}\n�?Current Rating ${rating}/10\n${statsLine}\n🗑�?Click to remove rating`;
                 } else if (season) {
-                    return `${mediaEmoji} ${title} Season ${season}\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10\n${statsLine}\n🗑️ Click to remove rating`;
+                    return `${mediaEmoji} ${title} Season ${season}\n�?${ratingVisual}\n�?Current Rating ${rating}/10\n${statsLine}\n🗑�?Click to remove rating`;
                 } else {
-                    return `${mediaEmoji} ${title} (Series)\n⭐ ${ratingVisual}\n✅ Current Rating ${rating}/10\n${statsLine}\n🗑️ Click to remove rating`;
+                    return `${mediaEmoji} ${title} (Series)\n�?${ratingVisual}\n�?Current Rating ${rating}/10\n${statsLine}\n🗑�?Click to remove rating`;
                 }
             }
         }
 
         // Fallback
         if (type === 'movie') {
-            return `${ratingVisual}\n"${title}" ${rating}/10\n🗑️ Click to remove rating`;
+            return `${ratingVisual}\n"${title}" ${rating}/10\n🗑�?Click to remove rating`;
         } else if (season && episode) {
-            return `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10\n🗑️ Click to remove rating`;
+            return `${ratingVisual}\nS${season}E${episode} "${title}" ${rating}/10\n🗑�?Click to remove rating`;
         } else {
-            return `${ratingVisual}\n"${title}" Series ${rating}/10\n🗑️ Click to remove rating`;
+            return `${ratingVisual}\n"${title}" Series ${rating}/10\n🗑�?Click to remove rating`;
         }
     }
 
@@ -726,14 +736,14 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
             displayTitle1 = `${title}${year ? ` (${year})` : ' (Movie)'}`;
         }
 
-        return `⭐ Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n📊 ${rating} out of 10 stars`;
+        return `�?Rating: ${rating}/10\n🎬 ${displayTitle1}\n${ratingVisual}\n${statsLine}\n📊 ${rating} out of 10 stars`;
     }
 
     // Pattern 6: Cinematic Rating Card
     if (pattern === 6) {
         if (type === 'movie') {
             const movieTitle = year ? `🎬 ${title} (${year})` : `🎬 ${title}`;
-            return `${movieTitle}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+            return `${movieTitle}\n�?${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
         } else if (type === 'series') {
             const mediaEmoji = getMediaEmoji(type, title);
             if (season && episode) {
@@ -742,11 +752,11 @@ async function formatRatingTitle(pattern, ratingStyle, rating, title, type, seas
                 if (episode === 1) episodeIndicator = ' 🚀';
                 if (episode >= 10) episodeIndicator = ' 🔚';
 
-                return `${mediaEmoji} ${title} S${season}E${episode}${episodeIndicator}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                return `${mediaEmoji} ${title} S${season}E${episode}${episodeIndicator}\n�?${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
             } else if (season) {
-                return `${mediaEmoji} ${title} Season ${season}\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                return `${mediaEmoji} ${title} Season ${season}\n�?${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
             } else {
-                return `${mediaEmoji} ${title} (Series)\n⭐ ${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
+                return `${mediaEmoji} ${title} (Series)\n�?${ratingVisual}\n🎯 Rating ${rating}/10\n${statsLine}\n📊 ${rating} out of 10 stars`;
             }
         }
     }
@@ -773,7 +783,7 @@ function readCookie(req, name) {
 
 function readPkceCookie(req) {
   try {
-    const raw = readCookie(req, 'trakt_pkce');
+    const raw = readCookie(req, 'simkl_pkce');
     return raw ? JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) : null;
   } catch { return null; }
 }
@@ -785,15 +795,16 @@ app.get('/oauth/initiate', (req, res) => {
   const verifier = crypto.randomBytes(32).toString('base64url');
   const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
   const cookieValue = Buffer.from(JSON.stringify({ state, verifier, clientId })).toString('base64url');
-  res.setHeader('Set-Cookie', 'trakt_pkce=' + cookieValue + '; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600');
+  res.setHeader('Set-Cookie', 'simkl_pkce=' + cookieValue + '; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600');
   const redirectUri = SERVER_URL.replace(/\/$/, '') + '/oauth/callback';
-  const authUrl = new URL('https://auth.trakt.tv/oauth/authorize');
+  const authUrl = new URL('https://simkl.com/oauth2/authorize');
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('code_challenge', challenge);
   authUrl.searchParams.set('code_challenge_method', 'S256');
+  authUrl.searchParams.set('scope', 'media:read media:write');
   res.redirect(authUrl.toString());
 });
 
@@ -801,46 +812,44 @@ app.get('/oauth/callback', (req, res) => {
   const code = String(req.query.code || '');
   const state = String(req.query.state || '');
   const pending = readPkceCookie(req);
-  if (req.query.error) return res.status(400).send('Trakt authorization was cancelled. You can close this window.');
+  if (req.query.error) return res.status(400).send('Simkl authorization was cancelled. You can close this window.');
   if (!code || !state || !pending || state !== pending.state) return res.status(400).send('OAuth state check failed. Close this window and try connecting again.');
   const targetOrigin = new URL(SERVER_URL).origin;
   res.setHeader('Cache-Control', 'no-store');
-  const page = '<!doctype html><html><head><meta charset="utf-8"><title>Trakt connected</title></head><body><p>Authorization received. Returning to configuration…</p><script>' +
-    'if(window.opener){window.opener.postMessage({type:"trakt-pkce-callback",code:' + JSON.stringify(code) + ',state:' + JSON.stringify(state) + '},' + JSON.stringify(targetOrigin) + ');window.close();}' +
+  const page = '<!doctype html><html><head><meta charset="utf-8"><title>Simkl connected</title></head><body><p>Authorization received. Returning to configuration�?/p><script>' +
+    'if(window.opener){window.opener.postMessage({type:"simkl-pkce-callback",code:' + JSON.stringify(code) + ',state:' + JSON.stringify(state) + '},' + JSON.stringify(targetOrigin) + ');window.close();}' +
     'else{document.body.insertAdjacentHTML("beforeend","<p>Close this window and return to configuration.</p>");}</script></body></html>';
   res.type('html').send(page);
 });
 
-// Updated OAuth exchange with clientSecret support
+// OAuth exchange with PKCE for Simkl
 app.post('/oauth/exchange', async (req, res) => {
   const { code, clientId, state, upstashUrl, upstashToken } = req.body;
   const pending = readPkceCookie(req);
   if (!code || !clientId || !state || !pending || state !== pending.state || clientId !== pending.clientId) {
-    return res.status(400).json({ success: false, error: 'OAuth state verification failed. Please reconnect to Trakt.' });
+    return res.status(400).json({ success: false, error: 'OAuth state verification failed. Please reconnect to Simkl.' });
   }
 
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    const response = await fetch('https://api.trakt.tv/oauth/token', {
+    const response = await fetch('https://api.simkl.com/oauth2/token', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Origin': 'https://trakt.tv',
-        'Referer': 'https://trakt.tv/',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
       },
-      body: JSON.stringify({
-        code,
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
         client_id: clientId,
         code_verifier: pending.verifier,
-        redirect_uri: SERVER_URL.replace(/\/$/, '') + '/oauth/callback',
-        grant_type: 'authorization_code'
+        redirect_uri: SERVER_URL.replace(/\/$/, '') + '/oauth/callback'
       }),
       signal: controller.signal
     });
@@ -849,28 +858,27 @@ app.post('/oauth/exchange', async (req, res) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[TRAKT OAUTH] Error response:', response.status, errorText.substring(0, 500));
-      throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+      console.error('[SIMKL OAUTH] Error response:', response.status, errorText.substring(0, 500));
+      throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
     }
 
     const tokens = await response.json();
 
     // Get user info
-    const userResponse = await fetch('https://api.trakt.tv/users/settings', {
+    const userResponse = await fetch('https://api.simkl.com/users/settings', {
       headers: {
         'Authorization': `Bearer ${tokens.access_token}`,
-        'trakt-api-version': '2',
-        'trakt-api-key': clientId,
+        'simkl-api-key': clientId,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
         'Accept-Language': 'en-US,en;q=0.9'
       }
     });
 
-    let username = 'Trakt User';
+    let username = 'Simkl User';
     if (userResponse.ok) {
       const userData = await userResponse.json();
-      username = userData.user?.username || username;
+      username = userData.user?.username || userData.username || username;
     }
 
     tokens.username = username;
@@ -883,7 +891,7 @@ app.post('/oauth/exchange', async (req, res) => {
     if (upstashUrl && upstashToken) {
       try {
         configId = generateConfigId();
-        const tokensKey = `trakt_tokens:${configId}`;
+        const tokensKey = `simkl_tokens:${configId}`;
 
         // Store tokens in Upstash with 90-day expiration
         await upstashSet(upstashUrl, upstashToken, tokensKey, JSON.stringify(tokens), 90 * 24 * 60 * 60);
@@ -929,10 +937,10 @@ app.post('/oauth/exchange', async (req, res) => {
   }
 });
 
-// Token refresh endpoint with clientSecret support (fixed storage variable)
+// Token refresh endpoint for Simkl
 app.post('/oauth/refresh', async (req, res) => {
   try {
-    const { refreshToken, clientId, clientSecret, upstashUrl, upstashToken, configId, storage } = req.body;
+    const { refreshToken, clientId, upstashUrl, upstashToken, configId, storage } = req.body;
 
     if (!refreshToken || !clientId) {
       return res.status(400).json({ error: 'Refresh token and Client ID are required' });
@@ -942,23 +950,20 @@ app.post('/oauth/refresh', async (req, res) => {
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     // Refresh tokens
-    const response = await fetch('https://api.trakt.tv/oauth/token', {
+    const response = await fetch('https://api.simkl.com/oauth2/token', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Origin': 'https://trakt.tv',
-        'Referer': 'https://trakt.tv/',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
       },
-      body: JSON.stringify({
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
         refresh_token: refreshToken,
-        client_id: clientId,
-        redirect_uri: SERVER_URL.replace(/\/$/, '') + '/oauth/callback',
-        grant_type: 'refresh_token'
+        client_id: clientId
       }),
       signal: controller.signal
     });
@@ -967,19 +972,18 @@ app.post('/oauth/refresh', async (req, res) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[TRAKT OAUTH] Error response:', response.status, errorText.substring(0, 500));
-      throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+      console.error('[SIMKL OAUTH] Error response:', response.status, errorText.substring(0, 500));
+      throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
     }
 
     const tokens = await response.json();
     tokens.expires_at = Date.now() + (tokens.expires_in * 1000);
 
     // Get user info to verify
-    const userResponse = await fetch('https://api.trakt.tv/users/settings', {
+    const userResponse = await fetch('https://api.simkl.com/users/settings', {
       headers: {
         'Authorization': `Bearer ${tokens.access_token}`,
-        'trakt-api-version': '2',
-        'trakt-api-key': clientId,
+        'simkl-api-key': clientId,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
         'Accept-Language': 'en-US,en;q=0.9'
@@ -988,13 +992,13 @@ app.post('/oauth/refresh', async (req, res) => {
 
     if (userResponse.ok) {
       const userData = await userResponse.json();
-      tokens.username = userData.user?.username || 'Trakt User';
+      tokens.username = userData.user?.username || 'Simkl User';
     }
 
     // Update Upstash if using Upstash storage
     if (storage === 'upstash' && upstashUrl && upstashToken && configId) {
       try {
-        const tokensKey = `trakt_tokens:${configId}`;
+        const tokensKey = `simkl_tokens:${configId}`;
         await upstashSet(upstashUrl, upstashToken, tokensKey, JSON.stringify(tokens), 90 * 24 * 60 * 60);
 
         // Update local cache
@@ -1048,7 +1052,7 @@ app.post('/oauth/tokens', async (req, res) => {
     }
 
     try {
-      const tokensKey = `trakt_tokens:${configId}`;
+      const tokensKey = `simkl_tokens:${configId}`;
       console.log(`[UPSTASH] Fetching from Upstash: ${upstashUrl}/get/${tokensKey}`);
 
       const tokensJson = await upstashGet(upstashUrl, upstashToken, tokensKey);
@@ -1138,9 +1142,9 @@ app.post('/upstash/test', async (req, res) => {
 // Token Refresh Helper (UPDATED with clientSecret)
 // ============================================
 
-async function refreshTraktTokens(userConfig) {
+async function refreshSimklTokens(userConfig) {
   try {
-    const { refresh_token, clientId, clientSecret, upstashUrl, upstashToken, configId, storage } = userConfig;
+    const { refresh_token, clientId, upstashUrl, upstashToken, configId, storage } = userConfig;
 
     if (!refresh_token || !clientId) {
       console.log('[TOKEN REFRESH] Missing refresh token or clientId');
@@ -1158,23 +1162,20 @@ async function refreshTraktTokens(userConfig) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    const response = await fetch('https://api.trakt.tv/oauth/token', {
+    const response = await fetch('https://api.simkl.com/oauth2/token', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Origin': 'https://trakt.tv',
-        'Referer': 'https://trakt.tv/',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
       },
-      body: JSON.stringify({
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
         refresh_token: refresh_token,
-        client_id: clientId,
-        redirect_uri: SERVER_URL.replace(/\/$/, '') + '/oauth/callback',
-        grant_type: 'refresh_token'
+        client_id: clientId
       }),
       signal: controller.signal
     });
@@ -1189,19 +1190,14 @@ async function refreshTraktTokens(userConfig) {
 
     const newTokens = await response.json();
 
-    // CORRECT CALCULATION: Trakt returns expires_in in seconds
-    // Convert to milliseconds for storage
+    // Simkl returns expires_in in seconds, convert to milliseconds
     newTokens.expires_at = Date.now() + (newTokens.expires_in * 1000);
 
-    // Store created_at as current time in seconds (matching Trakt format)
-    newTokens.created_at = Math.floor(Date.now() / 1000);
-
     // Update user info
-    const userResponse = await fetch('https://api.trakt.tv/users/settings', {
+    const userResponse = await fetch('https://api.simkl.com/users/settings', {
       headers: {
         'Authorization': `Bearer ${newTokens.access_token}`,
-        'trakt-api-version': '2',
-        'trakt-api-key': clientId,
+        'simkl-api-key': clientId,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'application/json',
         'Accept-Language': 'en-US,en;q=0.9'
@@ -1210,13 +1206,13 @@ async function refreshTraktTokens(userConfig) {
 
     if (userResponse.ok) {
       const userData = await userResponse.json();
-      newTokens.username = userData.user?.username || 'Trakt User';
+      newTokens.username = userData.user?.username || 'Simkl User';
     }
 
     // Update Upstash if using Upstash storage
     if (storage === 'upstash' && upstashUrl && upstashToken && configId) {
       try {
-        const tokensKey = `trakt_tokens:${configId}`;
+        const tokensKey = `simkl_tokens:${configId}`;
         await upstashSet(upstashUrl, upstashToken, tokensKey, JSON.stringify(newTokens), 90 * 24 * 60 * 60);
 
         // Update local cache
@@ -1302,7 +1298,7 @@ async function getUserConfigWithTokens(config) {
           if (daysRemaining < 30 && daysRemaining > 0) {
             console.log(`[CONFIG] Upstash token expiring in ${daysRemaining} days, refreshing...`);
             try {
-              const refreshedTokens = await refreshTraktTokens(userConfig);
+              const refreshedTokens = await refreshSimklTokens(userConfig);
               if (refreshedTokens && refreshedTokens.access_token) {
                 Object.assign(userConfig, refreshedTokens);
                 console.log(`[CONFIG] Upstash token refreshed successfully`);
@@ -1321,7 +1317,7 @@ async function getUserConfigWithTokens(config) {
         }
 
         // DIRECT Upstash call (no HTTP to ourselves)
-        const tokensKey = `trakt_tokens:${userConfig.configId}`;
+        const tokensKey = `simkl_tokens:${userConfig.configId}`;
         console.log(`[CONFIG] Direct Upstash call: ${userConfig.upstashUrl}/get/${tokensKey}`);
 
         const tokensJson = await upstashGet(userConfig.upstashUrl, userConfig.upstashToken, tokensKey);
@@ -1355,7 +1351,7 @@ async function getUserConfigWithTokens(config) {
         if (daysRemaining < 30 && daysRemaining > 0) {
           console.log(`[CONFIG] Upstash token expiring in ${daysRemaining} days, refreshing...`);
           try {
-            const refreshedTokens = await refreshTraktTokens(userConfig);
+            const refreshedTokens = await refreshSimklTokens(userConfig);
             if (refreshedTokens && refreshedTokens.access_token) {
               Object.assign(userConfig, refreshedTokens);
               console.log(`[CONFIG] Upstash token refreshed successfully`);
@@ -1408,7 +1404,7 @@ async function getUserConfigWithTokens(config) {
 
 async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, title, season = null, episode = null) {
   try {
-    console.log(`[TRAKT CLEANUP] Checking for duplicates: ${imdbId} ${type}`);
+    console.log(`[SIMKL CLEANUP] Checking for duplicates: ${imdbId} ${type}`);
 
     let deletedCount = 0;
 
@@ -1417,16 +1413,15 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
       // We'll remove all existing history for this movie and re-add it fresh
       // This ensures only one entry exists
 
-      console.log(`[TRAKT CLEANUP] Removing all history for movie: ${title}`);
+      console.log(`[SIMKL CLEANUP] Removing all history for movie: ${title}`);
 
       // First, remove from history
-      const removeResponse = await fetch('https://api.trakt.tv/sync/history/remove', {
+      const removeResponse = await fetch('https://api.simkl.com/sync/history/remove', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
-          'trakt-api-version': '2',
-          'trakt-api-key': clientId,
+          'simkl-api-key': clientId,
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'application/json',
           'Accept-Language': 'en-US,en;q=0.9'
@@ -1437,21 +1432,20 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
       });
 
       if (removeResponse.ok) {
-        console.log(`[TRAKT CLEANUP] Removed existing history for movie`);
+        console.log(`[SIMKL CLEANUP] Removed existing history for movie`);
         deletedCount = 1; // We assume at least one was removed
       }
 
     } else if (type === 'series' && season && episode) {
       // For episodes, use the same approach
-      console.log(`[TRAKT CLEANUP] Removing all history for episode: ${title} S${season}E${episode}`);
+      console.log(`[SIMKL CLEANUP] Removing all history for episode: ${title} S${season}E${episode}`);
 
-      const removeResponse = await fetch('https://api.trakt.tv/sync/history/remove', {
+      const removeResponse = await fetch('https://api.simkl.com/sync/history/remove', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
-          'trakt-api-version': '2',
-          'trakt-api-key': clientId,
+          'simkl-api-key': clientId,
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'application/json',
           'Accept-Language': 'en-US,en;q=0.9'
@@ -1470,7 +1464,7 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
       });
 
       if (removeResponse.ok) {
-        console.log(`[TRAKT CLEANUP] Removed existing history for episode`);
+        console.log(`[SIMKL CLEANUP] Removed existing history for episode`);
         deletedCount = 1;
       }
     }
@@ -1478,7 +1472,7 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
     return deletedCount;
 
   } catch (error) {
-    console.error(`[TRAKT CLEANUP] Error: ${error.message}`);
+    console.error(`[SIMKL CLEANUP] Error: ${error.message}`);
     return 0; // Fail silently
   }
 }
@@ -1487,10 +1481,10 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
 // Trakt API Function (UPDATED with anti-block headers for all actions)
 // ============================================
 
-async function makeTraktRequest(action, type, imdbId, title, userConfig, rating = null, season = null, episode = null) {
+async function makeSimklRequest(action, type, imdbId, title, userConfig, rating = null, season = null, episode = null) {
   try {
-    console.log(`[TRAKT] Making ${action} request for ${type}: ${imdbId} - "${title}"`);
-    console.log(`[TRAKT] Season: ${season}, Episode: ${episode}, Rating: ${rating}`);
+    console.log(`[SIMKL] Making ${action} request for ${type}: ${imdbId} - "${title}"`);
+    console.log(`[SIMKL] Season: ${season}, Episode: ${episode}, Rating: ${rating}`);
 
     const accessToken = userConfig.access_token;
     const clientId = userConfig.clientId;
@@ -1503,8 +1497,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
     const baseHeaders = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${accessToken}`,
-      'trakt-api-version': '2',
-      'trakt-api-key': clientId,
+      'simkl-api-key': clientId,
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': 'application/json',
       'Accept-Language': 'en-US,en;q=0.9'
@@ -1516,17 +1509,17 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
         const keepSingleState = userConfig.keepSingleWatchedState || false;
 
         if (keepSingleState) {
-          console.log(`[TRAKT] Keep single state enabled, cleaning up duplicates first`);
+          console.log(`[SIMKL] Keep single state enabled, cleaning up duplicates first`);
 
           // First, clean up any existing watched states
           try {
             const deletedCount = await deleteOlderWatchedStates(imdbId, type, accessToken, clientId, title, season, episode);
             if (deletedCount > 0) {
-              console.log(`[TRAKT] Cleaned ${deletedCount} duplicate watched states`);
+              console.log(`[SIMKL] Cleaned ${deletedCount} duplicate watched states`);
               cleanupDone = true;
             }
           } catch (cleanupError) {
-            console.log(`[TRAKT] Cleanup failed, continuing with normal watch: ${cleanupError.message}`);
+            console.log(`[SIMKL] Cleanup failed, continuing with normal watch: ${cleanupError.message}`);
             // Continue with normal marking
           }
 
@@ -1535,7 +1528,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
         }
 
         if (type === 'movie') {
-          response = await fetch('https://api.trakt.tv/sync/history', {
+          response = await fetch('https://api.simkl.com/sync/history', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1545,7 +1538,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Marked "${title}" as watched`;
@@ -1553,7 +1546,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
             message += ` (cleaned duplicates)`;
           }
         } else if (type === 'series') {
-          response = await fetch('https://api.trakt.tv/sync/history', {
+          response = await fetch('https://api.simkl.com/sync/history', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1571,7 +1564,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Marked S${season}E${episode} of "${title}" as watched`;
@@ -1583,7 +1576,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
       case 'mark_unwatched':
         if (type === 'movie') {
-          response = await fetch('https://api.trakt.tv/sync/history/remove', {
+          response = await fetch('https://api.simkl.com/sync/history/remove', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1593,12 +1586,12 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Marked "${title}" as unwatched`;
         } else if (type === 'series' && season && episode) {
-          response = await fetch('https://api.trakt.tv/sync/history/remove', {
+          response = await fetch('https://api.simkl.com/sync/history/remove', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1616,7 +1609,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Marked S${season}E${episode} of "${title}" as unwatched`;
@@ -1624,7 +1617,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
         break;
 
       case 'mark_season_watched':
-        response = await fetch('https://api.trakt.tv/sync/history', {
+        response = await fetch('https://api.simkl.com/sync/history', {
           method: 'POST',
           headers: baseHeaders,
           body: JSON.stringify({
@@ -1639,14 +1632,14 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+          throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
         }
 
         message = `Marked Season ${season} of "${title}" as watched`;
         break;
 
       case 'mark_series_watched':
-        response = await fetch('https://api.trakt.tv/sync/history', {
+        response = await fetch('https://api.simkl.com/sync/history', {
           method: 'POST',
           headers: baseHeaders,
           body: JSON.stringify({
@@ -1656,7 +1649,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+          throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
         }
 
         message = `Marked entire "${title}" series as watched`;
@@ -1670,13 +1663,13 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
         if (type === 'movie') {
           // If markAsPlayedOnRate AND keepSingleState are both enabled, clean up first
           if (markAsPlayedOnRate && keepSingleStateForRating) {
-            console.log(`[TRAKT] Rating with markAsPlayedOnRate and keep single state enabled`);
+            console.log(`[SIMKL] Rating with markAsPlayedOnRate and keep single state enabled`);
 
             try {
               // Clean up any existing watched states before rating
               const deletedCount = await deleteOlderWatchedStates(imdbId, type, accessToken, clientId, title, season, episode);
               if (deletedCount > 0) {
-                console.log(`[TRAKT] Cleaned ${deletedCount} duplicate watched states before rating`);
+                console.log(`[SIMKL] Cleaned ${deletedCount} duplicate watched states before rating`);
                 cleanupDone = true;
               }
 
@@ -1684,7 +1677,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
               await new Promise(resolve => setTimeout(resolve, 500));
 
               // Now mark as watched
-              const watchResponse = await fetch('https://api.trakt.tv/sync/history', {
+              const watchResponse = await fetch('https://api.simkl.com/sync/history', {
                 method: 'POST',
                 headers: baseHeaders,
                 body: JSON.stringify({
@@ -1693,18 +1686,18 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
               });
 
               if (!watchResponse.ok) {
-                console.log(`[TRAKT] Failed to mark as watched before rating: ${watchResponse.status}`);
+                console.log(`[SIMKL] Failed to mark as watched before rating: ${watchResponse.status}`);
               } else {
-                console.log(`[TRAKT] Marked as watched before rating`);
+                console.log(`[SIMKL] Marked as watched before rating`);
               }
 
             } catch (cleanupError) {
-              console.log(`[TRAKT] Cleanup before rating failed: ${cleanupError.message}`);
+              console.log(`[SIMKL] Cleanup before rating failed: ${cleanupError.message}`);
             }
           }
 
           // Now do the rating
-          response = await fetch('https://api.trakt.tv/sync/ratings', {
+          response = await fetch('https://api.simkl.com/sync/ratings', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1717,7 +1710,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Rated "${title}" ${rating}/10`;
@@ -1731,13 +1724,13 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
           if (season && episode) {
             // If markAsPlayedOnRate AND keepSingleState are both enabled, clean up first
             if (markAsPlayedOnRate && keepSingleStateForRating) {
-              console.log(`[TRAKT] Rating episode with markAsPlayedOnRate and keep single state enabled`);
+              console.log(`[SIMKL] Rating episode with markAsPlayedOnRate and keep single state enabled`);
 
               try {
                 // Clean up any existing watched states before rating
                 const deletedCount = await deleteOlderWatchedStates(imdbId, type, accessToken, clientId, title, season, episode);
                 if (deletedCount > 0) {
-                  console.log(`[TRAKT] Cleaned ${deletedCount} duplicate watched states before rating`);
+                  console.log(`[SIMKL] Cleaned ${deletedCount} duplicate watched states before rating`);
                   cleanupDone = true;
                 }
 
@@ -1745,7 +1738,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
                 await new Promise(resolve => setTimeout(resolve, 500));
 
                 // Now mark as watched
-                const watchResponse = await fetch('https://api.trakt.tv/sync/history', {
+                const watchResponse = await fetch('https://api.simkl.com/sync/history', {
                   method: 'POST',
                   headers: baseHeaders,
                   body: JSON.stringify({
@@ -1762,17 +1755,17 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
                 });
 
                 if (!watchResponse.ok) {
-                  console.log(`[TRAKT] Failed to mark as watched before rating: ${watchResponse.status}`);
+                  console.log(`[SIMKL] Failed to mark as watched before rating: ${watchResponse.status}`);
                 } else {
-                  console.log(`[TRAKT] Marked as watched before rating`);
+                  console.log(`[SIMKL] Marked as watched before rating`);
                 }
 
               } catch (cleanupError) {
-                console.log(`[TRAKT] Cleanup before rating failed: ${cleanupError.message}`);
+                console.log(`[SIMKL] Cleanup before rating failed: ${cleanupError.message}`);
               }
             }
 
-            response = await fetch('https://api.trakt.tv/sync/ratings', {
+            response = await fetch('https://api.simkl.com/sync/ratings', {
               method: 'POST',
               headers: baseHeaders,
               body: JSON.stringify({
@@ -1791,7 +1784,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
             if (!response.ok) {
               const errorText = await response.text();
-              throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+              throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
             }
 
             message = `Rated S${season}E${episode} of "${title}" ${rating}/10`;
@@ -1803,7 +1796,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
             }
           } else {
             // For series rating (no specific episode)
-            response = await fetch('https://api.trakt.tv/sync/ratings', {
+            response = await fetch('https://api.simkl.com/sync/ratings', {
               method: 'POST',
               headers: baseHeaders,
               body: JSON.stringify({
@@ -1816,7 +1809,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
             if (!response.ok) {
               const errorText = await response.text();
-              throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+              throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
             }
 
             message = `Rated series "${title}" ${rating}/10`;
@@ -1830,7 +1823,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
       // NEW ACTION: Remove rating
       case 'remove_rating':
         if (type === 'movie') {
-          response = await fetch('https://api.trakt.tv/sync/ratings/remove', {
+          response = await fetch('https://api.simkl.com/sync/ratings/remove', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1840,13 +1833,13 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Removed rating for "${title}"`;
         } else if (type === 'series') {
           if (season && episode) {
-            response = await fetch('https://api.trakt.tv/sync/ratings/remove', {
+            response = await fetch('https://api.simkl.com/sync/ratings/remove', {
               method: 'POST',
               headers: baseHeaders,
               body: JSON.stringify({
@@ -1864,12 +1857,12 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
             if (!response.ok) {
               const errorText = await response.text();
-              throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+              throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
             }
 
             message = `Removed rating for S${season}E${episode} of "${title}"`;
           } else {
-            response = await fetch('https://api.trakt.tv/sync/ratings/remove', {
+            response = await fetch('https://api.simkl.com/sync/ratings/remove', {
               method: 'POST',
               headers: baseHeaders,
               body: JSON.stringify({
@@ -1879,7 +1872,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
             if (!response.ok) {
               const errorText = await response.text();
-              throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+              throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
             }
 
             message = `Removed rating for series "${title}"`;
@@ -1890,7 +1883,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
       // Watchlist actions
       case 'add_to_watchlist':
         if (type === 'movie') {
-          response = await fetch('https://api.trakt.tv/sync/watchlist', {
+          response = await fetch('https://api.simkl.com/sync/watchlist', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1900,12 +1893,12 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Added "${title}" to watchlist`;
         } else if (type === 'series') {
-          response = await fetch('https://api.trakt.tv/sync/watchlist', {
+          response = await fetch('https://api.simkl.com/sync/watchlist', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1915,7 +1908,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Added "${title}" series to watchlist`;
@@ -1924,7 +1917,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
       case 'remove_from_watchlist':
         if (type === 'movie') {
-          response = await fetch('https://api.trakt.tv/sync/watchlist/remove', {
+          response = await fetch('https://api.simkl.com/sync/watchlist/remove', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1934,12 +1927,12 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Removed "${title}" from watchlist`;
         } else if (type === 'series') {
-          response = await fetch('https://api.trakt.tv/sync/watchlist/remove', {
+          response = await fetch('https://api.simkl.com/sync/watchlist/remove', {
             method: 'POST',
             headers: baseHeaders,
             body: JSON.stringify({
@@ -1949,7 +1942,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Trakt API error: ${response.status} - ${errorText}`);
+            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
           }
 
           message = `Removed "${title}" series from watchlist`;
@@ -1957,14 +1950,14 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
         break;
     }
 
-    console.log(`[TRAKT] ✅ SUCCESS: ${message}`);
+    console.log(`[SIMKL] �?SUCCESS: ${message}`);
 
     let responseData = {};
     try {
       responseData = await response.json();
-      console.log(`[TRAKT] Response data:`, JSON.stringify(responseData, null, 2));
+      console.log(`[SIMKL] Response data:`, JSON.stringify(responseData, null, 2));
     } catch (e) {
-      console.log(`[TRAKT] No JSON response body`);
+      console.log(`[SIMKL] No JSON response body`);
     }
 
     return {
@@ -1974,7 +1967,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
     };
 
   } catch (error) {
-    console.error(`[TRAKT] ❌ ERROR: ${error.message}`);
+    console.error(`[SIMKL] �?ERROR: ${error.message}`);
     return {
       success: false,
       error: error.message,
@@ -1989,7 +1982,7 @@ async function makeTraktRequest(action, type, imdbId, title, userConfig, rating 
 
 async function createStreamObject(title, action, type, imdbId, rating = null, season = null, episode = null, config = '', year = null, userConfig = null, isCurrentRating = false) {
   let streamTitle;
-  let streamName = "Trakt";
+  let streamName = "Simkl";
 
   // Decode config to get user preferences
   let decodedConfig = userConfig;
@@ -2026,36 +2019,36 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     if (type === 'movie') {
       if (keepSingleState) {
         if (keepSingleStateDisplay === 'none') {
-          streamTitle = `✅ Mark "${title}" as Watched`;
+          streamTitle = `�?Mark "${title}" as Watched`;
         } else if (keepSingleStateDisplay === 'newline') {
-          streamTitle = `✅ Mark "${title}" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+          streamTitle = `�?Mark "${title}" as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
         } else {
-          streamTitle = `✅ Mark "${title}" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+          streamTitle = `�?Mark "${title}" as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
         }
       } else {
-        streamTitle = `✅ Mark "${title}" as Watched`;
+        streamTitle = `�?Mark "${title}" as Watched`;
       }
     } else if (season && episode) {
       if (keepSingleState) {
         if (keepSingleStateDisplay === 'none') {
-          streamTitle = `✅ Mark S${season}E${episode} as Watched`;
+          streamTitle = `�?Mark S${season}E${episode} as Watched`;
         } else if (keepSingleStateDisplay === 'newline') {
-          streamTitle = `✅ Mark S${season}E${episode} as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
+          streamTitle = `�?Mark S${season}E${episode} as Watched\n${keepSingleStateEmoji} Keeps only latest watched state`;
         } else {
-          streamTitle = `✅ Mark S${season}E${episode} as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
+          streamTitle = `�?Mark S${season}E${episode} as Watched ${keepSingleStateEmoji} Keeps only latest watched state`;
         }
       } else {
-        streamTitle = `✅ Mark S${season}E${episode} as Watched`;
+        streamTitle = `�?Mark S${season}E${episode} as Watched`;
       }
     }
-    streamName = "Trakt Marks";
+    streamName = "Simkl Marks";
   } else if (action === 'mark_unwatched') {
     if (type === 'movie') {
-      streamTitle = `❌ Mark "${title}" as Unwatched`;
+      streamTitle = `�?Mark "${title}" as Unwatched`;
     } else if (season && episode) {
-      streamTitle = `❌ Mark S${season}E${episode} as Unwatched`;
+      streamTitle = `�?Mark S${season}E${episode} as Unwatched`;
     }
-    streamName = "Trakt Marks";
+    streamName = "Simkl Marks";
   } else if (action === 'mark_season_watched') {
     if (keepSingleState) {
       if (keepSingleStateDisplay === 'none') {
@@ -2068,7 +2061,7 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     } else {
       streamTitle = `📅 Mark Season ${season} of "${title}" as Watched`;
     }
-    streamName = "Trakt Marks";
+    streamName = "Simkl Marks";
   } else if (action === 'mark_series_watched') {
     if (keepSingleState) {
       if (keepSingleStateDisplay === 'none') {
@@ -2081,27 +2074,27 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     } else {
       streamTitle = `📺 Mark Entire "${title}" Series as Watched`;
     }
-    streamName = "Trakt Marks";
+    streamName = "Simkl Marks";
   } else if (action === 'rate_only') {
     if (isCurrentRating) {
       // Current rating - show as "remove rating"
       streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, true);
-      streamName = "Your Trakt Rating";  // Changed
+      streamName = "Your Simkl Rating";  // Changed
     } else {
       // Regular rating option
       streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, false);
-      streamName = "Rate on Trakt";  // Changed
+      streamName = "Rate on Simkl";  // Changed
     }
   } else if (action === 'remove_rating') {
     // For remove_rating action, show the current rating with remove option
     streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, true);
-    streamName = "Your Trakt Rating";  // Changed
+    streamName = "Your Simkl Rating";  // Changed
   } else if (action === 'add_to_watchlist') {
-    streamTitle = `📥 Add to Watchlist\n${mediaEmoji} "${title}" ${yearText}\n✅ Add ${mediaType} to your Trakt watchlist`;
-    streamName = "Trakt Watchlist";
+    streamTitle = `📥 Add to Watchlist\n${mediaEmoji} "${title}" ${yearText}\n�?Add ${mediaType} to your Simkl watchlist`;
+    streamName = "Simkl Watchlist";
   } else if (action === 'remove_from_watchlist') {
-    streamTitle = `📤 Remove from Watchlist\n${mediaEmoji} "${title}" ${yearText}\n🗑️ Remove ${mediaType} from your Trakt watchlist`;
-    streamName = "Trakt Watchlist";
+    streamTitle = `📤 Remove from Watchlist\n${mediaEmoji} "${title}" ${yearText}\n🗑�?Remove ${mediaType} from your Simkl watchlist`;
+    streamName = "Simkl Watchlist";
   }
 
   const params = new URLSearchParams({
@@ -2115,7 +2108,7 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     episode: episode || ''
   });
 
-  const finalVideoUrl = `${SERVER_URL}/configured/${config}/trakt-action?${params.toString()}`;
+  const finalVideoUrl = `${SERVER_URL}/configured/${config}/simkl-action?${params.toString()}`;
 
   return {
     name: streamName,
@@ -2123,7 +2116,7 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     url: finalVideoUrl,
     behaviorHints: {
       notWebReady: false,
-      bingeGroup: `trakt-${type}-${imdbId}-${action}`
+      bingeGroup: `simkl-${type}-${imdbId}-${action}`
     }
   };
 }
@@ -2190,10 +2183,10 @@ app.get("/manifest.json", (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
   const manifest = {
-    id: "org.stremio.trakt",
+    id: "org.stremio.simkl",
     version: "2.4.0",
-    name: "Trakt Sync & Rate",
-    description: "Sync watched states, rate content, and manage watchlist on Trakt.tv - configure your instance with Upstash Redis for persistent connection",
+    name: "Simkl Sync & Rate",
+    description: "Sync watched states, rate content, and manage watchlist on Simkl.com - configure your instance with Upstash Redis for persistent connection",
     resources: ["stream"],
     types: ["movie", "series"],
     catalogs: [],
@@ -2224,7 +2217,7 @@ app.get("/configured/:config/manifest.json", (req, res) => {
 
   try {
     const userConfig = decodeConfig(config);
-    let username = 'Trakt User';
+    let username = 'Simkl User';
     let showUsername = true;
 
     if (userConfig) {
@@ -2236,16 +2229,16 @@ app.get("/configured/:config/manifest.json", (req, res) => {
       }
     }
 
-    let addonName = "Trakt Sync & Rate";
+    let addonName = "Simkl Sync & Rate";
     if (showUsername && username) {
-      addonName = `Trakt Sync & Rate (${username})`;
+      addonName = `Simkl Sync & Rate (${username})`;
     }
 
     const manifest = {
-      id: `org.stremio.trakt.${config}`,
+      id: `org.stremio.simkl.${config}`,
       version: "2.4.0",
       name: addonName,
-      description: `Sync watched states, rate content, and manage watchlist on Trakt.tv${username ? ` - ${username}'s instance` : ''} with Upstash Redis persistent storage`,
+      description: `Sync watched states, rate content, and manage watchlist on Simkl.com${username ? ` - ${username}'s instance` : ''} with Upstash Redis persistent storage`,
       resources: ["stream"],
       types: ["movie", "series"],
       catalogs: [],
@@ -2264,17 +2257,17 @@ app.get("/configured/:config/manifest.json", (req, res) => {
       contactEmail: ""
     };
 
-    console.log(`[MANIFEST] ✅ Sending configured manifest. Show username: ${showUsername}, Name: "${addonName}"`);
+    console.log(`[MANIFEST] �?Sending configured manifest. Show username: ${showUsername}, Name: "${addonName}"`);
     res.json(manifest);
 
   } catch (error) {
-    console.error(`[MANIFEST] ❌ Error generating manifest: ${error.message}`);
+    console.error(`[MANIFEST] �?Error generating manifest: ${error.message}`);
 
     const fallbackManifest = {
-      id: "org.stremio.trakt",
+      id: "org.stremio.simkl",
       version: "2.4.0",
-      name: "Trakt Sync & Rate",
-      description: "Sync watched states, rate content, and manage watchlist on Trakt.tv",
+      name: "Simkl Sync & Rate",
+      description: "Sync watched states, rate content, and manage watchlist on Simkl.com",
       resources: ["stream"],
       types: ["movie", "series"],
       catalogs: [],
@@ -2507,11 +2500,11 @@ app.get("/configure", (req, res) => {
 // Trakt Action Endpoint (UPDATED with Remove Rating)
 // ============================================
 
-app.get("/configured/:config/trakt-action", async (req, res) => {
+app.get("/configured/:config/simkl-action", async (req, res) => {
   const { config } = req.params;
   const { action, type, imdbId, title, season, episode, rating } = req.query;
 
-  console.log(`[TRAKT-ACTION] Click detected! Executing immediately...`);
+  console.log(`[SIMKL-ACTION] Click detected! Executing immediately...`);
   console.log(`  Action: ${action}, Type: ${type}, IMDb: ${imdbId}`);
   console.log(`  Title: ${decodeURIComponent(title)}`);
 
@@ -2524,7 +2517,7 @@ app.get("/configured/:config/trakt-action", async (req, res) => {
       const userConfig = await getUserConfigWithTokens(config);
 
       if (userConfig && userConfig.access_token) {
-        const result = await makeTraktRequest(
+        const result = await makeSimklRequest(
           action,
           type,
           imdbId,
@@ -2536,19 +2529,19 @@ app.get("/configured/:config/trakt-action", async (req, res) => {
         );
 
         if (result.success) {
-          console.log(`[TRAKT] ✅ ${result.message}`);
+          console.log(`[SIMKL] �?${result.message}`);
 
           // Clear user rating cache after rating action
           const cacheKey = `${imdbId}_${type}_${season || ''}_${episode || ''}_${userConfig.access_token.substring(0, 10)}`;
           userRatingCache.delete(cacheKey);
         } else {
-          console.error(`[TRAKT] ❌ ${result.error}`);
+          console.error(`[SIMKL] �?${result.error}`);
         }
       } else {
-        console.error(`[TRAKT-ACTION] Invalid config or missing access token`);
+        console.error(`[SIMKL-ACTION] Invalid config or missing access token`);
       }
     } catch (error) {
-      console.error(`[TRAKT] Error: ${error.message}`);
+      console.error(`[SIMKL] Error: ${error.message}`);
     }
   }, 100);
 
@@ -2578,7 +2571,7 @@ app.get("/health", (req, res) => {
     oauth_states: oauthStates.size,
     environment: process.env.NODE_ENV || 'development',
     version: '2.4.0',
-    features: 'Upstash Redis, Trakt Sync, Ratings, Watchlist, Keep Single Watched State, Current Rating Display, Remove Rating, Custom Stream Ordering'
+    features: 'Upstash Redis, Simkl Sync, Ratings, Watchlist, Keep Single Watched State, Current Rating Display, Remove Rating, Custom Stream Ordering'
   });
 });
 
@@ -2610,7 +2603,7 @@ app.get("/cleanup", (req, res) => {
 
 if (process.env.NODE_ENV !== 'production' || process.env.RUN_SERVER) {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Trakt Addon Server Started v2.4.0`);
+    console.log(`🚀 Simkl Addon Server Started v2.4.0`);
     console.log(`📋 Configuration: ${SERVER_URL}/configure`);
     console.log(`📦 Default Manifest: ${SERVER_URL}/manifest.json`);
     console.log(`📦 Configured Manifest Example: ${SERVER_URL}/configured/eyJjbGllbnRJZCI6Ii4uLiJ9/manifest.json`);
@@ -2620,19 +2613,19 @@ if (process.env.NODE_ENV !== 'production' || process.env.RUN_SERVER) {
     console.log(`🧪 Health: ${SERVER_URL}/health`);
     console.log(`🧹 Cleanup: ${SERVER_URL}/cleanup`);
     console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`⚡ Server URL: ${SERVER_URL}`);
-    console.log(`🖼️  Images: Logo: ${LOGO_URL}, Background: ${BACKGROUND_URL}`);
+    console.log(`�?Server URL: ${SERVER_URL}`);
+    console.log(`🖼�? Images: Logo: ${LOGO_URL}, Background: ${BACKGROUND_URL}`);
     console.log(`🔧 Features: Watched/Unwatched, Season Watched, Ratings, Watchlist, Keep Single State`);
     console.log(`🎨 Rating Patterns: Original, Pattern 1, Pattern 6`);
-    console.log(`📊 Stats Display: Customizable Trakt stats (choose any 3)`);
+    console.log(`📊 Stats Display: Customizable Simkl stats (choose any 3)`);
     console.log(`🔐 Persistent Storage: Upstash Redis for 90-day token storage`);
     console.log(`⚠️  Fallback System: Local cache when Upstash is unreachable`);
     console.log(`🎬 Video: Using Overseerr wait.mp4 video (proven to work with Stremio)`);
     console.log(`🔄 Keep Single State: Removes duplicates when marking as watched`);
-    console.log(`⭐ Current Rating Display - Shows your existing ratings in Stremio`);
-    console.log(`🗑️  Remove Rating Option - Single stream for removing existing ratings (no duplicates)`);
+    console.log(`�?Current Rating Display - Shows your existing ratings in Stremio`);
+    console.log(`🗑�? Remove Rating Option - Single stream for removing existing ratings (no duplicates)`);
     console.log(`📋 NEW: Custom Stream Ordering - Drag and drop to reorder streams in Stremio`);
-    console.log(`\n✅ IMPORTANT: Fixed user rating error and implemented custom stream ordering!`);
+    console.log(`\n�?IMPORTANT: Fixed user rating error and implemented custom stream ordering!`);
   });
 }
 
