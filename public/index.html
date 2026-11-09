@@ -945,8 +945,9 @@
                     <span class="tooltip" style="margin-left: 5px;">
                         ⓘ
                         <span class="tooltiptext">
-                            Enables IMDb / RT Critics / RT Audience / Metacritic / Letterboxd / MDBList scores.<br>
-                            Your own key; no shared quota. Leave empty to skip MDBList.
+                            When provided, Star ratings in Stremio are synced to your MDBList account<br>
+                            (watchlist / watched remain on Simkl). Read/write user ratings.<br>
+                            Your own key; no shared quota. Leave empty to use Simkl for ratings.
                         </span>
                     </span>
                 </label>
@@ -970,7 +971,7 @@
             </div>
 
             <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
-                <strong>💡 Important:</strong> Without Upstash Redis, Simkl tokens expire every 7 days and you'll need to reconnect. With Upstash, your connection remains persistent. <strong>v2.4.0 now includes "Current Rating Display", "Remove Rating" and "Drag & Drop Stream Ordering" features!</strong>
+                <strong>💡 Important:</strong> Without Upstash Redis, Simkl tokens expire every 7 days and you'll need to reconnect. With Upstash, your connection remains persistent. <strong>v2.4.1 now includes MDBList-primary rating sync: rating writes/reads go to MDBList when a key is set; watched/watchlist stay on Simkl.</strong>
             </div>
         </section>
 

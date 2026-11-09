@@ -426,6 +426,201 @@ async function fetchMdbListInfo(imdbId, type, apiKey) {
   }
 }
 
+function buildMdblistSyncPayload(type, imdbId, season, episode, rating, { remove = false } = {}) {
+  const num = season != null ? parseInt(season, 10) : null;
+  const ep = episode != null ? parseInt(episode, 10) : null;
+  const r = rating == null ? undefined : Number(rating);
+  if (type === 'movie') {
+    const entry = { ids: { imdb: imdbId } };
+    if (!remove && r != null) entry.rating = r;
+    return { movies: [entry] };
+  }
+  if (num != null && ep != null) {
+    const epEntry = { number: ep };
+    if (!remove && r != null) epEntry.rating = r;
+    return { shows: [{ ids: { imdb: imdbId }, seasons: [{ number: num, episodes: [epEntry] }] }] };
+  }
+  const entry = { ids: { imdb: imdbId } };
+  if (!remove && r != null) entry.rating = r;
+  return { shows: [entry] };
+}
+
+// Map action errors returned per-item inside HTTP 200 responses.
+function extractMdblistSyncError(data) {
+  if (!data || !Array.isArray(data.errors) || data.errors.length === 0) return null;
+  const first = data.errors[0];
+  return first?.error || 'MDBList rejected the request';
+}
+
+async function mdblistSetRating(apiKey, type, imdbId, rating, season = null, episode = null) {
+  if (!apiKey) throw new Error('MDBList API key not configured');
+  const body = buildMdblistSyncPayload(type, imdbId, season, episode, rating, { remove: false });
+  const response = await fetch(`https://api.mdblist.com/sync/ratings?apikey=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (response.status === 401) throw new Error('MDBList: invalid API key');
+  if (response.status === 429) throw new Error('MDBList: rate limited (daily quota reached)');
+  if (!response.ok) throw new Error(`MDBList HTTP ${response.status}: ${await response.text()}`);
+  const data = await response.json().catch(() => ({}));
+  const err = extractMdblistSyncError(data);
+  if (err) throw new Error(`MDBList: ${err}`);
+  return data;
+}
+
+async function mdblistRemoveRating(apiKey, type, imdbId, season = null, episode = null) {
+  if (!apiKey) throw new Error('MDBList API key not configured');
+  const body = buildMdblistSyncPayload(type, imdbId, season, episode, null, { remove: true });
+  const response = await fetch(`https://api.mdblist.com/sync/ratings/remove?apikey=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (response.status === 401) throw new Error('MDBList: invalid API key');
+  if (response.status === 429) throw new Error('MDBList: rate limited (daily quota reached)');
+  if (!response.ok) throw new Error(`MDBList HTTP ${response.status}: ${await response.text()}`);
+  const data = await response.json().catch(() => ({}));
+  const err = extractMdblistSyncError(data);
+  if (err) throw new Error(`MDBList: ${err}`);
+  return data;
+}
+
+// MDBList has no "rating for this one title" endpoint: GET /sync/ratings returns the
+// whole user index, paginated (limit caps at 1000, then follow pagination.next_cursor).
+// So we build a per-key rating index on the server and cache it; writes patch it directly
+// so Stremio shows the new rating immediately instead of a stale "not rated".
+const mdblistRatingsIndexCache = new Map();
+const MDBLIST_RATINGS_INDEX_TTL = 10 * 60 * 1000;
+const MDBLIST_RATINGS_PAGE_SIZE = 1000;
+const MDBLIST_RATINGS_MAX_PAGES = 12;
+
+function mdblistRatingKey(type, imdbId, season = null, episode = null) {
+  const num = season != null ? parseInt(season, 10) : null;
+  const ep = episode != null ? parseInt(episode, 10) : null;
+  if (type === 'movie') return `movie:${imdbId}`;
+  if (num != null && ep != null) return `ep:${imdbId}:${num}x${ep}`;
+  if (num != null) return `season:${imdbId}:${num}`;
+  return `show:${imdbId}`;
+}
+
+function mdblistPickRating(entry) {
+  if (!entry) return 0;
+  // rating_precise keeps the .5 steps that rating is rounded on
+  const precise = Number(entry.rating_precise);
+  if (Number.isFinite(precise) && precise > 0) return precise;
+  const rounded = Number(entry.rating);
+  return Number.isFinite(rounded) && rounded > 0 ? rounded : 0;
+}
+
+function mdblistAddEntriesToIndex(index, data) {
+  if (!data) return;
+  for (const item of data.movies || []) {
+    const imdbId = item?.movie?.ids?.imdb;
+    const value = mdblistPickRating(item);
+    if (imdbId && value > 0) index.set(`movie:${imdbId}`, value);
+  }
+  for (const item of data.shows || []) {
+    const imdbId = item?.show?.ids?.imdb;
+    const value = mdblistPickRating(item);
+    if (imdbId && value > 0) index.set(`show:${imdbId}`, value);
+  }
+  for (const item of data.seasons || []) {
+    const showId = item?.season?.show?.ids?.imdb || item?.show?.ids?.imdb;
+    const number = item?.season?.number ?? item?.number;
+    const value = mdblistPickRating(item);
+    if (showId && number != null && value > 0) index.set(`season:${showId}:${number}`, value);
+  }
+  for (const item of data.episodes || []) {
+    const showId = item?.episode?.show?.ids?.imdb || item?.show?.ids?.imdb;
+    const seasonNumber = item?.episode?.season;
+    const epNumber = item?.episode?.number;
+    const value = mdblistPickRating(item);
+    if (showId && seasonNumber != null && epNumber != null && value > 0) {
+      index.set(`ep:${showId}:${seasonNumber}x${epNumber}`, value);
+    }
+  }
+}
+
+async function mdblistBuildRatingsIndex(apiKey) {
+  const index = new Map();
+  let cursor = null;
+  const problems = [];
+
+  for (let page = 0; page < MDBLIST_RATINGS_MAX_PAGES; page++) {
+    const url = new URL('https://api.mdblist.com/sync/ratings');
+    url.searchParams.set('apikey', apiKey);
+    url.searchParams.set('limit', String(MDBLIST_RATINGS_PAGE_SIZE));
+    if (cursor) url.searchParams.set('cursor', cursor);
+
+    const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+    if (response.status === 401) throw new Error('MDBList: invalid API key');
+    if (response.status === 429) {
+      problems.push('MDBList rate limited while loading your ratings');
+      break;
+    }
+    if (!response.ok) throw new Error(`MDBList HTTP ${response.status}`);
+
+    const data = await response.json().catch(() => null);
+    if (!data) break;
+    mdblistAddEntriesToIndex(index, data);
+
+    const pagination = data.pagination || {};
+    if (!pagination.has_more || !pagination.next_cursor || pagination.next_cursor === cursor) break;
+    cursor = pagination.next_cursor;
+  }
+
+  for (const message of problems) console.log(`[MDBLIST] ${message}`);
+  return index;
+}
+
+async function mdblistGetRatingsIndex(apiKey) {
+  const cached = mdblistRatingsIndexCache.get(apiKey);
+  if (cached && (Date.now() - cached.timestamp) < MDBLIST_RATINGS_INDEX_TTL) {
+    // Share one in-flight rebuild between concurrent detail requests
+    if (cached.promise) return cached.promise;
+    return cached.index;
+  }
+
+  const entry = cached || { index: new Map(), timestamp: 0, promise: null };
+  mdblistRatingsIndexCache.set(apiKey, entry);
+  entry.promise = mdblistBuildRatingsIndex(apiKey)
+    .then((index) => {
+      mdblistRatingsIndexCache.set(apiKey, { index, timestamp: Date.now(), promise: null });
+      return index;
+    })
+    .catch((error) => {
+      console.error(`[MDBLIST] Ratings index failed: ${error.message}`);
+      mdblistRatingsIndexCache.set(apiKey, { index: entry.index, timestamp: Date.now(), promise: null });
+      throw error;
+    })
+    .finally(() => {
+      const current = mdblistRatingsIndexCache.get(apiKey);
+      if (current && current.promise === entry.promise) current.promise = null;
+    });
+
+  return entry.promise;
+}
+
+async function mdblistGetUserRating(apiKey, type, imdbId, season = null, episode = null) {
+  const index = await mdblistGetRatingsIndex(apiKey);
+  return index.get(mdblistRatingKey(type, imdbId, season, episode)) || 0;
+}
+
+function mdblistSetCachedRating(apiKey, type, imdbId, season = null, episode = null, rating = 0) {
+  if (!apiKey) return;
+  const cached = mdblistRatingsIndexCache.get(apiKey);
+  if (!cached) return;
+  const key = mdblistRatingKey(type, imdbId, season, episode);
+  if (rating > 0) cached.index.set(key, rating);
+  else cached.index.delete(key);
+  cached.timestamp = Date.now();
+}
+
+function invalidateMdblistRatingsIndex(apiKey) {
+  if (apiKey) mdblistRatingsIndexCache.delete(apiKey);
+}
+
 function mdblistRatingsToMap(info) {
   const map = {};
   if (!info || !Array.isArray(info.ratings)) return map;
@@ -562,8 +757,19 @@ function invalidateUserRatingCache(imdbId, type, accessToken, season = null, epi
   }
 }
 
-async function getUserRating(imdbId, type, accessToken, clientId, season = null, episode = null) {
-  const cacheKey = `${imdbId}_${type}_${season || ''}_${episode || ''}_${accessToken.substring(0, 10)}`;
+async function getUserRating(imdbId, type, accessToken, clientId, season = null, episode = null, userConfig = null) {
+  const mdbKey = userConfig?.mdblistKey || userConfig?.mdblistApiKey;
+  if (mdbKey) {
+    try {
+      const rating = await mdblistGetUserRating(mdbKey, type, imdbId, season, episode);
+      console.log(`[USER RATING] MDBList rating for ${imdbId}: ${rating}`);
+      return rating;
+    } catch (err) {
+      console.error(`[USER RATING] MDBList lookup failed: ${err.message}; falling back to Simkl`);
+    }
+  }
+
+  const cacheKey = `${imdbId}_${type}_${season || ''}_${episode || ''}_${(accessToken || '').substring(0, 10)}`;
   const now = Date.now();
 
   // Check cache
@@ -1837,225 +2043,139 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
         break;
 
       case 'rate_only':
-        // Check if cleanup is enabled for when markAsPlayedOnRate is true
-        const keepSingleStateForRating = userConfig.keepSingleWatchedState || false;
-        const markAsPlayedOnRate = userConfig.markAsPlayedOnRate || false;
-
-        if (type === 'movie') {
-          // If markAsPlayedOnRate AND keepSingleState are both enabled, clean up first
-          if (markAsPlayedOnRate && keepSingleStateForRating) {
-            console.log(`[SIMKL] Rating with markAsPlayedOnRate and keep single state enabled`);
-
-            try {
-              // Clean up any existing watched states before rating
-              const deletedCount = await deleteOlderWatchedStates(imdbId, type, accessToken, clientId, title, season, episode);
-              if (deletedCount > 0) {
-                console.log(`[SIMKL] Cleaned ${deletedCount} duplicate watched states before rating`);
-                cleanupDone = true;
-              }
-
-              // Small delay
-              await new Promise(resolve => setTimeout(resolve, 500));
-
-              // Now mark as watched
-              const watchResponse = await fetch('https://api.simkl.com/sync/history', {
-                method: 'POST',
-                headers: baseHeaders,
-                body: JSON.stringify({
-                  movies: [{ ids: { imdb: imdbId } }]
-                })
-              });
-
-              if (!watchResponse.ok) {
-                console.log(`[SIMKL] Failed to mark as watched before rating: ${watchResponse.status}`);
-              } else {
-                console.log(`[SIMKL] Marked as watched before rating`);
-              }
-
-            } catch (cleanupError) {
-              console.log(`[SIMKL] Cleanup before rating failed: ${cleanupError.message}`);
-            }
+        // MDBList takes priority for rating writes if the user has provided an API key.
+        // markAsPlayedOnRate and keepSingleWatchedState still go to Simkl (watched/seen state).
+        {
+          const mdbKey = userConfig.mdblistKey || userConfig.mdblistApiKey;
+          if (mdbKey) {
+            // Patch the in-memory ratings index immediately so the updated rating
+            // shows up without waiting for a cache expiry or fresh API fetch.
+            mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, Number(rating));
+            await mdblistSetRating(mdbKey, type, imdbId, Number(rating), season, episode);
+            message = type === 'movie'
+              ? `Rated "${title}" ${rating}/10 on MDBList`
+              : season && episode
+                ? `Rated S${season}E${episode} of "${title}" ${rating}/10 on MDBList`
+                : `Rated series "${title}" ${rating}/10 on MDBList`;
+            break;
           }
+          // Fall through to original Simkl flow when no MDBList key is set.
+        }
+        // ↓↓↓ original Simkl rating logic (unchanged) ↓↓↓
+        {
+          const keepSingleStateForRating = userConfig.keepSingleWatchedState || false;
+          const markAsPlayedOnRate = userConfig.markAsPlayedOnRate || false;
 
-          // Now do the rating
-          response = await fetch('https://api.simkl.com/sync/ratings', {
-            method: 'POST',
-            headers: baseHeaders,
-            body: JSON.stringify({
-              movies: [{
-                ids: { imdb: imdbId },
-                rating: parseInt(rating)
-              }]
-            })
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
-          }
-
-          message = `Rated "${title}" ${rating}/10`;
-          if (markAsPlayedOnRate) {
-            message += ` (marked as watched)`;
-            if (cleanupDone) {
-              message += ` and cleaned duplicates`;
-            }
-          }
-        } else if (type === 'series') {
-          if (season && episode) {
-            // If markAsPlayedOnRate AND keepSingleState are both enabled, clean up first
+          if (type === 'movie') {
             if (markAsPlayedOnRate && keepSingleStateForRating) {
-              console.log(`[SIMKL] Rating episode with markAsPlayedOnRate and keep single state enabled`);
-
+              console.log(`[SIMKL] Rating with markAsPlayedOnRate and keep single state enabled`);
               try {
-                // Clean up any existing watched states before rating
                 const deletedCount = await deleteOlderWatchedStates(imdbId, type, accessToken, clientId, title, season, episode);
                 if (deletedCount > 0) {
                   console.log(`[SIMKL] Cleaned ${deletedCount} duplicate watched states before rating`);
                   cleanupDone = true;
                 }
-
-                // Small delay
                 await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Now mark as watched
                 const watchResponse = await fetch('https://api.simkl.com/sync/history', {
-                  method: 'POST',
-                  headers: baseHeaders,
-                  body: JSON.stringify({
-                    shows: [{
-                      ids: { imdb: imdbId },
-                      seasons: [{
-                        number: parseInt(season),
-                        episodes: [{
-                          number: parseInt(episode)
-                        }]
-                      }]
-                    }]
-                  })
+                  method: 'POST', headers: baseHeaders,
+                  body: JSON.stringify({ movies: [{ ids: { imdb: imdbId } }] })
                 });
-
-                if (!watchResponse.ok) {
-                  console.log(`[SIMKL] Failed to mark as watched before rating: ${watchResponse.status}`);
-                } else {
-                  console.log(`[SIMKL] Marked as watched before rating`);
-                }
-
+                if (watchResponse.ok) console.log(`[SIMKL] Marked as watched before rating`);
+                else console.log(`[SIMKL] Failed to mark as watched before rating: ${watchResponse.status}`);
               } catch (cleanupError) {
                 console.log(`[SIMKL] Cleanup before rating failed: ${cleanupError.message}`);
               }
             }
-
             response = await fetch('https://api.simkl.com/sync/ratings', {
-              method: 'POST',
-              headers: baseHeaders,
-              body: JSON.stringify({
-                shows: [{
-                  ids: { imdb: imdbId },
-                  seasons: [{
-                    number: parseInt(season),
-                    episodes: [{
-                      number: parseInt(episode),
-                      rating: parseInt(rating)
-                    }]
-                  }]
-                }]
-              })
+              method: 'POST', headers: baseHeaders,
+              body: JSON.stringify({ movies: [{ ids: { imdb: imdbId }, rating: parseInt(rating) }] })
             });
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
-            }
-
-            message = `Rated S${season}E${episode} of "${title}" ${rating}/10`;
+            if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
+            message = `Rated "${title}" ${rating}/10`;
             if (markAsPlayedOnRate) {
               message += ` (marked as watched)`;
-              if (cleanupDone) {
-                message += ` and cleaned duplicates`;
+              if (cleanupDone) message += ` and cleaned duplicates`;
+            }
+          } else if (type === 'series') {
+            if (season && episode) {
+              if (markAsPlayedOnRate && keepSingleStateForRating) {
+                console.log(`[SIMKL] Rating episode with markAsPlayedOnRate and keep single state enabled`);
+                try {
+                  const deletedCount = await deleteOlderWatchedStates(imdbId, type, accessToken, clientId, title, season, episode);
+                  if (deletedCount > 0) {
+                    console.log(`[SIMKL] Cleaned ${deletedCount} duplicate watched states before rating`);
+                    cleanupDone = true;
+                  }
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  const watchResponse = await fetch('https://api.simkl.com/sync/history', {
+                    method: 'POST', headers: baseHeaders,
+                    body: JSON.stringify({ shows: [{ ids: { imdb: imdbId }, seasons: [{ number: parseInt(season), episodes: [{ number: parseInt(episode) }] }] }] })
+                  });
+                  if (watchResponse.ok) console.log(`[SIMKL] Marked as watched before rating`);
+                  else console.log(`[SIMKL] Failed to mark as watched before rating: ${watchResponse.status}`);
+                } catch (cleanupError) {
+                  console.log(`[SIMKL] Cleanup before rating failed: ${cleanupError.message}`);
+                }
               }
-            }
-          } else {
-            // For series rating (no specific episode)
-            response = await fetch('https://api.simkl.com/sync/ratings', {
-              method: 'POST',
-              headers: baseHeaders,
-              body: JSON.stringify({
-                shows: [{
-                  ids: { imdb: imdbId },
-                  rating: parseInt(rating)
-                }]
-              })
-            });
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
-            }
-
-            message = `Rated series "${title}" ${rating}/10`;
-            if (markAsPlayedOnRate) {
-              message += ` (marked as watched)`;
+              response = await fetch('https://api.simkl.com/sync/ratings', {
+                method: 'POST', headers: baseHeaders,
+                body: JSON.stringify({ shows: [{ ids: { imdb: imdbId }, seasons: [{ number: parseInt(season), episodes: [{ number: parseInt(episode), rating: parseInt(rating) }] }] }] })
+              });
+              if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
+              message = `Rated S${season}E${episode} of "${title}" ${rating}/10`;
+              if (markAsPlayedOnRate) {
+                message += ` (marked as watched)`;
+                if (cleanupDone) message += ` and cleaned duplicates`;
+              }
+            } else {
+              response = await fetch('https://api.simkl.com/sync/ratings', {
+                method: 'POST', headers: baseHeaders,
+                body: JSON.stringify({ shows: [{ ids: { imdb: imdbId }, rating: parseInt(rating) }] })
+              });
+              if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
+              message = `Rated series "${title}" ${rating}/10`;
+              if (markAsPlayedOnRate) message += ` (marked as watched)`;
             }
           }
         }
         break;
 
-      // NEW ACTION: Remove rating
       case 'remove_rating':
+        {
+          const mdbKey = userConfig.mdblistKey || userConfig.mdblistApiKey;
+          if (mdbKey) {
+            mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, 0);
+            await mdblistRemoveRating(mdbKey, type, imdbId, season, episode);
+            message = type === 'movie'
+              ? `Removed rating for "${title}" (MDBList)`
+              : season && episode
+                ? `Removed rating for S${season}E${episode} of "${title}" (MDBList)`
+                : `Removed rating for series "${title}" (MDBList)`;
+            break;
+          }
+        }
+        // ↓↓↓ original Simkl rating removal logic ↓↓↓
         if (type === 'movie') {
           response = await fetch('https://api.simkl.com/sync/ratings/remove', {
-            method: 'POST',
-            headers: baseHeaders,
-            body: JSON.stringify({
-              movies: [{ ids: { imdb: imdbId } }]
-            })
+            method: 'POST', headers: baseHeaders,
+            body: JSON.stringify({ movies: [{ ids: { imdb: imdbId } }] })
           });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
-          }
-
+          if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
           message = `Removed rating for "${title}"`;
         } else if (type === 'series') {
           if (season && episode) {
             response = await fetch('https://api.simkl.com/sync/ratings/remove', {
-              method: 'POST',
-              headers: baseHeaders,
-              body: JSON.stringify({
-                shows: [{
-                  ids: { imdb: imdbId },
-                  seasons: [{
-                    number: parseInt(season),
-                    episodes: [{
-                      number: parseInt(episode)
-                    }]
-                  }]
-                }]
-              })
+              method: 'POST', headers: baseHeaders,
+              body: JSON.stringify({ shows: [{ ids: { imdb: imdbId }, seasons: [{ number: parseInt(season), episodes: [{ number: parseInt(episode) }] }] }] })
             });
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
-            }
-
+            if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
             message = `Removed rating for S${season}E${episode} of "${title}"`;
           } else {
             response = await fetch('https://api.simkl.com/sync/ratings/remove', {
-              method: 'POST',
-              headers: baseHeaders,
-              body: JSON.stringify({
-                shows: [{ ids: { imdb: imdbId } }]
-              })
+              method: 'POST', headers: baseHeaders,
+              body: JSON.stringify({ shows: [{ ids: { imdb: imdbId } }] })
             });
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
-            }
-
+            if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
             message = `Removed rating for series "${title}"`;
           }
         }
@@ -2535,7 +2655,8 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
       userConfig.access_token,
       userConfig.clientId,
       parsedId.season,
-      parsedId.episode
+      parsedId.episode,
+      userConfig
     );
     console.log(`[STREAM] Current rating for ${parsedId.imdbId}: ${currentRating}/10`);
 
@@ -2714,7 +2835,14 @@ app.get("/configured/:config/simkl-action", async (req, res) => {
           // Clear user rating cache after rating action
           const cacheKey = `${imdbId}_${type}_${season || ''}_${episode || ''}_${userConfig.access_token.substring(0, 10)}`;
           userRatingCache.delete(cacheKey);
-      invalidateUserRatingCache(imdbId, type, userConfig.access_token, season, episode);
+          invalidateUserRatingCache(imdbId, type, userConfig.access_token, season, episode);
+
+          const mdbKey = userConfig.mdblistKey || userConfig.mdblistApiKey;
+          if (mdbKey) {
+            const numRating = rating ? Number(rating) : 0;
+            if (action === 'remove_rating') mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, 0);
+            else if (action === 'rate_only') mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, numRating);
+          }
         } else {
           console.error(`[SIMKL] ❌ ${result.error}`);
         }
