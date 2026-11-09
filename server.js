@@ -171,8 +171,10 @@ function decodeConfig(configString) {
 
 // Parse Stremio ID
 function parseStremioId(id, type) {
+  // season/episode are always present and null when unknown: callers compare
+  // them with `!== null`, so leaving them undefined would look like a real value.
   if (type === 'movie' && id.startsWith('tt')) {
-    return { imdbId: id };
+    return { imdbId: id, season: null, episode: null };
   }
 
   if (type === 'series') {
@@ -186,7 +188,7 @@ function parseStremioId(id, type) {
         };
       }
     } else if (id.startsWith('tt')) {
-      return { imdbId: id };
+      return { imdbId: id, season: null, episode: null };
     }
   }
 
@@ -2518,7 +2520,12 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     url: finalVideoUrl,
     behaviorHints: {
       notWebReady: false,
-      bingeGroup: `simkl-${type}-${imdbId}-${action}-${platform || 'simkl'}`
+      // Rating streams must be unique per value, otherwise Stremio's
+      // behaviorHints.dedupe collapses all 10 rating tabs into one.
+      // season/episode are included so episode-level and series-level
+      // rating streams (which share a name like "Rate on Simkl") don't
+      // collide and get deduped into a single tab.
+      bingeGroup: `simkl-${type}-${imdbId}-${action}-${rating || 'none'}-${season ?? 's'}-${episode ?? 'e'}-${platform || 'simkl'}`
     }
   };
 }
@@ -2852,19 +2859,23 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
           break;
 
         case 'rating':
-          if (targets.ratingSyncSimkl) {
-            const s = await createRatingStreams(
-              title, type, parsedId.imdbId, ratings, currentRating,
-              parsedId.season, parsedId.episode, config, year, userConfig, 'simkl'
-            );
-            streams.push(...s);
-          }
-          if (targets.ratingSyncMdblist) {
-            const m = await createRatingStreams(
-              title, type, parsedId.imdbId, ratings, currentRating,
-              parsedId.season, parsedId.episode, config, year, userConfig, 'mdblist'
-            );
-            streams.push(...m);
+          // Episode/movie-level rating. On a series view without a specific
+          // episode, the series_rating case handles the whole-show rating instead.
+          if (type !== 'series' || (parsedId.season !== null && parsedId.episode !== null)) {
+            if (targets.ratingSyncSimkl) {
+              const s = await createRatingStreams(
+                title, type, parsedId.imdbId, ratings, currentRating,
+                parsedId.season, parsedId.episode, config, year, userConfig, 'simkl'
+              );
+              streams.push(...s);
+            }
+            if (targets.ratingSyncMdblist) {
+              const m = await createRatingStreams(
+                title, type, parsedId.imdbId, ratings, currentRating,
+                parsedId.season, parsedId.episode, config, year, userConfig, 'mdblist'
+              );
+              streams.push(...m);
+            }
           }
           break;
 
