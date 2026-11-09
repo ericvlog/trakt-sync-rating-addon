@@ -1913,13 +1913,23 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
 // Simkl API Function (UPDATED with anti-block headers for all actions)
 // ============================================
 
-async function makeSimklRequest(action, type, imdbId, title, userConfig, rating = null, season = null, episode = null) {
+async function makeSimklRequest(action, type, imdbId, title, userConfig, rating = null, season = null, episode = null, platform = 'simkl') {
   try {
-    console.log(`[SIMKL] Making ${action} request for ${type}: ${imdbId} - "${title}"`);
+    console.log(`[SIMKL] Making ${action} request for ${type}: ${imdbId} - "${title}" (platform: ${platform || 'both'})`);
     console.log(`[SIMKL] Season: ${season}, Episode: ${episode}, Rating: ${rating}`);
 
     const accessToken = userConfig.access_token;
     const clientId = userConfig.clientId;
+    const mdbKey = userConfig.mdblistKey || userConfig.mdblistApiKey;
+
+    // Effective sync targets. When the clicked stream belongs to a single platform,
+    // restrict the sync to that platform so each stream tab only writes its own source.
+    let targets = getSyncTargets(userConfig);
+    if (platform === 'simkl') {
+      targets = { ...targets, ratingSyncMdblist: false, watchlistSyncMdblist: false };
+    } else if (platform === 'mdblist') {
+      targets = { ...targets, ratingSyncSimkl: false, watchlistSyncSimkl: false };
+    }
 
     let message = '';
     let response;
@@ -2089,10 +2099,9 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
 
       case 'rate_only':
         {
-          const targets = getSyncTargets(userConfig);
-          const mdbKey = userConfig.mdblistKey || userConfig.mdblistApiKey;
           const tasks = [];
           const successTargets = [];
+          const markAsPlayedOnRate = userConfig.markAsPlayedOnRate || false;
 
           if (targets.ratingSyncMdblist && mdbKey) {
             tasks.push((async () => {
@@ -2105,7 +2114,6 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
           if (targets.ratingSyncSimkl) {
             tasks.push((async () => {
               const keepSingleStateForRating = userConfig.keepSingleWatchedState || false;
-              const markAsPlayedOnRate = userConfig.markAsPlayedOnRate || false;
               if (type === 'movie') {
                 if (markAsPlayedOnRate && keepSingleStateForRating) {
                   console.log(`[SIMKL] Rating with markAsPlayedOnRate and keep single state enabled`);
@@ -2192,111 +2200,137 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
 
       case 'remove_rating':
         {
-          const mdbKey = userConfig.mdblistKey || userConfig.mdblistApiKey;
-          if (mdbKey) {
-            mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, 0);
-            await mdblistRemoveRating(mdbKey, type, imdbId, season, episode);
-            message = type === 'movie'
-              ? `Removed rating for "${title}" (MDBList)`
-              : season && episode
-                ? `Removed rating for S${season}E${episode} of "${title}" (MDBList)`
-                : `Removed rating for series "${title}" (MDBList)`;
-            break;
+          const tasks = [];
+          const successTargets = [];
+
+          if (targets.ratingSyncMdblist && mdbKey) {
+            tasks.push((async () => {
+              mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, 0);
+              await mdblistRemoveRating(mdbKey, type, imdbId, season, episode);
+              successTargets.push('MDBList');
+            })());
           }
-        }
-        // ↓↓↓ original Simkl rating removal logic ↓↓↓
-        if (type === 'movie') {
-          response = await fetch('https://api.simkl.com/sync/ratings/remove', {
-            method: 'POST', headers: baseHeaders,
-            body: JSON.stringify({ movies: [{ ids: { imdb: imdbId } }] })
-          });
-          if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
-          message = `Removed rating for "${title}"`;
-        } else if (type === 'series') {
-          if (season && episode) {
-            response = await fetch('https://api.simkl.com/sync/ratings/remove', {
-              method: 'POST', headers: baseHeaders,
-              body: JSON.stringify({ shows: [{ ids: { imdb: imdbId }, seasons: [{ number: parseInt(season), episodes: [{ number: parseInt(episode) }] }] }] })
-            });
-            if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
-            message = `Removed rating for S${season}E${episode} of "${title}"`;
-          } else {
-            response = await fetch('https://api.simkl.com/sync/ratings/remove', {
-              method: 'POST', headers: baseHeaders,
-              body: JSON.stringify({ shows: [{ ids: { imdb: imdbId } }] })
-            });
-            if (!response.ok) throw new Error(`Simkl API error: ${response.status} - ${await response.text()}`);
-            message = `Removed rating for series "${title}"`;
+
+          if (targets.ratingSyncSimkl) {
+            tasks.push((async () => {
+              let removeResponse;
+              if (type === 'movie') {
+                removeResponse = await fetch('https://api.simkl.com/sync/ratings/remove', {
+                  method: 'POST', headers: baseHeaders,
+                  body: JSON.stringify({ movies: [{ ids: { imdb: imdbId } }] })
+                });
+              } else if (season && episode) {
+                removeResponse = await fetch('https://api.simkl.com/sync/ratings/remove', {
+                  method: 'POST', headers: baseHeaders,
+                  body: JSON.stringify({ shows: [{ ids: { imdb: imdbId }, seasons: [{ number: parseInt(season), episodes: [{ number: parseInt(episode) }] }] }] })
+                });
+              } else {
+                removeResponse = await fetch('https://api.simkl.com/sync/ratings/remove', {
+                  method: 'POST', headers: baseHeaders,
+                  body: JSON.stringify({ shows: [{ ids: { imdb: imdbId } }] })
+                });
+              }
+              if (!removeResponse.ok) throw new Error(`Simkl API error: ${removeResponse.status} - ${await removeResponse.text()}`);
+              successTargets.push('Simkl');
+            })());
           }
+
+          if (tasks.length === 0) {
+            throw new Error('No rating sync target selected or configured');
+          }
+
+          const results = await Promise.allSettled(tasks);
+          const errors = results.filter(r => r.status === 'rejected').map(r => r.reason.message);
+          if (successTargets.length === 0 && errors.length > 0) {
+            throw new Error(errors.join('; '));
+          }
+
+          message = type === 'movie'
+            ? `Removed rating for "${title}" on ${successTargets.join(' & ')}`
+            : season && episode
+              ? `Removed rating for S${season}E${episode} of "${title}" on ${successTargets.join(' & ')}`
+              : `Removed rating for series "${title}" on ${successTargets.join(' & ')}`;
         }
         break;
 
-      // Watchlist actions
+      // Watchlist actions (platform-aware)
       case 'add_to_watchlist':
-        if (type === 'movie') {
-          response = await fetch('https://api.simkl.com/sync/watchlist', {
-            method: 'POST',
-            headers: baseHeaders,
-            body: JSON.stringify({
-              movies: [{ ids: { imdb: imdbId } }]
-            })
-          });
+        {
+          const tasks = [];
+          const successTargets = [];
+          const label = type === 'series' ? `series "${title}"` : `"${title}"`;
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
+          if (targets.watchlistSyncMdblist && mdbKey) {
+            tasks.push((async () => {
+              await mdblistAddToWatchlist(mdbKey, type, imdbId);
+              successTargets.push('MDBList');
+            })());
           }
 
-          message = `Added "${title}" to watchlist`;
-        } else if (type === 'series') {
-          response = await fetch('https://api.simkl.com/sync/watchlist', {
-            method: 'POST',
-            headers: baseHeaders,
-            body: JSON.stringify({
-              shows: [{ ids: { imdb: imdbId } }]
-            })
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
+          if (targets.watchlistSyncSimkl) {
+            tasks.push((async () => {
+              const body = type === 'movie'
+                ? { movies: [{ ids: { imdb: imdbId } }] }
+                : { shows: [{ ids: { imdb: imdbId } }] };
+              const wlResponse = await fetch('https://api.simkl.com/sync/watchlist', {
+                method: 'POST', headers: baseHeaders, body: JSON.stringify(body)
+              });
+              if (!wlResponse.ok) throw new Error(`Simkl API error: ${wlResponse.status} - ${await wlResponse.text()}`);
+              successTargets.push('Simkl');
+            })());
           }
 
-          message = `Added "${title}" series to watchlist`;
+          if (tasks.length === 0) {
+            throw new Error('No watchlist sync target selected or configured');
+          }
+
+          const results = await Promise.allSettled(tasks);
+          const errors = results.filter(r => r.status === 'rejected').map(r => r.reason.message);
+          if (successTargets.length === 0 && errors.length > 0) {
+            throw new Error(errors.join('; '));
+          }
+
+          message = `Added ${label} to watchlist on ${successTargets.join(' & ')}`;
         }
         break;
 
       case 'remove_from_watchlist':
-        if (type === 'movie') {
-          response = await fetch('https://api.simkl.com/sync/watchlist/remove', {
-            method: 'POST',
-            headers: baseHeaders,
-            body: JSON.stringify({
-              movies: [{ ids: { imdb: imdbId } }]
-            })
-          });
+        {
+          const tasks = [];
+          const successTargets = [];
+          const label = type === 'series' ? `series "${title}"` : `"${title}"`;
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
+          if (targets.watchlistSyncMdblist && mdbKey) {
+            tasks.push((async () => {
+              await mdblistRemoveFromWatchlist(mdbKey, type, imdbId);
+              successTargets.push('MDBList');
+            })());
           }
 
-          message = `Removed "${title}" from watchlist`;
-        } else if (type === 'series') {
-          response = await fetch('https://api.simkl.com/sync/watchlist/remove', {
-            method: 'POST',
-            headers: baseHeaders,
-            body: JSON.stringify({
-              shows: [{ ids: { imdb: imdbId } }]
-            })
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Simkl API error: ${response.status} - ${errorText}`);
+          if (targets.watchlistSyncSimkl) {
+            tasks.push((async () => {
+              const body = type === 'movie'
+                ? { movies: [{ ids: { imdb: imdbId } }] }
+                : { shows: [{ ids: { imdb: imdbId } }] };
+              const wlResponse = await fetch('https://api.simkl.com/sync/watchlist/remove', {
+                method: 'POST', headers: baseHeaders, body: JSON.stringify(body)
+              });
+              if (!wlResponse.ok) throw new Error(`Simkl API error: ${wlResponse.status} - ${await wlResponse.text()}`);
+              successTargets.push('Simkl');
+            })());
           }
 
-          message = `Removed "${title}" series from watchlist`;
+          if (tasks.length === 0) {
+            throw new Error('No watchlist sync target selected or configured');
+          }
+
+          const results = await Promise.allSettled(tasks);
+          const errors = results.filter(r => r.status === 'rejected').map(r => r.reason.message);
+          if (successTargets.length === 0 && errors.length > 0) {
+            throw new Error(errors.join('; '));
+          }
+
+          message = `Removed ${label} from watchlist on ${successTargets.join(' & ')}`;
         }
         break;
     }
@@ -2331,9 +2365,9 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
 // Stream Object Creator
 // ============================================
 
-async function createStreamObject(title, action, type, imdbId, rating = null, season = null, episode = null, config = '', year = null, userConfig = null, isCurrentRating = false) {
+async function createStreamObject(title, action, type, imdbId, rating = null, season = null, episode = null, config = '', year = null, userConfig = null, isCurrentRating = false, platform = 'simkl') {
   let streamTitle;
-  let streamName = "Simkl";
+  let streamName = platform === 'mdblist' ? "MDBList" : "Simkl";
 
   // Decode config to get user preferences
   let decodedConfig = userConfig;
@@ -2460,7 +2494,8 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     title: encodeURIComponent(title),
     rating: rating || '',
     season: season || '',
-    episode: episode || ''
+    episode: episode || '',
+    platform: platform || 'simkl'
   });
 
   const finalVideoUrl = `${SERVER_URL}/configured/${config}/simkl-action?${params.toString()}`;
@@ -2480,54 +2515,53 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
 // Stream Creation Helper Functions for Custom Ordering
 // ============================================
 
-async function createCurrentRatingStream(title, type, imdbId, currentRating, season = null, episode = null, config = '', year = null, userConfig = null) {
+async function createCurrentRatingStream(title, type, imdbId, currentRating, season = null, episode = null, config = '', year = null, userConfig = null, platform = 'simkl') {
   if (currentRating > 0) {
-    return [await createStreamObject(title, 'remove_rating', type, imdbId, currentRating, season, episode, config, year, userConfig)];
+    return [await createStreamObject(title, 'remove_rating', type, imdbId, currentRating, season, episode, config, year, userConfig, false, platform)];
   }
   return [];
 }
 
-async function createRatingStreams(title, type, imdbId, ratings, currentRating, season = null, episode = null, config = '', year = null, userConfig = null) {
+async function createRatingStreams(title, type, imdbId, ratings, currentRating, season = null, episode = null, config = '', year = null, userConfig = null, platform = 'simkl') {
   const streams = [];
   if (ratings && ratings.length > 0) {
     for (const rating of ratings) {
-      // Only show rating if different from current rating or if currentRating is 0
       if (currentRating === 0 || currentRating !== rating) {
-        streams.push(await createStreamObject(title, 'rate_only', type, imdbId, rating, season, episode, config, year, userConfig, false));
+        streams.push(await createStreamObject(title, 'rate_only', type, imdbId, rating, season, episode, config, year, userConfig, false, platform));
       }
     }
   }
   return streams;
 }
 
-async function createWatchedStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null) {
-  return [await createStreamObject(title, 'mark_watched', type, imdbId, null, season, episode, config, year, userConfig)];
+async function createWatchedStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null, platform = 'simkl') {
+  return [await createStreamObject(title, 'mark_watched', type, imdbId, null, season, episode, config, year, userConfig, false, platform)];
 }
 
-async function createSeasonWatchedStream(title, type, imdbId, season = null, config = '', year = null, userConfig = null) {
+async function createSeasonWatchedStream(title, type, imdbId, season = null, config = '', year = null, userConfig = null, platform = 'simkl') {
   if (type === 'series' && season !== null) {
-    return [await createStreamObject(title, 'mark_season_watched', type, imdbId, null, season, null, config, year, userConfig)];
+    return [await createStreamObject(title, 'mark_season_watched', type, imdbId, null, season, null, config, year, userConfig, false, platform)];
   }
   return [];
 }
 
-async function createSeriesWatchedStream(title, type, imdbId, config = '', year = null, userConfig = null) {
+async function createSeriesWatchedStream(title, type, imdbId, config = '', year = null, userConfig = null, platform = 'simkl') {
   if (type === 'series') {
-    return [await createStreamObject(title, 'mark_series_watched', type, imdbId, null, null, null, config, year, userConfig)];
+    return [await createStreamObject(title, 'mark_series_watched', type, imdbId, null, null, null, config, year, userConfig, false, platform)];
   }
   return [];
 }
 
-async function createAddToWatchlistStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null) {
-  return [await createStreamObject(title, 'add_to_watchlist', type, imdbId, null, season, episode, config, year, userConfig)];
+async function createAddToWatchlistStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null, platform = 'simkl') {
+  return [await createStreamObject(title, 'add_to_watchlist', type, imdbId, null, season, episode, config, year, userConfig, false, platform)];
 }
 
-async function createRemoveFromWatchlistStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null) {
-  return [await createStreamObject(title, 'remove_from_watchlist', type, imdbId, null, season, episode, config, year, userConfig)];
+async function createRemoveFromWatchlistStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null, platform = 'simkl') {
+  return [await createStreamObject(title, 'remove_from_watchlist', type, imdbId, null, season, episode, config, year, userConfig, false, platform)];
 }
 
-async function createUnwatchedStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null) {
-  return [await createStreamObject(title, 'mark_unwatched', type, imdbId, null, season, episode, config, year, userConfig)];
+async function createUnwatchedStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null, platform = 'simkl') {
+  return [await createStreamObject(title, 'mark_unwatched', type, imdbId, null, season, episode, config, year, userConfig, false, platform)];
 }
 
 // ============================================
@@ -2752,20 +2786,38 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
       switch (streamType) {
         case 'current_rating':
           if (showCurrentRating && currentRating > 0 && enableRemoveRating) {
-            const currentRatingStreams = await createCurrentRatingStream(
-              title, type, parsedId.imdbId, currentRating,
-              parsedId.season, parsedId.episode, config, year, userConfig
-            );
-            streams.push(...currentRatingStreams);
+            if (targets.ratingSyncSimkl) {
+              const s = await createCurrentRatingStream(
+                title, type, parsedId.imdbId, currentRating,
+                parsedId.season, parsedId.episode, config, year, userConfig, 'simkl'
+              );
+              streams.push(...s);
+            }
+            if (targets.ratingSyncMdblist) {
+              const m = await createCurrentRatingStream(
+                title, type, parsedId.imdbId, currentRating,
+                parsedId.season, parsedId.episode, config, year, userConfig, 'mdblist'
+              );
+              streams.push(...m);
+            }
           }
           break;
 
         case 'rating':
-          const ratingStreams = await createRatingStreams(
-            title, type, parsedId.imdbId, ratings, currentRating,
-            parsedId.season, parsedId.episode, config, year, userConfig
-          );
-          streams.push(...ratingStreams);
+          if (targets.ratingSyncSimkl) {
+            const s = await createRatingStreams(
+              title, type, parsedId.imdbId, ratings, currentRating,
+              parsedId.season, parsedId.episode, config, year, userConfig, 'simkl'
+            );
+            streams.push(...s);
+          }
+          if (targets.ratingSyncMdblist) {
+            const m = await createRatingStreams(
+              title, type, parsedId.imdbId, ratings, currentRating,
+              parsedId.season, parsedId.episode, config, year, userConfig, 'mdblist'
+            );
+            streams.push(...m);
+          }
           break;
 
         case 'watched':
@@ -2798,21 +2850,39 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
 
         case 'add_to_watchlist':
           if (enableWatchlist) {
-            const addWatchlistStreams = await createAddToWatchlistStream(
-              title, type, parsedId.imdbId,
-              parsedId.season, parsedId.episode, config, year, userConfig
-            );
-            streams.push(...addWatchlistStreams);
+            if (targets.watchlistSyncSimkl) {
+              const s = await createAddToWatchlistStream(
+                title, type, parsedId.imdbId,
+                parsedId.season, parsedId.episode, config, year, userConfig, 'simkl'
+              );
+              streams.push(...s);
+            }
+            if (targets.watchlistSyncMdblist) {
+              const m = await createAddToWatchlistStream(
+                title, type, parsedId.imdbId,
+                parsedId.season, parsedId.episode, config, year, userConfig, 'mdblist'
+              );
+              streams.push(...m);
+            }
           }
           break;
 
         case 'remove_from_watchlist':
           if (enableRemoveFromWatchlist) {
-            const removeWatchlistStreams = await createRemoveFromWatchlistStream(
-              title, type, parsedId.imdbId,
-              parsedId.season, parsedId.episode, config, year, userConfig
-            );
-            streams.push(...removeWatchlistStreams);
+            if (targets.watchlistSyncSimkl) {
+              const s = await createRemoveFromWatchlistStream(
+                title, type, parsedId.imdbId,
+                parsedId.season, parsedId.episode, config, year, userConfig, 'simkl'
+              );
+              streams.push(...s);
+            }
+            if (targets.watchlistSyncMdblist) {
+              const m = await createRemoveFromWatchlistStream(
+                title, type, parsedId.imdbId,
+                parsedId.season, parsedId.episode, config, year, userConfig, 'mdblist'
+              );
+              streams.push(...m);
+            }
           }
           break;
 
