@@ -2373,19 +2373,21 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     }
     streamName = "Simkl Marks";
   } else if (action === 'rate_only') {
+    const hasMdbKey = !!(decodedConfig?.mdblistKey || decodedConfig?.mdblistApiKey);
     if (isCurrentRating) {
       // Current rating - show as "remove rating"
       streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, true);
-      streamName = "Your Simkl Rating";  // Changed
+      streamName = hasMdbKey ? "Your MDBList Rating" : "Your Simkl Rating";  // Changed
     } else {
       // Regular rating option
       streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, false);
-      streamName = "Rate on Simkl";  // Changed
+      streamName = hasMdbKey ? "Rate on MDBList" : "Rate on Simkl";  // Changed
     }
   } else if (action === 'remove_rating') {
     // For remove_rating action, show the current rating with remove option
+    const hasMdbKey = !!(decodedConfig?.mdblistKey || decodedConfig?.mdblistApiKey);
     streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, true);
-    streamName = "Your Simkl Rating";  // Changed
+    streamName = hasMdbKey ? "Your MDBList Rating" : "Your Simkl Rating";  // Changed
   } else if (action === 'add_to_watchlist') {
     streamTitle = `📥 Add to Watchlist\n${mediaEmoji} "${title}" ${yearText}\n✅ Add ${mediaType} to your Simkl watchlist`;
     streamName = "Simkl Watchlist";
