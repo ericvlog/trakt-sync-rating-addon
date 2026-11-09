@@ -1225,6 +1225,8 @@ app.get('/oauth/initiate', (req, res) => {
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('code_challenge', challenge);
   authUrl.searchParams.set('code_challenge_method', 'S256');
+  // Simkl requires media:read media:write to write ratings / watched / watchlist.
+  authUrl.searchParams.set('scope', 'media:read media:write');
   res.redirect(authUrl.toString());
 });
 
