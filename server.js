@@ -651,12 +651,21 @@ function getSyncTargets(userConfig) {
 
   // New single-toggle-per-platform layout (syncSimkl / syncMdblist).
   // Backwards compatible: fall back to the old per-action flags if present.
-  const syncSimkl = userConfig.syncSimkl !== undefined
-    ? userConfig.syncSimkl
-    : !!(userConfig.syncSimklRating || userConfig.syncSimklWatchlist);
-  const syncMdblist = userConfig.syncMdblist !== undefined
-    ? userConfig.syncMdblist
-    : !!(userConfig.syncMdblistRating || userConfig.syncMdblistWatchlist);
+  // If no sync flags exist at all (very old config), default to Simkl on.
+  const hasNewFlags = userConfig.syncSimkl !== undefined || userConfig.syncMdblist !== undefined;
+  const hasOldFlags = !!(userConfig.ratingSyncSimkl || userConfig.ratingSyncMdblist
+    || userConfig.watchlistSyncSimkl || userConfig.watchlistSyncMdblist
+    || userConfig.syncSimklRating || userConfig.syncMdblistRating
+    || userConfig.syncSimklWatchlist || userConfig.syncMdblistWatchlist);
+
+  const syncSimkl = hasNewFlags
+    ? !!userConfig.syncSimkl
+    : (hasOldFlags ? !!(userConfig.syncSimklRating || userConfig.syncSimklWatchlist
+      || userConfig.ratingSyncSimkl || userConfig.watchlistSyncSimkl) : true);
+  const syncMdblist = hasNewFlags
+    ? !!userConfig.syncMdblist
+    : !!(userConfig.syncMdblistRating || userConfig.syncMdblistWatchlist
+      || userConfig.ratingSyncMdblist || userConfig.watchlistSyncMdblist);
 
   const ratingSyncSimkl = !!(syncSimkl && hasSimkl);
   const ratingSyncMdblist = !!(syncMdblist && hasMdb);
