@@ -2829,6 +2829,18 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
       ]
     } = userConfig;
 
+    // Older addon URLs embed a streamOrder without the newer stream types.
+    // Backfill them next to their closest relative so existing installs keep working.
+    const streamOrderBackfill = [
+      { type: 'series_current_rating', after: 'current_rating' },
+      { type: 'series_rating', after: 'rating' }
+    ];
+    for (const { type: missing, after } of streamOrderBackfill) {
+      if (streamOrder.includes(missing)) continue;
+      const anchor = streamOrder.indexOf(after);
+      streamOrder.splice(anchor === -1 ? streamOrder.length : anchor + 1, 0, missing);
+    }
+
     const targets = getSyncTargets(userConfig);
     console.log(`[STREAM] Config - Watched: ${markAsWatched}, Unwatched: ${markAsUnwatched}, Ratings: ${ratings.length}, Season: ${enableSeasonWatched}, Watchlist: ${enableWatchlist}, KeepSingleState: ${keepSingleWatchedState}, ShowCurrentRating: ${showCurrentRating}, EnableRemoveRating: ${enableRemoveRating}`);
     console.log(`[STREAM] Stream Order: ${streamOrder.join(', ')}`);
