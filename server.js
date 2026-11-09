@@ -658,14 +658,16 @@ function getSyncTargets(userConfig) {
     || userConfig.syncSimklRating || userConfig.syncMdblistRating
     || userConfig.syncSimklWatchlist || userConfig.syncMdblistWatchlist);
 
+  // No flags at all = config generated before Sync Destinations existed.
+  // Fall back to the historical behaviour: Simkl always on, MDBList on when a key is set.
   const syncSimkl = hasNewFlags
     ? !!userConfig.syncSimkl
     : (hasOldFlags ? !!(userConfig.syncSimklRating || userConfig.syncSimklWatchlist
       || userConfig.ratingSyncSimkl || userConfig.watchlistSyncSimkl) : true);
   const syncMdblist = hasNewFlags
     ? !!userConfig.syncMdblist
-    : !!(userConfig.syncMdblistRating || userConfig.syncMdblistWatchlist
-      || userConfig.ratingSyncMdblist || userConfig.watchlistSyncMdblist);
+    : (hasOldFlags ? !!(userConfig.syncMdblistRating || userConfig.syncMdblistWatchlist
+      || userConfig.ratingSyncMdblist || userConfig.watchlistSyncMdblist) : hasMdb);
 
   const ratingSyncSimkl = !!(syncSimkl && hasSimkl);
   const ratingSyncMdblist = !!(syncMdblist && hasMdb);
@@ -1922,7 +1924,7 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
 // Simkl API Function (UPDATED with anti-block headers for all actions)
 // ============================================
 
-async function makeSimklRequest(action, type, imdbId, title, userConfig, rating = null, season = null, episode = null, platform = 'simkl') {
+async function makeSimklRequest(action, type, imdbId, title, userConfig, rating = null, season = null, episode = null, platform = null) {
   try {
     console.log(`[SIMKL] Making ${action} request for ${type}: ${imdbId} - "${title}" (platform: ${platform || 'both'})`);
     console.log(`[SIMKL] Season: ${season}, Episode: ${episode}, Rating: ${rating}`);
@@ -2942,10 +2944,10 @@ app.get("/configure", (req, res) => {
 
 app.get("/configured/:config/simkl-action", async (req, res) => {
   const { config } = req.params;
-  const { action, type, imdbId, title, season, episode, rating } = req.query;
+  const { action, type, imdbId, title, season, episode, rating, platform } = req.query;
 
   console.log(`[SIMKL-ACTION] Click detected! Executing immediately...`);
-  console.log(`  Action: ${action}, Type: ${type}, IMDb: ${imdbId}`);
+  console.log(`  Action: ${action}, Type: ${type}, IMDb: ${imdbId}, Platform: ${platform || 'both'}`);
   console.log(`  Title: ${decodeURIComponent(title)}`);
 
   // Using the proven working video URL from Overseerr
@@ -2965,19 +2967,19 @@ app.get("/configured/:config/simkl-action", async (req, res) => {
           userConfig,
           rating,
           season,
-          episode
+          episode,
+          platform
         );
 
         if (result.success) {
           console.log(`[SIMKL] ✅ ${result.message}`);
 
           // Clear user rating cache after rating action
-          const cacheKey = `${imdbId}_${type}_${season || ''}_${episode || ''}_${userConfig.access_token.substring(0, 10)}`;
-          userRatingCache.delete(cacheKey);
           invalidateUserRatingCache(imdbId, type, userConfig.access_token, season, episode);
 
+          // Only touch the MDBList rating cache when MDBList was actually written to
           const mdbKey = userConfig.mdblistKey || userConfig.mdblistApiKey;
-          if (mdbKey) {
+          if (mdbKey && platform !== 'simkl') {
             const numRating = rating ? Number(rating) : 0;
             if (action === 'remove_rating') mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, 0);
             else if (action === 'rate_only') mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, numRating);
