@@ -817,7 +817,49 @@
         </header>
 
         <!-- Authentication Section -->
-        <section class="section">
+        <!-- Sync Destinations Section -->
+        <section class="section" id="syncDestinationsSection">
+            <h2 class="section-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                Sync Destinations
+            </h2>
+            <div class="feature-description" style="margin-bottom: 15px;">
+                Choose where your actions should be synced. You can sync to Simkl, MDBList, or both simultaneously.
+            </div>
+
+            <div class="form-group">
+                <label><strong>Rating Sync Destination</strong></label>
+                <div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="ratingSyncSimkl" checked>
+                        <span>Simkl</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="ratingSyncMdblist">
+                        <span>MDBList</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><strong>Watchlist Sync Destination</strong></label>
+                <div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="watchlistSyncSimkl" checked>
+                        <span>Simkl</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="watchlistSyncMdblist">
+                        <span>MDBList</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="authStorageSection">
             <h2 class="section-title">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
@@ -880,63 +922,66 @@
                 <span id="upstashStatus" style="margin-left: 10px; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem;"></span>
             </div>
 
-            <!-- Simkl Client ID (now above Client Secret) -->
-            <div class="form-group">
-                <label for="clientId">
-                    Simkl Client ID
-                    <a href="https://api.simkl.com" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
-                        (Get it here)
-                    </a>
-                    <span class="tooltip" style="margin-left: 5px;">
-                        ⓘ
-                        <span class="tooltiptext">
-                            Steps:<br>
-                            1. Click "NEW APPLICATION"<br>
-                            2. Name: "Stremio Simkl Addon"<br>
-                            3. Redirect URI: use your deployed HTTPS callback URL ending in <code>/oauth/callback</code><br>
-                            4. Copy the Client ID
+            <!-- Simkl Auth Container -->
+            <div id="simklAuthContainer">
+                <!-- Simkl Client ID (now above Client Secret) -->
+                <div class="form-group">
+                    <label for="clientId">
+                        Simkl Client ID
+                        <a href="https://api.simkl.com" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
+                            (Get it here)
+                        </a>
+                        <span class="tooltip" style="margin-left: 5px;">
+                            ⓘ
+                            <span class="tooltiptext">
+                                Steps:<br>
+                                1. Click "NEW APPLICATION"<br>
+                                2. Name: "Stremio Simkl Addon"<br>
+                                3. Redirect URI: use your deployed HTTPS callback URL ending in <code>/oauth/callback</code><br>
+                                4. Copy the Client ID
+                            </span>
                         </span>
-                    </span>
-                </label>
-                <input type="text" id="clientId" placeholder="Enter your Simkl Client ID">
+                    </label>
+                    <input type="text" id="clientId" placeholder="Enter your Simkl Client ID">
+                </div>
+
+                <!-- Simkl Client Secret (required for server apps) -->
+                <div class="form-group">
+                    <label for="clientSecret">
+                        Simkl Client Secret (required for server apps)
+                        <a href="https://api.simkl.com" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
+                            (Get it here)
+                        </a>
+                        <span class="tooltip" style="margin-left: 5px;">
+                            ⓘ
+                            <span class="tooltiptext">
+                                Required for OAuth token exchange.<br>
+                                Find it in your Simkl app settings.
+                            </span>
+                        </span>
+                    </label>
+                    <input type="password" id="clientSecret" placeholder="Enter your Simkl Client Secret">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn" onclick="startAuth()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        Connect to Simkl
+                    </button>
+                </div>
+
+                <div id="mainAuthStatus" class="status status-warning">
+                    <span class="upstash-indicator upstash-warning"></span>
+                    Not connected to Simkl
+                </div>
             </div>
 
-            <!-- Simkl Client Secret (required for server apps) -->
-            <div class="form-group">
-                <label for="clientSecret">
-                    Simkl Client Secret (required for server apps)
-                    <a href="https://api.simkl.com" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
-                        (Get it here)
-                    </a>
-                    <span class="tooltip" style="margin-left: 5px;">
-                        ⓘ
-                        <span class="tooltiptext">
-                            Required for OAuth token exchange.<br>
-                            Find it in your Simkl app settings.
-                        </span>
-                    </span>
-                </label>
-                <input type="password" id="clientSecret" placeholder="Enter your Simkl Client Secret">
-            </div>
-
-            <div class="form-group">
-                <label for="tmdbKey">
-                    TMDB API Key (Optional)
-                    <a href="https://www.themoviedb.org/settings/api" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
-                        (Get it here)
-                    </a>
-                    <span class="tooltip" style="margin-left: 5px;">
-                        ⓘ
-                        <span class="tooltiptext">
-                            Used to fetch movie/show titles for better display.<br>
-                            Not required for basic functionality.
-                        </span>
-                    </span>
-                </label>
-                <input type="password" id="tmdbKey" placeholder="Enter TMDB API Key (optional)">
-            </div>
-
-            <div class="form-group">
+            <!-- MDBList Key Container -->
+            <div id="mdbKeyContainer" class="form-group">
                 <label for="mdbKey">
                     MDBList API Key (Optional)
                     <a href="https://mdblist.com/preferences/#api" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
@@ -954,27 +999,28 @@
                 <input type="password" id="mdbKey" placeholder="Enter your MDBList API Key (optional)">
             </div>
 
-            <div class="btn-group">
-                <button class="btn" onclick="startAuth()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                        <polyline points="10 17 15 12 10 7"/>
-                        <line x1="15" y1="12" x2="3" y2="12"/>
-                    </svg>
-                    Connect to Simkl
-                </button>
-            </div>
-
-            <div id="mainAuthStatus" class="status status-warning">
-                <span class="upstash-indicator upstash-warning"></span>
-                Not connected to Simkl
+            <!-- TMDB Key Group -->
+            <div id="tmdbKeyContainer" class="form-group">
+                <label for="tmdbKey">
+                    TMDB API Key (Optional)
+                    <a href="https://www.themoviedb.org/settings/api" target="_blank" class="info-link" style="margin-left: 5px; text-decoration: none; border-bottom: 1px dashed #60a5fa;">
+                        (Get it here)
+                    </a>
+                    <span class="tooltip" style="margin-left: 5px;">
+                        ⓘ
+                        <span class="tooltiptext">
+                            Used to fetch movie/show titles for better display.<br>
+                            Not required for basic functionality.
+                        </span>
+                    </span>
+                </label>
+                <input type="password" id="tmdbKey" placeholder="Enter TMDB API Key (optional)">
             </div>
 
             <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
                 <strong>💡 Important:</strong> Without Upstash Redis, Simkl tokens expire every 7 days and you'll need to reconnect. With Upstash, your connection remains persistent. <strong>v2.4.1 now includes MDBList-primary rating sync: rating writes/reads go to MDBList when a key is set; watched/watchlist stay on Simkl.</strong>
             </div>
         </section>
-
         <!-- Addon Settings Section -->
         <section class="section">
             <h2 class="section-title">
@@ -2975,6 +3021,8 @@
                     if (data.ratingSyncMdblist !== undefined) ratingSyncMdblistCheckbox.checked = data.ratingSyncMdblist;
                     if (data.watchlistSyncSimkl !== undefined) watchlistSyncSimklCheckbox.checked = data.watchlistSyncSimkl;
                     if (data.watchlistSyncMdblist !== undefined) watchlistSyncMdblistCheckbox.checked = data.watchlistSyncMdblist;
+
+                    updateFieldVisibility();
                     if (data.previewRatingValue) {
                         previewRatingValue = data.previewRatingValue;
                         ratingSlider.value = previewRatingValue;
@@ -3120,6 +3168,29 @@
             }
             return new TextDecoder().decode(bytes);
         }
+        function updateFieldVisibility() {
+            const needSimkl = ratingSyncSimklCheckbox.checked || watchlistSyncSimklCheckbox.checked;
+            const needMdb = ratingSyncMdblistCheckbox.checked || watchlistSyncMdblistCheckbox.checked;
+
+            const simklEl = document.getElementById('simklAuthContainer');
+            const mdbEl = document.getElementById('mdbKeyContainer');
+
+            if (simklEl) simklEl.style.display = needSimkl ? 'block' : 'none';
+            if (mdbEl) mdbEl.style.display = needMdb ? 'block' : 'none';
+        }
+
+        [ratingSyncSimklCheckbox, ratingSyncMdblistCheckbox, watchlistSyncSimklCheckbox, watchlistSyncMdblistCheckbox].forEach(cb => {
+            if (cb) {
+                cb.addEventListener('change', () => {
+                    updateFieldVisibility();
+                    saveData();
+                    generateAddonUrl();
+                });
+            }
+        });
+
+        // Initial check on load
+        updateFieldVisibility();
     </script>
 </body>
 </html>
