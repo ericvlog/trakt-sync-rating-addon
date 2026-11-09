@@ -2408,15 +2408,9 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
   const keepSingleState = decodedConfig?.keepSingleWatchedState || false;
 
   const targets = getSyncTargets(decodedConfig);
-  let ratingProviderLabel = "Simkl";
-  if (targets.ratingSyncSimkl && targets.ratingSyncMdblist) ratingProviderLabel = "Simkl & MDBList";
-  else if (targets.ratingSyncMdblist) ratingProviderLabel = "MDBList";
-  else ratingProviderLabel = "Simkl";
-
-  let watchlistProviderLabel = "Simkl";
-  if (targets.watchlistSyncSimkl && targets.watchlistSyncMdblist) watchlistProviderLabel = "Simkl & MDBList";
-  else if (targets.watchlistSyncMdblist) watchlistProviderLabel = "MDBList";
-  else watchlistProviderLabel = "Simkl";
+  // Each stream is generated per-platform, so label it with its own platform.
+  const ratingProviderLabel = platform === 'mdblist' ? "MDBList" : "Simkl";
+  const watchlistProviderLabel = platform === 'mdblist' ? "MDBList" : "Simkl";
 
   if (action === 'mark_watched') {
     if (type === 'movie') {
@@ -2517,7 +2511,7 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     url: finalVideoUrl,
     behaviorHints: {
       notWebReady: false,
-      bingeGroup: `simkl-${type}-${imdbId}-${action}`
+      bingeGroup: `simkl-${type}-${imdbId}-${action}-${platform || 'simkl'}`
     }
   };
 }
