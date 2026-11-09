@@ -2477,16 +2477,19 @@ async function createStreamObject(title, action, type, imdbId, rating = null, se
     }
     streamName = "Simkl Marks";
   } else if (action === 'rate_only') {
+    // A series stream with no season/episode rates the whole show instead of one episode.
+    const isSeriesLevel = type === 'series' && !season && !episode;
     if (isCurrentRating) {
       streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, true);
-      streamName = `Your ${ratingProviderLabel} Rating`;
+      streamName = isSeriesLevel ? `Your ${ratingProviderLabel} Series Rating` : `Your ${ratingProviderLabel} Rating`;
     } else {
       streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, false);
-      streamName = `Rate on ${ratingProviderLabel}`;
+      streamName = isSeriesLevel ? `Rate Series on ${ratingProviderLabel}` : `Rate on ${ratingProviderLabel}`;
     }
   } else if (action === 'remove_rating') {
+    const isSeriesLevel = type === 'series' && !season && !episode;
     streamTitle = await formatRatingTitle(ratingPattern, ratingStyle, rating, title, type, season, episode, year, decodedConfig, imdbId, true);
-    streamName = `Your ${ratingProviderLabel} Rating`;
+    streamName = isSeriesLevel ? `Your ${ratingProviderLabel} Series Rating` : `Your ${ratingProviderLabel} Rating`;
   } else if (action === 'add_to_watchlist') {
     streamTitle = `📥 Add to Watchlist\n${mediaEmoji} "${title}" ${yearText}\n✅ Add ${mediaType} to your ${watchlistProviderLabel} watchlist`;
     streamName = `${watchlistProviderLabel} Watchlist`;
@@ -2545,6 +2548,25 @@ async function createRatingStreams(title, type, imdbId, ratings, currentRating, 
 
 async function createWatchedStream(title, type, imdbId, season = null, episode = null, config = '', year = null, userConfig = null, platform = 'simkl') {
   return [await createStreamObject(title, 'mark_watched', type, imdbId, null, season, episode, config, year, userConfig, false, platform)];
+}
+
+// Whole-series rating: season/episode are omitted so the write targets the show itself.
+async function createSeriesRatingStreams(title, type, imdbId, ratings, seriesCurrentRating, config = '', year = null, userConfig = null, platform = 'simkl') {
+  if (type !== 'series') return [];
+  const streams = [];
+  if (ratings && ratings.length > 0) {
+    for (const rating of ratings) {
+      if (seriesCurrentRating === 0 || seriesCurrentRating !== rating) {
+        streams.push(await createStreamObject(title, 'rate_only', type, imdbId, rating, null, null, config, year, userConfig, false, platform));
+      }
+    }
+  }
+  return streams;
+}
+
+async function createSeriesCurrentRatingStream(title, type, imdbId, seriesCurrentRating, config = '', year = null, userConfig = null, platform = 'simkl') {
+  if (type !== 'series' || !(seriesCurrentRating > 0)) return [];
+  return [await createStreamObject(title, 'remove_rating', type, imdbId, seriesCurrentRating, null, null, config, year, userConfig, false, platform)];
 }
 
 async function createSeasonWatchedStream(title, type, imdbId, season = null, config = '', year = null, userConfig = null, platform = 'simkl') {
@@ -2761,6 +2783,20 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
     );
     console.log(`[STREAM] Current rating for ${parsedId.imdbId}: ${currentRating}/10`);
 
+    // Whole-series rating (independent from the episode currently being watched)
+    let seriesCurrentRating = 0;
+    if (type === 'series') {
+      try {
+        seriesCurrentRating = await getUserRating(
+          parsedId.imdbId, type, userConfig.access_token, userConfig.clientId,
+          null, null, userConfig
+        );
+      } catch (e) {
+        console.log(`[STREAM] Series rating lookup failed: ${e.message}`);
+      }
+      console.log(`[STREAM] Series rating for ${parsedId.imdbId}: ${seriesCurrentRating}/10`);
+    }
+
     const {
       ratings = [],
       markAsWatched = true,
@@ -2768,6 +2804,7 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
       enableSeasonWatched = true,
       enableWatchlist = true,
       enableRemoveFromWatchlist = true,
+      enableSeriesRating = true,
       keepSingleWatchedState = false,
       keepSingleStateDisplay = 'inline',
       keepSingleStateEmoji = '🔄',
@@ -2828,6 +2865,44 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
               parsedId.season, parsedId.episode, config, year, userConfig, 'mdblist'
             );
             streams.push(...m);
+          }
+          break;
+
+        case 'series_rating':
+          if (type === 'series' && enableSeriesRating) {
+            if (targets.ratingSyncSimkl) {
+              const s = await createSeriesRatingStreams(
+                title, type, parsedId.imdbId, ratings, seriesCurrentRating,
+                config, year, userConfig, 'simkl'
+              );
+              streams.push(...s);
+            }
+            if (targets.ratingSyncMdblist) {
+              const m = await createSeriesRatingStreams(
+                title, type, parsedId.imdbId, ratings, seriesCurrentRating,
+                config, year, userConfig, 'mdblist'
+              );
+              streams.push(...m);
+            }
+          }
+          break;
+
+        case 'series_current_rating':
+          if (type === 'series' && enableSeriesRating && seriesCurrentRating > 0 && enableRemoveRating) {
+            if (targets.ratingSyncSimkl) {
+              const s = await createSeriesCurrentRatingStream(
+                title, type, parsedId.imdbId, seriesCurrentRating,
+                config, year, userConfig, 'simkl'
+              );
+              streams.push(...s);
+            }
+            if (targets.ratingSyncMdblist) {
+              const m = await createSeriesCurrentRatingStream(
+                title, type, parsedId.imdbId, seriesCurrentRating,
+                config, year, userConfig, 'mdblist'
+              );
+              streams.push(...m);
+            }
           }
           break;
 

@@ -1166,6 +1166,17 @@
                 <input type="checkbox" id="markAsPlayedOnRate">
                 <label for="markAsPlayedOnRate">Automatically mark as played when rating</label>
             </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableSeriesRating" checked>
+                <label for="enableSeriesRating">
+                    <strong>⭐ Rate the whole series (not just one episode)</strong>
+                </label>
+            </div>
+            <div class="feature-description">
+                When you are watching an episode, a separate stream will let you rate the entire show on one go (Simkl show rating / MDBList show rating).
+                This is independent from the per-episode rating above.
+            </div>
             
             <div class="new-feature">
                 <span class="new-feature-label">NEW</span>
@@ -1616,7 +1627,9 @@
         // Stream order state
         let streamOrder = [
             'current_rating',
+            'series_current_rating',
             'rating',
+            'series_rating',
             'watched',
             'season_watched',
             'series_watched',
@@ -1628,7 +1641,9 @@
         // Mapping of stream types to display names
         const streamTypeNames = {
             'current_rating': '⭐ Current Rating',
+            'series_current_rating': '⭐ Current Series Rating',
             'rating': '📊 Rate Options',
+            'series_rating': '⭐ Rate the Whole Series',
             'watched': '✅ Mark as Watched',
             'season_watched': '📅 Mark Season Watched',
             'series_watched': '📺 Mark Series Watched',
@@ -1652,6 +1667,7 @@
         const enableRemoveFromWatchlistCheckbox = document.getElementById('enableRemoveFromWatchlist');
         const showCurrentRatingCheckbox = document.getElementById('showCurrentRating');
         const enableRemoveRatingCheckbox = document.getElementById('enableRemoveRating');
+        const enableSeriesRatingCheckbox = document.getElementById('enableSeriesRating');
         const keepSingleWatchedStateCheckbox = document.getElementById('keepSingleWatchedState');
         const keepSingleStateDisplayGroup = document.getElementById('keepSingleStateDisplayGroup');
         const keepSingleInlineRadio = document.getElementById('keepSingleInline');
@@ -1773,7 +1789,9 @@
         function resetStreamOrder() {
             streamOrder = [
                 'current_rating',
+                'series_current_rating',
                 'rating',
+                'series_rating',
                 'watched',
                 'season_watched',
                 'series_watched',
@@ -2683,6 +2701,7 @@
                 showCertification: showCertificationCheckbox.checked,
                 showSimklRank: showSimklRankCheckbox.checked,
                 markAsPlayedOnRate: markAsPlayedOnRateCheckbox.checked,
+                enableSeriesRating: enableSeriesRatingCheckbox.checked,
                 syncSimkl: syncSimklCheckbox.checked,
                 syncMdblist: syncMdblistCheckbox.checked,
                 ratingSyncSimkl: syncSimklCheckbox.checked,
@@ -2833,7 +2852,9 @@
                 currentUsername = 'SimklUser';
                 streamOrder = [
                     'current_rating',
+                    'series_current_rating',
                     'rating',
+                    'series_rating',
                     'watched',
                     'season_watched',
                     'series_watched',
@@ -2964,6 +2985,7 @@
                     if (data.showSimklRank !== undefined) showSimklRankCheckbox.checked = data.showSimklRank;
                     if (data.syncSimkl !== undefined) syncSimklCheckbox.checked = data.syncSimkl;
                     if (data.syncMdblist !== undefined) syncMdblistCheckbox.checked = data.syncMdblist;
+                    if (data.enableSeriesRating !== undefined) enableSeriesRatingCheckbox.checked = data.enableSeriesRating;
                     // Legacy migration: previous 4-checkbox layout
                     if (data.syncSimkl === undefined && (data.syncSimklRating || data.syncSimklWatchlist)) {
                         syncSimklCheckbox.checked = true;
