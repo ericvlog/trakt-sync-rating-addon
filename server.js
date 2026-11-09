@@ -2776,8 +2776,10 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
       ]
     } = userConfig;
 
+    const targets = getSyncTargets(userConfig);
     console.log(`[STREAM] Config - Watched: ${markAsWatched}, Unwatched: ${markAsUnwatched}, Ratings: ${ratings.length}, Season: ${enableSeasonWatched}, Watchlist: ${enableWatchlist}, KeepSingleState: ${keepSingleWatchedState}, ShowCurrentRating: ${showCurrentRating}, EnableRemoveRating: ${enableRemoveRating}`);
     console.log(`[STREAM] Stream Order: ${streamOrder.join(', ')}`);
+    console.log(`[STREAM] Targets - ratingSimkl: ${targets.ratingSyncSimkl}, ratingMdblist: ${targets.ratingSyncMdblist}, wlSimkl: ${targets.watchlistSyncSimkl}, wlMdblist: ${targets.watchlistSyncMdblist}`);
 
     const streams = [];
 
