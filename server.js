@@ -2898,7 +2898,7 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
           break;
 
         case 'unwatched':
-          if (markAsUnwatched) {
+          if (markAsUnwatched && targets.marksSyncSimkl) {
             const unwatchedStreams = await createUnwatchedStream(
               title, type, parsedId.imdbId,
               parsedId.season, parsedId.episode, config, year, userConfig
