@@ -673,8 +673,10 @@ function getSyncTargets(userConfig) {
   const ratingSyncMdblist = !!(syncMdblist && hasMdb);
   const watchlistSyncSimkl = !!(syncSimkl && hasSimkl);
   const watchlistSyncMdblist = !!(syncMdblist && hasMdb);
+  // Watched / unwatched history only exists on Simkl (MDBList has no history API).
+  const marksSyncSimkl = !!(syncSimkl && hasSimkl);
 
-  return { ratingSyncSimkl, ratingSyncMdblist, watchlistSyncSimkl, watchlistSyncMdblist };
+  return { ratingSyncSimkl, ratingSyncMdblist, watchlistSyncSimkl, watchlistSyncMdblist, marksSyncSimkl };
 }
 
 function mdblistRatingsToMap(info) {
@@ -1928,8 +1930,8 @@ async function deleteOlderWatchedStates(imdbId, type, accessToken, clientId, tit
 
 async function makeSimklRequest(action, type, imdbId, title, userConfig, rating = null, season = null, episode = null, platform = null) {
   try {
-    console.log(`[SIMKL] Making ${action} request for ${type}: ${imdbId} - "${title}" (platform: ${platform || 'both'})`);
-    console.log(`[SIMKL] Season: ${season}, Episode: ${episode}, Rating: ${rating}`);
+    console.log(`[SYNC] Making ${action} request for ${type}: ${imdbId} - "${title}" (platform: ${platform || 'both'})`);
+    console.log(`[SYNC] Season: ${season}, Episode: ${episode}, Rating: ${rating}`);
 
     const accessToken = userConfig.access_token;
     const clientId = userConfig.clientId;
@@ -2348,7 +2350,7 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
         break;
     }
 
-    console.log(`[SIMKL] ✅ SUCCESS: ${message}`);
+    console.log(`[SYNC] ✅ SUCCESS: ${message}`);
 
     let responseData = {};
     try {
@@ -2365,7 +2367,7 @@ async function makeSimklRequest(action, type, imdbId, title, userConfig, rating 
     };
 
   } catch (error) {
-    console.error(`[SIMKL] ❌ ERROR: ${error.message}`);
+    console.error(`[SYNC] ❌ ERROR: ${error.message}`);
     return {
       success: false,
       error: error.message,
@@ -2830,7 +2832,7 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
           break;
 
         case 'watched':
-          if (markAsWatched) {
+          if (markAsWatched && targets.marksSyncSimkl) {
             const watchedStreams = await createWatchedStream(
               title, type, parsedId.imdbId,
               parsedId.season, parsedId.episode, config, year, userConfig
@@ -2840,7 +2842,7 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
           break;
 
         case 'season_watched':
-          if (type === 'series' && enableSeasonWatched && parsedId.season !== null && parsedId.episode !== null) {
+          if (type === 'series' && enableSeasonWatched && parsedId.season !== null && parsedId.episode !== null && targets.marksSyncSimkl) {
             const seasonStreams = await createSeasonWatchedStream(
               title, type, parsedId.imdbId, parsedId.season, config, year, userConfig
             );
@@ -2849,7 +2851,7 @@ app.get("/configured/:config/stream/:type/:id.json", async (req, res) => {
           break;
 
         case 'series_watched':
-          if (type === 'series' && markAsWatched) {
+          if (type === 'series' && markAsWatched && targets.marksSyncSimkl) {
             const seriesStreams = await createSeriesWatchedStream(
               title, type, parsedId.imdbId, config, year, userConfig
             );
@@ -2968,7 +2970,7 @@ app.get("/configured/:config/simkl-action", async (req, res) => {
         );
 
         if (result.success) {
-          console.log(`[SIMKL] ✅ ${result.message}`);
+          console.log(`[SYNC] ✅ ${result.message}`);
 
           // Clear user rating cache after rating action
           invalidateUserRatingCache(imdbId, type, userConfig.access_token, season, episode);
@@ -2981,7 +2983,7 @@ app.get("/configured/:config/simkl-action", async (req, res) => {
             else if (action === 'rate_only') mdblistSetCachedRating(mdbKey, type, imdbId, season, episode, numRating);
           }
         } else {
-          console.error(`[SIMKL] ❌ ${result.error}`);
+          console.error(`[SYNC] ❌ ${result.error}`);
         }
       } else {
         console.error(`[SIMKL-ACTION] Invalid config or missing access token`);
