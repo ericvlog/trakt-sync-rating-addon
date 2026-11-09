@@ -649,13 +649,10 @@ function getSyncTargets(userConfig) {
   const hasSimkl = !!(userConfig?.access_token || userConfig?.accessToken);
   const hasMdb = !!(userConfig?.mdblistKey || userConfig?.mdblistApiKey);
 
-  // Default to true for Simkl if not explicitly set (backwards compatible)
-  // Default to false for MDBList if not explicitly set
-  const ratingSyncSimkl = userConfig.ratingSyncSimkl !== false;
-  const ratingSyncMdblist = !!(userConfig.ratingSyncMdblist && hasMdb);
-  
-  const watchlistSyncSimkl = userConfig.watchlistSyncSimkl !== false;
-  const watchlistSyncMdblist = !!(userConfig.watchlistSyncMdblist && hasMdb);
+  const ratingSyncSimkl = !!(userConfig.syncSimklRating && hasSimkl);
+  const ratingSyncMdblist = !!(userConfig.syncMdblistRating && hasMdb);
+  const watchlistSyncSimkl = !!(userConfig.syncSimklWatchlist && hasSimkl);
+  const watchlistSyncMdblist = !!(userConfig.syncMdblistWatchlist && hasMdb);
 
   return { ratingSyncSimkl, ratingSyncMdblist, watchlistSyncSimkl, watchlistSyncMdblist };
 }

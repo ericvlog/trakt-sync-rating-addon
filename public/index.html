@@ -827,34 +827,38 @@
                 Sync Destinations
             </h2>
             <div class="feature-description" style="margin-bottom: 15px;">
-                Choose where your actions should be synced. You can sync to Simkl, MDBList, or both simultaneously.
+                Choose which actions should be synced for each platform.
             </div>
 
-            <div class="form-group">
-                <label><strong>Rating Sync Destination</strong></label>
-                <div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap;">
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <input type="checkbox" id="ratingSyncSimkl" checked>
-                        <span>Simkl</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <input type="checkbox" id="ratingSyncMdblist">
-                        <span>MDBList</span>
-                    </label>
+            <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+                <!-- Simkl Options -->
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label><strong>Simkl</strong></label>
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="syncSimklRating" checked>
+                            <span>Sync Ratings</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="syncSimklWatchlist" checked>
+                            <span>Sync Watchlist</span>
+                        </label>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label><strong>Watchlist Sync Destination</strong></label>
-                <div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap;">
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <input type="checkbox" id="watchlistSyncSimkl" checked>
-                        <span>Simkl</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <input type="checkbox" id="watchlistSyncMdblist">
-                        <span>MDBList</span>
-                    </label>
+                <!-- MDBList Options -->
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label><strong>MDBList</strong></label>
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="syncMdblistRating">
+                            <span>Sync Ratings</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="syncMdblistWatchlist">
+                            <span>Sync Watchlist</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1663,10 +1667,10 @@
         let upstashConnected = false;
 
         // Sync destinations - default to Simkl only for backward compatibility
-        let ratingSyncSimkl = true;
-        let ratingSyncMdblist = false;
-        let watchlistSyncSimkl = true;
-        let watchlistSyncMdblist = false;
+        let syncSimklRating = true;
+        let syncSimklWatchlist = true;
+        let syncMdblistRating = false;
+        let syncMdblistWatchlist = false;
 
         // Stream order state
         let streamOrder = [
@@ -1738,10 +1742,10 @@
         const streamOrderList = document.getElementById('stream-order-list');
 
         // Sync Destinations Elements
-        const ratingSyncSimklCheckbox = document.getElementById('ratingSyncSimkl');
-        const ratingSyncMdblistCheckbox = document.getElementById('ratingSyncMdblist');
-        const watchlistSyncSimklCheckbox = document.getElementById('watchlistSyncSimkl');
-        const watchlistSyncMdblistCheckbox = document.getElementById('watchlistSyncMdblist');
+        const syncSimklRatingCheckbox = document.getElementById('syncSimklRating');
+        const syncSimklWatchlistCheckbox = document.getElementById('syncSimklWatchlist');
+        const syncMdblistRatingCheckbox = document.getElementById('syncMdblistRating');
+        const syncMdblistWatchlistCheckbox = document.getElementById('syncMdblistWatchlist');
 
         // Preview elements
         const movieWatchedContent = document.getElementById('movieWatchedContent');
@@ -3017,10 +3021,10 @@
                     }
                     if (data.showCertification !== undefined) showCertificationCheckbox.checked = data.showCertification;
                     if (data.showSimklRank !== undefined) showSimklRankCheckbox.checked = data.showSimklRank;
-                    if (data.ratingSyncSimkl !== undefined) ratingSyncSimklCheckbox.checked = data.ratingSyncSimkl;
-                    if (data.ratingSyncMdblist !== undefined) ratingSyncMdblistCheckbox.checked = data.ratingSyncMdblist;
-                    if (data.watchlistSyncSimkl !== undefined) watchlistSyncSimklCheckbox.checked = data.watchlistSyncSimkl;
-                    if (data.watchlistSyncMdblist !== undefined) watchlistSyncMdblistCheckbox.checked = data.watchlistSyncMdblist;
+                    if (data.syncSimklRating !== undefined) syncSimklRatingCheckbox.checked = data.syncSimklRating;
+                    if (data.syncSimklWatchlist !== undefined) syncSimklWatchlistCheckbox.checked = data.syncSimklWatchlist;
+                    if (data.syncMdblistRating !== undefined) syncMdblistRatingCheckbox.checked = data.syncMdblistRating;
+                    if (data.syncMdblistWatchlist !== undefined) syncMdblistWatchlistCheckbox.checked = data.syncMdblistWatchlist;
 
                     updateFieldVisibility();
                     if (data.previewRatingValue) {
@@ -3125,10 +3129,10 @@
                 selectedSources: selectedSources,
                 showCertification: showCertificationCheckbox.checked,
                 showSimklRank: showSimklRankCheckbox.checked,
-                ratingSyncSimkl: ratingSyncSimklCheckbox.checked,
-                ratingSyncMdblist: ratingSyncMdblistCheckbox.checked,
-                watchlistSyncSimkl: watchlistSyncSimklCheckbox.checked,
-                watchlistSyncMdblist: watchlistSyncMdblistCheckbox.checked,
+                syncSimklRating: syncSimklRatingCheckbox.checked,
+                syncSimklWatchlist: syncSimklWatchlistCheckbox.checked,
+                syncMdblistRating: syncMdblistRatingCheckbox.checked,
+                syncMdblistWatchlist: syncMdblistWatchlistCheckbox.checked,
                 previewRatingValue: previewRatingValue,
                 storageMethod: storageMethod,
                 configId: configId,
@@ -3169,8 +3173,8 @@
             return new TextDecoder().decode(bytes);
         }
         function updateFieldVisibility() {
-            const needSimkl = ratingSyncSimklCheckbox.checked || watchlistSyncSimklCheckbox.checked;
-            const needMdb = ratingSyncMdblistCheckbox.checked || watchlistSyncMdblistCheckbox.checked;
+            const needSimkl = syncSimklRatingCheckbox.checked || syncSimklWatchlistCheckbox.checked;
+            const needMdb = syncMdblistRatingCheckbox.checked || syncMdblistWatchlistCheckbox.checked;
 
             const simklEl = document.getElementById('simklAuthContainer');
             const mdbEl = document.getElementById('mdbKeyContainer');
@@ -3179,7 +3183,7 @@
             if (mdbEl) mdbEl.style.display = needMdb ? 'block' : 'none';
         }
 
-        [ratingSyncSimklCheckbox, ratingSyncMdblistCheckbox, watchlistSyncSimklCheckbox, watchlistSyncMdblistCheckbox].forEach(cb => {
+        [syncSimklRatingCheckbox, syncSimklWatchlistCheckbox, syncMdblistRatingCheckbox, syncMdblistWatchlistCheckbox].forEach(cb => {
             if (cb) {
                 cb.addEventListener('change', () => {
                     updateFieldVisibility();
